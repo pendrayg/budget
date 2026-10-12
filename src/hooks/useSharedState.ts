@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Conflict, NoStorage, SessionExpired, fetchState, putState } from '../lib/api'
 import { mergeStates } from '../lib/merge'
 import { defaultState, parseEnvelope, sanitizeState } from '../lib/state'
+import { readLocalMode, writeLocalMode } from '../lib/storage-mode'
 import type { Envelope, State } from '../lib/types'
 
 const MIRROR_KEY = 'budget:state:v1'
@@ -24,7 +25,7 @@ export type SyncStatus =
   | 'saving'
   /** Le serveur n'a pas répondu : les changements attendent sur ce téléphone. */
   | 'offline'
-  /** Le Worker n'a pas d'espace KV : le document ne vit que sur ce téléphone. */
+  /** Le Worker n'a pas d'espace KV : le document vit sur cet appareil. Un mode, pas une panne. */
   | 'local'
   /** Le serveur a répondu autre chose qu'une session expirée ou un conflit. */
   | 'error'
@@ -73,12 +74,13 @@ function saveMirror(mirror: Mirror): void {
  * après une demi-seconde de calme ; un conflit (409) se fusionne et repart ; une panne laisse
  * le local marqué « à envoyer ». On n'envoie JAMAIS un local périmé sans l'avoir fusionné.
  *
- * Sans espace KV (501), le miroir local devient le seul document : on n'envoie plus rien, et
- * chaque retour au premier plan revérifie, au cas où un espace aurait été lié depuis.
+ * Sans espace KV (501), le miroir local devient le seul document : on n'envoie plus rien. Ce
+ * mode est retenu sur l'appareil pour s'ouvrir directement en local ; chaque retour au premier
+ * plan revérifie EN SILENCE (ni spinner ni statut), au cas où un espace aurait été lié depuis.
  */
 export function useSharedState(onSessionExpired: () => void): SharedState {
   const [mirror, setMirror] = useState<Mirror>(() => loadMirror() ?? { version: 0, dirty: false, state: defaultState() })
-  const [status, setStatus] = useState<SyncStatus>('idle')
+  const [status, setStatus] = useState<SyncStatus>(() => (readLocalMode() ? 'local' : 'idle'))
   const [notice, setNotice] = useState<string | null>(null)
 
   const mirrorRef = useRef(mirror)
@@ -87,7 +89,7 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
   const verifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inFlight = useRef(false)
   /** Le Worker a dit qu'il n'a pas d'espace KV : rien à envoyer jusqu'à la prochaine lecture. */
-  const noStorage = useRef(false)
+  const noStorage = useRef(readLocalMode())
   const expiredRef = useRef(onSessionExpired)
   expiredRef.current = onSessionExpired
 
@@ -108,12 +110,14 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
   const pull = useCallback(async () => {
     if (inFlight.current) return
     inFlight.current = true
-    setStatus('loading')
+    // En local, la revérification ne se voit pas : rien ne change tant que le Worker répond 501.
+    if (!noStorage.current) setStatus('loading')
     try {
       const remote = await fetchState()
       if (noStorage.current) {
         // Un espace KV vient d'être lié : ce qui attendait sur le téléphone repart.
         noStorage.current = false
+        writeLocalMode(false)
         if (mirrorRef.current.dirty) setMirror((m) => ({ ...m }))
       }
       if (remote) adopt(remote)
@@ -126,8 +130,9 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
       if (error instanceof SessionExpired) expiredRef.current()
       else if (error instanceof NoStorage) {
         noStorage.current = true
+        writeLocalMode(true)
         setStatus('local')
-      } else setStatus('offline')
+      } else if (!noStorage.current) setStatus('offline')
     } finally {
       inFlight.current = false
     }
@@ -160,6 +165,7 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
         setStatus('idle')
       } else if (error instanceof NoStorage) {
         noStorage.current = true
+        writeLocalMode(true)
         setStatus('local')
       } else {
         setStatus('offline')

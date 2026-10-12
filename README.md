@@ -255,10 +255,14 @@ ligne ; le serveur fait foi.
 - Hors ligne, les changements restent sur le téléphone, marqués « à envoyer », et partent au
   prochain geste ou retour au premier plan. Un onglet quitté envoie ce qui attend
   (`keepalive`).
-- L'espace KV est **facultatif**. Sans lien `BUDGET_KV`, le Worker répond 501 sur `/api/*` :
-  l'app le lit comme « pas de sauvegarde serveur », garde le document dans le miroir local et
-  n'envoie plus rien. Les téléphones ne partagent alors plus le document. Au retour au premier
-  plan, l'app revérifie : un espace lié depuis reçoit ce qui attendait.
+- L'espace KV est **facultatif** : deux modes, choisis par le déploiement, sans réglage.
+  - **Synchronisé** (KV lié) : ce qui précède, le document est partagé entre les téléphones.
+  - **Local** (sans KV) : le Worker répond 501 sur `/api/*`, et l'app garde le document sur
+    l'appareil, sans rien envoyer ni signaler de panne. Le mode est retenu
+    (`budget:storage`) : l'app s'ouvre directement en local, sans spinner. Les réglages
+    proposent la sauvegarde en fichier pour garder les données ailleurs ou changer d'appareil.
+    Au retour au premier plan, l'app revérifie en silence : un espace lié depuis reçoit ce qui
+    attendait, et l'app repasse en synchronisé.
 - Sauvegarde (« Télécharger ») et restauration (« Restaurer ») JSON dans les réglages. Une
   restauration garde les dates de la sauvegarde.
 

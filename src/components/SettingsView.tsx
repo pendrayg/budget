@@ -39,11 +39,13 @@ export default function SettingsView({
   const fileInput = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null)
 
+  // Sans espace KV, l'app est en local : pas de synchronisation à proposer.
+  const local = status === 'local'
   const statusText: Record<SyncStatus, string> = {
     idle: dirty ? 'Des modifications attendent d’être envoyées.' : `À jour avec le serveur (version ${version}).`,
     loading: 'Lecture du serveur…',
     saving: 'Envoi en cours…',
-    local: 'Pas de sauvegarde serveur : les données restent sur ce téléphone. Téléchargez une sauvegarde de temps en temps.',
+    local: 'Données enregistrées sur cet appareil.',
     offline: 'Serveur injoignable : les modifications restent sur ce téléphone et partiront plus tard.',
     error: 'Le serveur a répondu une erreur.',
   }
@@ -127,14 +129,18 @@ export default function SettingsView({
           </div>
         </DisclosureButton>
 
-        <DisclosureButton title="Données" hint="Synchronisation et sauvegarde" icon="cloud">
+        <DisclosureButton title="Données" hint={local ? 'Sauvegarde' : 'Synchronisation et sauvegarde'} icon="cloud">
           <div className="form">
             <p className="storage-state">{statusText[status]}</p>
-            <div className="toolbar-end">
-              <Button size="sm" icon="refresh" onClick={onSync}>
-                Synchroniser
-              </Button>
-            </div>
+            {local ? (
+              <p className="field-hint muted">Téléchargez une sauvegarde pour les garder ailleurs ou les passer sur un autre appareil.</p>
+            ) : (
+              <div className="toolbar-end">
+                <Button size="sm" icon="refresh" onClick={onSync}>
+                  Synchroniser
+                </Button>
+              </div>
+            )}
 
             {message && (
               <Notice tone={message.tone} title={message.text} />
