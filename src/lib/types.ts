@@ -170,9 +170,9 @@ export interface ProjectItem {
 }
 
 /**
- * Un achat ponctuel, en lignes. Avec une date cible, il peut s'épargner dans le budget : il y
- * devient une dépense d'une catégorie à épargner (`budget`), dont la mensualité mène son total à
- * la cible (cf. `src/lib/projects.ts`).
+ * Un achat ponctuel, en lignes, du commun ou d'une personne. Avec une date cible, il peut
+ * s'épargner dans le budget : il y devient une dépense d'une catégorie à épargner de son
+ * périmètre (`budget`), dont la mensualité mène son total à la cible (cf. `src/lib/projects.ts`).
  */
 export interface Project {
   id: string
@@ -182,6 +182,9 @@ export interface Project {
   target?: Month
   /** La dépense du budget qui l'épargne, tant qu'on l'épargne. */
   budget?: { categoryId: string }
+  /** Absent : un projet du commun. Sinon, la personne dont c'est le projet ; son identifiant porte
+   *  le même préfixe (cf. scope.ts). */
+  owner?: string
   updatedAt: string
 }
 

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { formatEuro, formatPercent } from '../lib/format'
 import { currentMonth, monthLabel } from '../lib/month'
 import { isProjectSaving, projectSaved, projectTotal } from '../lib/projects'
+import { inScope, type Scope } from '../lib/scope'
 import type { Project, State } from '../lib/types'
 import { useOpenLine } from '../hooks/useOpenLine'
 import ProjectForm from './ProjectForm'
@@ -33,20 +34,23 @@ function ProjectHint({ state, project }: { state: State; project: Project }) {
   )
 }
 
-/** La feuille `Projets` : des achats ponctuels, en lignes, avec leur total. Rien à répartir. Chaque
+/** La feuille `Projets` : des achats ponctuels, en lignes, avec leur total, du périmètre choisi (le
+ *  commun, ou une personne). Rien à répartir. Chaque
  *  projet est un bouton section dépliante qui porte son formulaire ; un nouveau se crée en feuille.
  *  Avec une date cible, un projet s'épargne dans le budget, et sa ligne en dit la complétion. */
-export default function ProjectsView({ state, update }: { state: State; update: (change: (state: State) => State) => void }) {
+export default function ProjectsView({ state, scope, update }: { state: State; scope: Scope; update: (change: (state: State) => State) => void }) {
   const [creating, setCreating] = useState({ open: false, generation: 0 })
   const lines = useOpenLine()
-  const projects = state.projects.slice().sort((x, y) => x.name.localeCompare(y.name, 'fr'))
+  // Seul, tout est à soi : pas de « de … » dans les titres.
+  const owner = state.people.length > 1 ? state.people.find((person) => person.id === scope) : undefined
+  const projects = state.projects.filter((project) => inScope(project, scope)).sort((x, y) => x.name.localeCompare(y.name, 'fr'))
 
   return (
     <>
       <section className="section">
         <div className="section-head">
           <div>
-            <h2>Projets</h2>
+            <h2>{owner ? `Projets de ${owner.name}` : 'Projets'}</h2>
             <p>{projects.length > 0 ? `${projects.length} ${projects.length > 1 ? 'projets' : 'projet'}, ${formatEuro(projects.reduce((sum, p) => sum + projectTotal(p), 0))} en tout.` : 'Les achats ponctuels, ligne par ligne.'}</p>
           </div>
         </div>
@@ -71,7 +75,7 @@ export default function ProjectsView({ state, update }: { state: State; update: 
                 }
                 hint={<ProjectHint state={state} project={project} />}
               >
-                <ProjectForm key={lines.formKey(project.id)} projectId={project.id} state={state} update={update} onDone={lines.close} />
+                <ProjectForm key={lines.formKey(project.id)} projectId={project.id} state={state} scope={scope} update={update} onDone={lines.close} />
               </DisclosureButton>
             ))}
           </div>
@@ -84,7 +88,7 @@ export default function ProjectsView({ state, update }: { state: State; update: 
           Nouveau projet
         </Button>
       </section>
-      <ProjectSheet open={creating.open} generation={creating.generation} state={state} update={update} onClose={() => setCreating((c) => ({ ...c, open: false }))} />
+      <ProjectSheet open={creating.open} generation={creating.generation} state={state} scope={scope} update={update} onClose={() => setCreating((c) => ({ ...c, open: false }))} />
     </>
   )
 }

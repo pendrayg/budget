@@ -42,6 +42,7 @@ describe('projets épargnés', () => {
 
   it('s’épargne aussi dans un budget perso, sous le préfixe de sa personne', () => {
     let state = addGroup(withProject(), { id: 'p2:g', name: 'Épargne', save: true, owner: 'p2', updatedAt: T }, null)
+    state = { ...state, projects: state.projects.map((p) => (p.id === 'nas' ? { ...p, owner: 'p2' } : p)) }
     state = activateProject(state, 'nas', 'p2:g', '2026-10', 'c-nas', T)
     expect(project(state).budget?.categoryId).toBe('p2:c-nas')
     expect(monthSummary(state, '2026-10', 'p2').total).toBeCloseTo(65.17, 2)
@@ -94,5 +95,34 @@ describe('projets épargnés', () => {
     expect(project(sanitizeState(state))).toMatchObject({ target: '2027-03', budget: { categoryId: 'c-nas' } })
     const broken = { ...state, projects: state.projects.map((p) => (p.id === 'nas' ? { ...p, budget: { categoryId: 'disparue' } } : p)) }
     expect(project(sanitizeState(broken)).budget).toBeUndefined()
+  })
+})
+
+describe('projets communs et personnels', () => {
+  const withSaving = () => addGroup(withProject(), { id: 'p2:g', name: 'Épargne', save: true, owner: 'p2', updatedAt: T }, null)
+
+  it('ne s’épargne que dans une catégorie de son périmètre', () => {
+    // Un projet du commun ne va pas dans le budget de Bruno…
+    expect(activateProject(withSaving(), 'nas', 'p2:g', '2026-10', 'c-nas', T)).toEqual(withSaving())
+    // … ni un projet de Bruno dans le commun.
+    const bruno = { ...withSaving(), projects: withSaving().projects.map((p) => (p.id === 'nas' ? { ...p, owner: 'p2' } : p)) }
+    expect(project(activateProject(bruno, 'nas', SAVE, '2026-10', 'c-nas', T)).budget).toBeUndefined()
+    expect(project(activateProject(bruno, 'nas', 'p2:g', '2026-10', 'c-nas', T)).budget?.categoryId).toBe('p2:c-nas')
+  })
+
+  it('lit son propriétaire dans son champ, ou dans le préfixe de son identifiant', () => {
+    const state = withProject()
+    const read = (projects: State['projects']) => sanitizeState({ ...state, projects }).projects
+    expect(read([{ ...project(state), owner: 'p2' }])[0].owner).toBe('p2')
+    expect(read([{ ...project(state), id: 'p2:nas' }])[0].owner).toBe('p2')
+    expect(read([{ ...project(state), owner: 'disparu' }])[0].owner).toBeUndefined()
+  })
+
+  it('donne à sa personne un projet d’avant, déjà épargné dans son budget perso', () => {
+    const bruno = { ...withSaving(), projects: withSaving().projects.map((p) => (p.id === 'nas' ? { ...p, owner: 'p2' } : p)) }
+    const saved = activateProject(bruno, 'nas', 'p2:g', '2026-10', 'c-nas', T)
+    const before = { ...saved, projects: saved.projects.map((p) => (p.id === 'nas' ? { ...p, owner: undefined } : p)) }
+    expect(project(sanitizeState(before)).owner).toBe('p2')
+    expect(project(sanitizeState(withProject())).owner).toBeUndefined()
   })
 })

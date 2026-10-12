@@ -1,7 +1,7 @@
 import { isPersonColor } from './colors'
 import { isMonth } from './month'
 import { MAX_PEOPLE } from './people'
-import { ownerFromId } from './scope'
+import { categoryScope, ownerFromId } from './scope'
 import type {
   Amount,
   BudgetGroup,
@@ -319,7 +319,7 @@ function budgets(value: unknown, categoryIds: Set<string>, keyIds: Set<string>):
 }
 
 /** Les projets ; un lien vers une dépense disparue est oublié. */
-function projects(value: unknown, categoryIds: Set<string>): Project[] {
+function projects(value: unknown, categoryIds: Set<string>, personIds: string[]): Project[] {
   if (!Array.isArray(value)) return []
   const seen = new Set<string>()
   const result: Project[] = []
@@ -334,6 +334,8 @@ function projects(value: unknown, categoryIds: Set<string>): Project[] {
     const project: Project = { id: item.id, name: text(item.name, 'Sans nom'), items, updatedAt: stamp(item.updatedAt) }
     if (isMonth(item.target)) project.target = item.target
     if (isRecord(item.budget) && typeof item.budget.categoryId === 'string' && categoryIds.has(item.budget.categoryId)) project.budget = { categoryId: item.budget.categoryId }
+    const personal = owner(item, item.id, personIds)
+    if (personal) project.owner = personal
     result.push(project)
   }
   return result
@@ -406,11 +408,16 @@ export function sanitizeState(value: unknown): State {
     groups: placed.groups,
     categories: withVersions,
     budgets: placed.budgets,
-    projects: projects(value.projects, new Set(withVersions.map((c) => c.id))),
+    projects: projects(value.projects, new Set(withVersions.map((c) => c.id)), ids),
     transactions: transactions(value.transactions, new Set(withVersions.map((c) => c.id)), ids),
     rules: rules(value.rules, new Set(withVersions.map((c) => c.id))),
     settings: settings(value.settings),
   }
+  // Les projets d'avant les projets personnels : épargné dans un budget perso, c'est le sien.
+  state.projects = state.projects.map((project) => {
+    const scope = !project.owner && project.budget ? categoryScope(state, project.budget.categoryId) : null
+    return scope ? { ...project, owner: scope } : project
+  })
   // Seule, une personne n'a pas de commun : tout est à elle.
   return persons.length === 1 ? ownEverything(state, persons[0].id) : state
 }
@@ -420,6 +427,7 @@ function ownEverything(state: State, owner: string): State {
     ...state,
     groups: state.groups.map((group) => (group.owner === owner ? group : { ...group, owner })),
     transactions: state.transactions.map((t) => (t.owner === owner ? t : { ...t, owner })),
+    projects: state.projects.map((p) => (p.owner === owner ? p : { ...p, owner })),
   }
 }
 

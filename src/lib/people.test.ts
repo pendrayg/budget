@@ -14,6 +14,7 @@ const fixed = (state: State) => state.splitKeys.find((k) => k.kind === 'fixed')!
 /** La graine, plus un budget perso de Bruno et une opération sur chaque compte. */
 function household(): State {
   let state = addGroup(seedState(), { id: 'p2:g', name: 'Loisirs', save: false, owner: 'p2', updatedAt: T }, null)
+  state = { ...state, projects: [...state.projects, { id: 'p2:velo', name: 'Vélo', items: [], owner: 'p2', updatedAt: T }] }
   state = importStatement(state, [{ date: '2026-10-03', label: 'CARTE 02/10/26 SALLE DE SPORT CB*1234', amount: 30 }], T, 'p2').state
   state = placeTransaction(state, state.transactions[0].id, { ignored: true }, T)
   state = importStatement(state, [{ date: '2026-10-04', label: 'CARTE 03/10/26 SUPERMARCHE CB*1234', amount: 41 }], T).state
@@ -54,6 +55,9 @@ describe('personnes', () => {
     const sport = state.transactions.find((t) => t.label.includes('SALLE'))!
     expect(sport.owner).toBeUndefined()
     expect(sport.id.startsWith('p2:')).toBe(false)
+    const velo = state.projects.find((p) => p.name === 'Vélo')!
+    expect(velo.id).toBe('velo')
+    expect(velo.owner).toBeUndefined()
     expect(state.rules.some((r) => r.key.startsWith('p2:'))).toBe(false)
     expect(state.rules.some((r) => r.key === 'SALLE DE SPORT')).toBe(true)
     expect(fixedSharesAt(fixed(state), '2026-10')).toEqual({ p1: 1, [state.people[1].id]: 0 })
@@ -65,6 +69,7 @@ describe('personnes', () => {
     expect(scopeFor(state, null)).toBe('p1')
     expect(state.groups.every((g) => g.owner === 'p1' && g.id.startsWith('p1:'))).toBe(true)
     expect(state.transactions.every((t) => t.owner === 'p1' && t.id.startsWith('p1:'))).toBe(true)
+    expect(state.projects.every((p) => p.owner === 'p1' && p.id.startsWith('p1:'))).toBe(true)
     expect(state.rules.every((r) => r.key.startsWith('p1:'))).toBe(true)
     // Le budget commun est devenu le sien : même total, qu'elle paie seule.
     expect(monthSummary(state, '2026-10', 'p1').total).toBeCloseTo(monthSummary(household(), '2026-10').total, 2)

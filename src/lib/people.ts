@@ -54,8 +54,8 @@ const rescope = (id: string, from: Scope, to: Scope) => {
 }
 
 /**
- * Retire une personne (jamais la dernière). Ce qui était à elle — catégories, opérations, règles
- * apprises — va à celle qui reste s'il n'en reste qu'une, avec tout le commun ; au commun sinon.
+ * Retire une personne (jamais la dernière). Ce qui était à elle — catégories, opérations, projets,
+ * règles apprises — va à celle qui reste s'il n'en reste qu'une, avec tout le commun ; au commun sinon.
  * Les identifiants suivent (le préfixe du compte), pour qu'un relevé réimporté retrouve ses
  * opérations. Ses revenus disparaissent ; les clés fixes se ramènent aux parts des autres.
  */
@@ -83,6 +83,7 @@ export function removePerson(state: State, personId: string, now: string): State
     groups,
     budgets: state.budgets.map((version) => ({ ...version, groupId: groupIds.get(version.groupId) ?? version.groupId })),
     transactions: state.transactions.map(move),
+    projects: state.projects.map(move),
     rules: dedupe(
       state.rules.map((rule) => {
         const from = scopeOfRule(state, rule.key)

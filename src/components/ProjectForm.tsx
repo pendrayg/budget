@@ -3,6 +3,7 @@ import { useId, useState } from 'react'
 import { budgetAt } from '../lib/budget'
 import { createId, formatEuro, nowIso } from '../lib/format'
 import { currentMonth, monthLabel } from '../lib/month'
+import { scopePrefix, type Scope } from '../lib/scope'
 import { activateProject, deleteProject, isProjectSaving, projectGroup, projectMonthly, projectSaved, stopProject, syncProjectBudget } from '../lib/projects'
 import { sortedGroups } from '../lib/summary'
 import type { Month, State } from '../lib/types'
@@ -33,13 +34,11 @@ function fromMonth(month: Month): string {
   return /^[aeiou]/.test(label) ? `d’${label}` : `de ${label}`
 }
 
-/** Les catégories à épargner où un projet peut s'épargner : le commun d'abord, puis celles de chacun. */
-function saveGroupOptions(state: State): { value: string; label: string }[] {
-  return [null, ...state.people.map((person) => person.id)].flatMap((scope) =>
-    sortedGroups(state, scope)
-      .filter((group) => group.save)
-      .map((group) => ({ value: group.id, label: scope && state.people.length > 1 ? `${group.name} · ${state.people.find((p) => p.id === scope)?.name ?? ''}` : group.name })),
-  )
+/** Les catégories à épargner où un projet peut s'épargner : celles de son périmètre. */
+function saveGroupOptions(state: State, scope: Scope): { value: string; label: string }[] {
+  return sortedGroups(state, scope)
+    .filter((group) => group.save)
+    .map((group) => ({ value: group.id, label: group.name }))
 }
 
 /**
@@ -55,11 +54,14 @@ function saveGroupOptions(state: State): { value: string; label: string }[] {
 export default function ProjectForm({
   projectId,
   state,
+  scope,
   update,
   onDone,
 }: {
   projectId: string | null
   state: State
+  /** Le périmètre choisi : celui d'un nouveau projet. Un projet qui existe garde le sien. */
+  scope: Scope
   update: (change: (state: State) => State) => void
   onDone: () => void
 }) {
@@ -67,7 +69,11 @@ export default function ProjectForm({
   const [draft, setDraft] = useState(() => draftFor(state, projectId))
   const month = currentMonth()
   const project = projectId ? state.projects.find((p) => p.id === projectId) : undefined
-  const groupOptions = saveGroupOptions(state)
+  const owner: Scope = project ? (project.owner ?? null) : scope
+  const groupOptions = saveGroupOptions(state, owner)
+  // Où créer la catégorie à épargner qui manque : seul, « au budget » suffit.
+  const ownerName = state.people.find((person) => person.id === owner)?.name
+  const budgetName = state.people.length === 1 ? 'au budget' : ownerName ? `au budget de ${ownerName}` : 'au budget commun'
   const [groupId, setGroupId] = useState(groupOptions[0]?.value ?? '')
 
   const isNew = projectId === null
@@ -77,7 +83,7 @@ export default function ProjectForm({
   const write = (d: Draft) => {
     const now = nowIso()
     update((current) => {
-      const id = projectId ?? createId()
+      const id = projectId ?? `${scopePrefix(owner)}${createId()}`
       const previous = current.projects.find((p) => p.id === id)
       const next = {
         id,
@@ -85,6 +91,7 @@ export default function ProjectForm({
         items: d.lines.filter((line) => line.amount !== null || line.label.trim() !== '').map((line) => ({ id: line.id, label: line.label.trim(), amount: line.amount ?? 0 })),
         ...(d.target ? { target: d.target } : {}),
         ...(previous?.budget ? { budget: previous.budget } : {}),
+        ...(owner ? { owner } : {}),
         updatedAt: now,
       }
       const written = { ...current, projects: [...current.projects.filter((p) => p.id !== id), next] }
@@ -148,6 +155,7 @@ export default function ProjectForm({
           total={total}
           target={draft.target}
           groupOptions={groupOptions}
+          budgetName={budgetName}
           groupId={groupId}
           onGroup={setGroupId}
           update={update}
@@ -188,6 +196,7 @@ function ProjectSaving({
   total,
   target,
   groupOptions,
+  budgetName,
   groupId,
   onGroup,
   update,
@@ -198,6 +207,8 @@ function ProjectSaving({
   total: number
   target: Month | ''
   groupOptions: { value: string; label: string }[]
+  /** « au budget commun », « au budget de Bruno » : là où créer la catégorie qui manque. */
+  budgetName: string
   groupId: string
   onGroup: (groupId: string) => void
   update: (change: (state: State) => State) => void
@@ -233,7 +244,7 @@ function ProjectSaving({
           {reachable && <Button onClick={() => update((s) => syncProjectBudget(s, projectId, month, nowIso()))}>Reprendre</Button>}
         </>
       ) : groupOptions.length === 0 ? (
-        <p className="field-hint muted">Créez d’abord au budget une catégorie à épargner.</p>
+        <p className="field-hint muted">Créez d’abord {budgetName} une catégorie à épargner.</p>
       ) : (
         <>
           <label className="ds-visually-hidden" htmlFor={`${uid}-group`}>

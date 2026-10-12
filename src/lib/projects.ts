@@ -1,12 +1,12 @@
 import { addCategory, budgetAt, editCategory, upsertVersion, versionMonthly, versionsOf } from './budget'
 import { addMonths, monthsBetween } from './month'
-import { categoryScope, scopePrefix } from './scope'
+import { categoryScope, inScope, scopePrefix } from './scope'
 import { spendingMonths, spendingSummary } from './spending'
 import type { Amount, BudgetGroup, BudgetVersion, Month, Project, State } from './types'
 
 /**
  * Un projet qu'on ÉPARGNE : avec une date cible, il devient une dépense d'une catégorie à épargner
- * (du commun ou d'un budget perso), dont la mensualité mène son total à la cible. C'est une dépense
+ * de son périmètre (un projet du commun dans le commun, celui d'une personne dans son budget), dont la mensualité mène son total à la cible. C'est une dépense
  * comme une autre — historique, synthèses, rangement des opérations, bloc Épargne des dépenses —
  * que le projet désigne (`project.budget`). Le lien reste quand on arrête ou que la cible passe :
  * la complétion se lit toujours.
@@ -78,7 +78,7 @@ function dropAfter(state: State, categoryId: string, month: Month): State {
 export function activateProject(state: State, projectId: string, groupId: string, month: Month, categoryId: string, now: string): State {
   const project = state.projects.find((p) => p.id === projectId)
   const group = state.groups.find((g) => g.id === groupId)
-  if (!project?.target || !group) return state
+  if (!project?.target || !group || !inScope(group, project.owner ?? null)) return state
   if (project.budget) return syncProjectBudget(state, projectId, month, now)
   const id = `${scopePrefix(group.owner ?? null)}${categoryId}`
   const monthly = projectMonthly(projectTotal(project), 0, month, project.target)

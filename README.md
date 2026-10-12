@@ -161,9 +161,9 @@ le revenu moyen moins ce budget.
 
 ### Les budgets et comptes personnels
 
-Sur le budget et les dépenses, un sous-menu **Commun / Alice / Bruno** (une pastille par
-personne, sur deux lignes à partir de trois), en bas au-dessus du menu, choisit le budget :
-le commun, ou celui de l'une des personnes. Le choix vaut pour les deux écrans, et ce
+Sur le budget, les dépenses et les projets, un sous-menu **Commun / Alice / Bruno** (une pastille
+par personne, sur deux lignes à partir de trois), en bas au-dessus du menu, choisit le budget :
+le commun, ou celui de l'une des personnes. Le choix vaut pour les trois écrans, et ce
 téléphone le retient. Un budget personnel a ses propres catégories et dépenses, que sa personne
 paie seule : pas de répartition (ni prorata, ni ratio), seulement « À épargner ». Sa synthèse
 dit son total, la part du revenu qu'il prend, et le **reste à vivre** une fois versée sa part du
@@ -179,10 +179,14 @@ deux jeux d'opérations distincts.
 
 ### Les projets
 
-La feuille `Projets` : des achats ponctuels en lignes, avec leur total. Rien à répartir.
+La feuille `Projets` : des achats ponctuels en lignes, avec leur total. Rien à répartir. Comme
+le budget et les dépenses, les projets sont **du commun ou d'une personne** : le même sous-menu
+choisit le périmètre, et un nouveau projet naît dans celui qui est choisi. Retirer une personne
+rapatrie ses projets avec le reste.
 
 Un projet peut avoir une **date cible** et s'**épargner dans le budget** : on choisit une
-catégorie à épargner (du commun ou d'un budget perso), où il devient une dépense comme une autre,
+catégorie à épargner **de son périmètre** (du commun pour un projet commun, du budget de la
+personne pour le sien), où il devient une dépense comme une autre,
 avec la répartition de sa catégorie. Sa mensualité est le reste à épargner divisé par les mois
 jusqu'à la cible (le mois en cours compris) ; elle se recalcule à chaque modification du projet,
 à partir du mois en cours, et s'arrête après la cible. On peut arrêter puis reprendre ; supprimer
@@ -291,7 +295,7 @@ categories: Category[]                    // les DÉPENSES (ancien nom gardé) :
 budgets: BudgetVersion[]                  // { categoryId, from, groupId, amount, note?, splitKeyId, save }
   amount: { kind: 'monthly'|'quarterly'|'semiannual'|'annual'|'biennial', value } | { kind: 'items', items } | { kind: 'none' }
     items: { label, amount, period? }[]   // period absente : mensuelle ; un ancien « 4 mois » (months4, weekly4) se lit mensuel ÷ 4
-projects: Project[]                       // { id, name, items: { id, label, amount }[], target?, budget?: { categoryId } }
+projects: Project[]                       // { id, name, items: { id, label, amount }[], target?, budget?: { categoryId }, owner? }
 transactions: Transaction[]               // les opérations des relevés : { id, date, label, detail?, amount, owner?, categoryId? | saving? | unplanned? | ignored?, manual? }
 rules: MatchRule[]                        // ce qu'on a appris : { key: '[p2:]MARCHAND' ou '[p2:]MARCHAND|centimes', categoryId? | saving? | ignored? }
 settings: { prorataWindowMonths: 12 }

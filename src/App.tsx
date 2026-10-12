@@ -100,7 +100,7 @@ export default function App() {
     revenus: <IncomesView state={shared.state} month={currentMonth()} missing={missing} update={shared.update} onEnterMonth={openIncome} />,
     depenses: <DepensesView state={shared.state} scope={scope} update={shared.update} />,
     calculatrice: <CalculatorView state={shared.state} month={currentMonth()} />,
-    projets: <ProjectsView state={shared.state} update={shared.update} />,
+    projets: <ProjectsView state={shared.state} scope={scope} update={shared.update} />,
     reglages: (
       <SettingsView
         state={shared.state}
@@ -149,9 +149,9 @@ export default function App() {
       </Slides>
 
       <Footer>
-        {/* Le sous-menu du budget et des dépenses, au-dessus du menu, près du pouce : il ne se
-            montre que sur ces deux écrans, dont il choisit le budget et le compte. */}
-        {!solo && (current === 'budget' || current === 'depenses') && <ScopeSelector state={shared.state} scope={scope} onChange={chooseScope} />}
+        {/* Le sous-menu du budget, des dépenses et des projets, au-dessus du menu, près du pouce :
+            il ne se montre que sur ces trois écrans, dont il choisit le périmètre. */}
+        {!solo && (current === 'budget' || current === 'depenses' || current === 'projets') && <ScopeSelector state={shared.state} scope={scope} onChange={chooseScope} />}
         <MenuBar className="app-menu" label="Sections" items={sections} active={current} onSelect={setSection} />
       </Footer>
 
