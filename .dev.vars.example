@@ -1,0 +1,5 @@
+# Copier en `.dev.vars` (ignoré par git) pour `npm run worker:dev`.
+# Laissées vides, le Worker local ne vérifie pas de jeton Access (il n'y a pas d'Access en local).
+# En production, ces deux variables se règlent dans le tableau de bord du Worker.
+ACCESS_TEAM_DOMAIN=
+ACCESS_AUD=

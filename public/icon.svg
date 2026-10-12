@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Budget">
+  <rect width="512" height="512" rx="112" fill="#222425" />
+  <!-- Le cadre : quatre coins de viseur, nets et discrets, qui tiennent l'argent dans ses limites. -->
+  <g fill="none" stroke="#5f6a73" stroke-width="20" stroke-linecap="square">
+    <path d="M112 168 V112 H168" />
+    <path d="M344 112 H400 V168" />
+    <path d="M400 344 V400 H344" />
+    <path d="M168 400 H112 V344" />
+  </g>
+  <!-- L'argent : l'euro, géométrique, au bleu de l'app. -->
+  <g fill="none" stroke="#a8e6ff" stroke-linecap="butt">
+    <path d="M320 192 A76 76 0 1 0 320 320" stroke-width="32" />
+    <path d="M164 234 H296 M164 278 H284" stroke-width="24" />
+  </g>
+</svg>

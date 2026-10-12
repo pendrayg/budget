@@ -1,0 +1,35 @@
+{
+  "name": "budget",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "deploy": "npm run build && wrangler deploy",
+    "worker:dev": "wrangler dev"
+  },
+  "dependencies": {
+    "@pendrayg/neomorphism-design-system": "^0.24.2",
+    "pdfjs-dist": "4.10.38",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "recharts": "^2.15.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260828.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8",
+    "wrangler": "^4.127.1"
+  },
+  "overrides": {
+    "react-is": "^19.3.0"
+  }
+}

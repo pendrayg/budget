@@ -1,0 +1,1177 @@
+/* Mise en page de Budget. Le design system — jetons, deux thèmes, règle de relief, échelle des
+   ombres, boutons, champs, sélecteurs, cases, messages, barre de menu, écran (Screen, Body,
+   Footer, Slides), sections dépliantes, icônes — vient du paquet partagé
+   @pendrayg/neomorphism-design-system, importé avant ce fichier (cf. main.tsx). Ici, ce qui
+   est propre à l'application : ses sections, ses cartes de chiffres, ses lignes de liste, ses
+   formulaires et sa feuille.
+
+   Comme Investment, l'application n'a pas de ZONES : les sections sont des blocs nus séparés par
+   le blanc, le contenu va d'un bord à l'autre du corps. La bordure fine ne subsiste que sous ce
+   qui flotte au-dessus du contenu (la feuille sur grand écran) et comme filet entre deux lignes. */
+
+html,
+body,
+#root {
+  margin: 0;
+  /* La hauteur de l'écran (cf. .ds-screen) : celle de l'écran entier en web app sur iPhone, où
+     iOS compte la page plus courte que l'écran (cf. lib/viewport.ts). La page elle-même ne
+     défile jamais : c'est le corps du DS qui défile. */
+  height: var(--app-height, 100%);
+  overflow: hidden;
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+/* Une action posée dans un message (le lien d'action du DS) descend d'un cran pour que le rehaut
+   de son relief ne voile pas la ligne du dessus. */
+.ds-notice > .ds-link {
+  margin-top: 8px;
+}
+
+.ds-notice {
+  padding-inline: 0;
+}
+
+/* ---------- Coquille ---------- */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  /* Le corps du DS coupe ce qui dépasse et ne garde sous son contenu que la largeur de son fondu
+     (8 px) : l'ombre du dernier bouton y était rognée. La place d'une ombre, sous la page. */
+  padding-bottom: var(--shadow-room);
+}
+
+/* Synchronisation : le point du DS, en haut à droite sous la barre d'état, par-dessus le corps. */
+.sync-indicator {
+  position: absolute;
+  top: env(safe-area-inset-top);
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.sync-indicator.is-on {
+  opacity: 1;
+}
+
+.app-menu {
+  --menu-grow: 2;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* Le sous-menu Commun / personnes, posé sur le menu : même largeur, l'écart d'une ombre. */
+.scope-selector {
+  max-width: 720px;
+  margin: 0 auto var(--shadow-room);
+}
+
+/* ---------- Sections ---------- */
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+
+.section-head h2,
+.section-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.section-head p {
+  margin: 2px 0 0;
+  color: var(--color-muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.section-head > div:first-child {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.section-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- Cartes de chiffres : un montant contre sa contrepartie ----------
+   Même format qu'Investment : la taille dit l'importance, les libellés tiennent dans la ligne. */
+
+.summary-card {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.summary-line-hero {
+  font-size: clamp(18px, 6.4cqi, 32px);
+}
+
+.summary-line-mid {
+  font-size: clamp(14px, 4.4cqi, 20px);
+}
+
+.summary-line-minor {
+  font-size: clamp(12px, 3.8cqi, 15px);
+  font-weight: 500;
+}
+
+.summary-figure {
+  white-space: nowrap;
+}
+
+/* La légende du graphique des revenus, dans la synthèse : le revenu moyen de chacun est souligné
+   d'un trait plein de sa couleur, son reste à vivre d'un pointillé, comme ses deux lignes. La
+   couleur vient de la personne (`--trait`), le texte reste à l'encre du texte. */
+.summary-underline {
+  padding-bottom: 3px;
+  border-bottom: 2px solid var(--trait);
+}
+
+.summary-underline-dashed {
+  border-bottom-style: dashed;
+}
+
+.summary-figure:last-child:not(:first-child) {
+  margin-left: auto;
+}
+
+/* La synthèse du budget : la part de chacun, le prénom au-dessus, la répartition dessous ; la
+   seconde personne calée à droite, prénom compris. */
+.summary-split {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.summary-person {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.summary-person + .summary-person {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* À trois personnes et plus : une ligne par personne, prénom à gauche, montant à droite. */
+.summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.summary-row .summary-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* La synthèse des revenus à trois et plus : part, moyenne, effort, reste, serrés sur la ligne. */
+.income-row {
+  flex-wrap: wrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.income-row .summary-name {
+  flex: 1 0 100%;
+}
+
+.income-row .summary-figure {
+  font-weight: 600;
+}
+
+.income-row-head .summary-figure {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.summary-row .summary-amount {
+  font-size: clamp(16px, 5.5cqi, 24px);
+}
+
+.summary-amount {
+  font-size: clamp(20px, 7cqi, 32px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.summary-share {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Le prénom au-dessus du chiffre, en petit : c'est le montant qu'on lit, le nom qui l'adresse. */
+.summary-name {
+  display: block;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+/* ---------- Sections du budget : des sections dépliantes du DS ----------
+   L'intitulé porte le nom et le total, calé à droite ; l'indication, le nombre de catégories et
+   la part de chacun. Le chevron dessous déplie les catégories. Entre deux sections, l'écart
+   sépare le chevron de l'une de l'intitulé de la suivante. */
+
+.budget-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.budget-section .ds-disclosure-titles {
+  flex: 1 1 auto;
+}
+
+/* Dans une catégorie dépliée : ses réglages, à l'écart de ses dépenses ; après elles, le bouton
+   qui en ajoute une. */
+.group-settings {
+  margin-bottom: 20px;
+}
+
+.group-add {
+  margin-top: 20px;
+}
+
+/* Trois colonnes : montant à gauche, titre au centre, montant à droite ; dessous, la répartition
+   de chacun et le nombre de catégories. Les colonnes extrêmes se partagent la place à égalité,
+   si bien que le titre reste au milieu quelle que soit la longueur des montants. */
+.budget-section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px 10px;
+}
+
+.budget-section-heading > :nth-child(3n + 1) {
+  text-align: left;
+}
+
+.budget-section-heading > :nth-child(3n) {
+  text-align: right;
+}
+
+/* À trois personnes et plus : sous le titre et le total, la part de chacun, en ligne qui
+   s'enroule. */
+.budget-section-people {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 14px;
+  font-size: clamp(12px, 3.8cqi, 15px);
+  font-weight: 500;
+}
+
+.budget-section-name {
+  text-align: center;
+}
+
+.budget-section-sub {
+  color: var(--color-muted);
+  font-size: 12.5px;
+  font-weight: 400;
+}
+
+.budget-section-total {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- Lignes en boutons sections dépliantes ----------
+   Une catégorie, un mois de revenus, un projet : un bouton large du DS, dont l'en-tête dit la ligne
+   (nom et montant) et dont le dépli porte son formulaire. L'intitulé prend la taille d'une ligne,
+   pas celle d'un titre de section. */
+.line-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.line-button .ds-disclosure-title {
+  font-size: 14px;
+}
+
+.line-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.line-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* L'icône d'une catégorie, devant son nom : une icône Nerd Font, à la taille du texte. */
+/* Une icône que l'app dessine se tient comme un glyphe, à la couleur du texte : un em de haut, et
+   la largeur de ses proportions (le drapeau, plus large que haut, a ainsi la hauteur d'une capitale). */
+.app-glyph {
+  display: inline-block;
+  height: 1em;
+  fill: currentColor;
+  vertical-align: -0.125em;
+}
+
+.line-icon {
+  margin-right: 10px;
+  font-size: 1.15em;
+  vertical-align: -0.12em;
+}
+
+/* Le choix d'une icône : le bouton qui ouvre le sélecteur, avec l'icône choisie, et sa poubelle. */
+/* Un mois (cf. MonthInput) : un champ du DS qui le dit, et par-dessus le champ natif, transparent,
+   qui reçoit le toucher et ouvre le sélecteur d'iOS. Engagé, le champ du DS se creuse. */
+.month-input {
+  position: relative;
+  min-width: 0;
+}
+
+.month-display {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.month-placeholder {
+  color: color-mix(in srgb, var(--color-muted) 70%, transparent);
+}
+
+.month-input:focus-within .month-display {
+  --sink: 1;
+  transition: --sink 1s var(--sink-ease);
+}
+
+.month-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  /* 16 px : en deçà, iOS zoomerait sur le champ en l'ouvrant. */
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* La date cible et sa corbeille, sur une ligne. */
+.target-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.target-field > .month-input {
+  flex: 1 1 auto;
+}
+
+.icon-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-preview {
+  font-size: 1.3em;
+}
+
+/* La grille du sélecteur : des boutons carrés, autant que la largeur en tient. */
+.icon-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--control-height), 1fr));
+  gap: 14px;
+}
+
+.icon-choice.ds-text {
+  width: 100%;
+  padding: 0;
+  height: var(--control-height);
+  font-size: 22px;
+}
+
+/* Un mois de revenus : le revenu de chacun de part et d'autre du mois, comme la synthèse. Les
+   colonnes extrêmes se partagent la place à égalité : le mois reste au milieu. */
+.income-cells {
+  flex: 1 1 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+/* Un mois de revenus pour une personne seule, ou à trois et plus : le mois à gauche, le montant
+   (ou le total du foyer) à droite ; le détail par personne passe en indice. */
+.income-cells-row {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Dans les réglages : le libellé d'une personne et, à droite, de quoi la retirer. */
+.person-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.income-cells > :first-child {
+  text-align: left;
+}
+
+.income-cells > :last-child {
+  text-align: right;
+}
+
+.income-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+/* ---------- Formulaires ---------- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label,
+.field-label {
+  color: var(--color-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.field > .ds-input,
+.field > .ds-select {
+  width: 100%;
+}
+
+/* Le sélecteur de périodicité tient entre le libellé et le champ ; il garde la place de son ombre. */
+.field > .ds-flat-selector {
+  margin: 6px 0 10px;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.toolbar > .field {
+  flex: 1 1 150px;
+  min-width: 0;
+}
+
+.toolbar-end {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Un choix de la sélection du DS (Selectable + SelectToggle) : le texte à gauche, le bouton à
+   bascule calé à droite ; le bloc s'enfonce quand il est choisi. */
+.choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.choice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.choice > .ds-button {
+  flex: 0 0 auto;
+}
+
+/* Les items d'un montant ou les lignes d'un revenu : libellé, montant, retrait. */
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Les lignes d'un projet : un montant deux fois moins large, le libellé prend le reste. */
+.item-row-narrow {
+  grid-template-columns: minmax(0, 4fr) minmax(0, 1fr) auto;
+}
+
+/* Les items d'une dépense ont en plus leur bouton de périodicité, d'une largeur fixe : celle de
+   « 2 ans » ou « Trim. », ses plus longues valeurs. */
+.item-row-period {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) var(--period-width) auto;
+  --period-width: 72px;
+}
+
+.item-row .ds-input {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Le bouton de périodicité d'un item garde sa largeur d'une valeur à l'autre, et les lignes la
+   même colonne : passer à « 2 ans » ne pousse rien. */
+.item-row .period-button {
+  width: 100%;
+  justify-content: center;
+  padding-inline: 0;
+}
+
+/* La complétion d'un projet épargné : une piste creuse, remplie de ce qui est déjà de côté. */
+.project-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.project-progress {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.project-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+.project-saving .ds-button {
+  align-self: flex-start;
+}
+
+.items-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+}
+
+.history-row:last-child {
+  border-bottom: 0;
+}
+
+.history-row > span:first-child {
+  flex: 1;
+  text-transform: capitalize;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px var(--shadow-room);
+  padding-top: 6px;
+}
+
+.form-actions {
+  flex-wrap: nowrap;
+}
+
+.form-actions .ds-button[type='submit'] {
+  flex: 1 1 auto;
+}
+
+/* La suppression se tient à droite de la création, à sa taille de bouton-icône… */
+.form-actions .ds-delete {
+  flex: 0 0 auto;
+}
+
+/* … et seule au bas d'une fiche (une catégorie, un projet, qui s'enregistrent d'eux-mêmes), elle
+   prend toute la largeur. */
+.form-actions .ds-delete:only-child {
+  flex: 1 1 auto;
+}
+
+/* Une action seule en tête d'écran : sur toute la largeur, comme dans un en-tête de section. */
+.form-danger {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px var(--shadow-room);
+}
+
+/* ---------- Réglages ---------- */
+
+/* Les groupes de réglages, des boutons sections dépliantes : l'écart laisse aux reliefs de quoi
+   s'étaler. */
+.reglages-groupes {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.reglages-groupes .ds-reveal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.key-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.key-editor h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.storage-state {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* ---------- Rappels ---------- */
+
+.reminder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.reminder-text {
+  flex: 1 1 240px;
+}
+
+/* Le message du DS n'a pas de ton d'alerte : celui-ci prend la couleur de danger du DS, pour dire
+   que les montants affichés dessous ne sont pas les vrais tant que des revenus manquent. */
+.ds-notice.notice-danger {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0 0 20px;
+}
+
+.ds-notice.notice-danger strong {
+  flex: 1 1 100%;
+  color: var(--color-danger);
+}
+
+/* Les couleurs qu'on peut donner à une personne (src/lib/colors.ts), une teinte par thème. Le DS
+   est sombre par défaut, clair par préférence ou forçage : mêmes sélecteurs que ses jetons. */
+:root {
+  --c-blue: #3987e5;
+  --c-orange: #d95926;
+  --c-aqua: #199e70;
+  --c-yellow: #c98500;
+  --c-pink: #d55181;
+  --c-green: #008300;
+  --c-violet: #9085e9;
+  --c-red: #e66767;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --c-blue: #2a78d6;
+    --c-orange: #eb6834;
+    --c-aqua: #1baf7a;
+    --c-yellow: #eda100;
+    --c-pink: #e87ba4;
+    --c-violet: #6250d6;
+    --c-red: #e34948;
+  }
+}
+
+:root[data-theme='light'] {
+  --c-blue: #2a78d6;
+  --c-orange: #eb6834;
+  --c-aqua: #1baf7a;
+  --c-yellow: #eda100;
+  --c-pink: #e87ba4;
+  --c-violet: #6250d6;
+  --c-red: #e34948;
+}
+
+/* ---------- Graphique : l'évolution du total ----------
+   Le DS n'a pas de cadre de graphique : une hauteur fixe, et l'infobulle en panneau flottant,
+   délimitée comme ce qui couvre le contenu (bordure fine, pas d'ombre). Le relief de la ligne
+   vient du DS (`ChartFilters`, rendu une fois dans App). */
+
+.chart-body {
+  width: 100%;
+  height: 200px;
+}
+
+/* Le graphique va d'un bord à l'autre du contenu : le premier point, posé sur le bord, déborde de
+   son rayon plutôt que d'être coupé en deux. */
+.chart-body svg {
+  overflow: visible;
+}
+
+.chart-tooltip {
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--neu-radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.chart-tooltip-title {
+  margin-bottom: 5px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+/* Le choix de la couleur d'une personne (Réglages) : des pastilles carrées, à la hauteur d'une
+   commande, la couleur en disque au centre. */
+.color-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.color-swatch.ds-text {
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0;
+  justify-content: center;
+}
+
+.color-dot {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+/* Le trait de couleur d'une personne, à côté de son nom dans l'infobulle. */
+.chart-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.chart-tooltip-person + .chart-tooltip-person {
+  margin-top: 6px;
+}
+
+.chart-tooltip-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+}
+
+.chart-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Écran vide ---------- */
+
+.empty {
+  padding: 36px 0;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.empty h2 {
+  margin: 0 0 6px;
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.empty p {
+  margin: 0 auto;
+  max-width: 420px;
+  font-size: 14px;
+}
+
+.empty > .ds-button {
+  margin-top: 18px;
+}
+
+/* ---------- Code d'accès ---------- */
+
+.gate {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 360px;
+  margin: 15vh auto 0;
+}
+
+.gate h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.gate p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ---------- Calculatrice ---------- */
+
+/* La calculatrice occupe toute la hauteur du corps : le résultat en haut, les commandes poussées
+   en bas, près du pouce. Sa page s'étire à la hauteur du corps (marge comprise, pour ne pas le
+   faire défiler) ; plus haute que l'écran, elle défile comme les autres. */
+.page:has(> .calc-view) {
+  box-sizing: border-box;
+  min-height: 100%;
+}
+
+.calc-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
+.calc-result {
+  margin-top: 28px;
+}
+
+.calc-inputs {
+  margin-top: auto;
+  padding-top: 28px;
+}
+
+/* ---------- Feuille : <dialog> natif ----------
+   Le DS n'a pas de feuille : plein écran sur téléphone, même fond que l'appli, sans relief. Son
+   bouton de fermeture est le bouton-icône du DS. */
+
+.sheet {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet:not([open]) {
+  display: none;
+}
+
+.sheet::backdrop {
+  background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(12px + env(safe-area-inset-top)) var(--shadow-room) 8px;
+  flex: 0 0 auto;
+}
+
+.sheet-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+/* Les commandes y ont la place de leur ombre sur les côtés (un défilement rogne ce qui dépasse). */
+.sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px var(--shadow-room) calc(var(--shadow-room) + env(safe-area-inset-bottom));
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 768px) {
+  .sheet {
+    width: min(640px, calc(100% - 48px));
+    height: auto;
+    max-height: calc(100dvh - 48px);
+    margin: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--neu-radius-lg);
+  }
+
+  .sheet-head {
+    padding: 18px var(--shadow-room) 12px;
+  }
+}
+
+/* ---------- Téléphone ---------- */
+
+@media (max-width: 700px) {
+  .page {
+    gap: 24px;
+  }
+
+  .section-head > .ds-button {
+    width: 100%;
+  }
+
+  .toolbar-end .ds-button {
+    flex: 1 1 auto;
+  }
+
+  .form-actions .ds-button[type='submit'] {
+    flex: 1 1 auto;
+  }
+}
+
+/* ---------- Dépenses : l'état des lieux d'après les relevés ----------
+   Un mois déplié : ce qui reste à ranger, puis chaque catégorie et ses dépenses, le dépensé face
+   au budgété. Une opération tient sur deux lignes : sa date, son libellé et son montant, puis où
+   elle est rangée, le sélecteur sur toute la largeur. */
+
+.month-name::first-letter {
+  text-transform: uppercase;
+}
+
+.spending-month {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.spending-block h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.spending-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Dans le bloc Épargne : les catégories à épargner, sous le versement du mois. */
+.savings-groups {
+  margin-top: 18px;
+}
+
+.spend-versus {
+  font-weight: 600;
+}
+
+.spend-versus .muted {
+  font-weight: 400;
+}
+
+/* L'écart au budget : en rouge au-delà, en vert en deçà. Le DS n'a pas de vert : une teinte
+   lisible sur chaque fond, plus claire sur le fond sombre. */
+:root {
+  --spend-under: #5cc77a;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --spend-under: #1b7f3b;
+  }
+}
+
+:root[data-theme='light'] {
+  --spend-under: #1b7f3b;
+}
+
+.spend-over {
+  color: var(--color-danger);
+}
+
+.spend-under {
+  color: var(--spend-under);
+}
+
+.tx-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tx-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 14px;
+}
+
+.tx-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tx-row .tx-place {
+  grid-column: 1 / -1;
+}
+
+/* L'icône d'une dépense dans le choix de rangement : une colonne fixe, pour que les noms
+   s'alignent, avec ou sans icône. */
+.placement-icon {
+  display: inline-block;
+  width: 1.2em;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+.placement-of {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.placement-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.placement-choice.ds-text,
+.tx-row .tx-place.ds-text {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 12px;
+  /* Un nom long passe à la ligne plutôt que de déborder du bouton. */
+  height: auto;
+  min-height: var(--control-height);
+  padding-block: 8px;
+  white-space: normal;
+  text-align: left;
+}

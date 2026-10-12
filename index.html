@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Le budget commun du couple : revenus, prorata, budgets par catégorie et calculatrice de répartition." />
+    <meta name="color-scheme" content="dark light" />
+    <!-- Barre d'outils assortie au thème SERVI (= --color-bg de chaque thème). Le sombre vient en
+         premier : un UA qui ignore l'attribut `media` retient la première balise. -->
+    <meta name="theme-color" content="#222425" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Budget" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <!-- Safari ne prend pas de SVG pour l'écran d'accueil : un PNG carré, iOS arrondit lui-même. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Budget</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

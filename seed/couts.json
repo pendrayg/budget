@@ -1,0 +1,786 @@
+{
+  "app": "budget",
+  "schema": 1,
+  "source": "Exemple fictif",
+  "state": {
+    "schema": 1,
+    "people": [
+      {
+        "id": "p1",
+        "name": "Alice"
+      },
+      {
+        "id": "p2",
+        "name": "Bruno"
+      }
+    ],
+    "splitKeys": [
+      {
+        "id": "prorata",
+        "kind": "prorata"
+      },
+      {
+        "id": "k-40-60",
+        "kind": "fixed",
+        "name": "40 / 60",
+        "shares": [
+          {
+            "from": "2000-01",
+            "byPerson": {
+              "p1": 0.4,
+              "p2": 0.6
+            }
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      }
+    ],
+    "incomes": [
+      {
+        "month": "2025-10",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2050
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2025-10",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2900
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2025-11",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2050
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2025-11",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2900
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2025-12",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2050
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2025-12",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 4200
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-01",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2100
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-01",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2950
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-02",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2100
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-02",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2950
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-03",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2100
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-03",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2950
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-04",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2100
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-04",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2950
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-05",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2100
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-05",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2950
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-06",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2100
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-06",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2950
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-07",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2150
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-07",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2950
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-08",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2150
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-08",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2950
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-09",
+        "personId": "p1",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2150
+          },
+          {
+            "label": "Transport",
+            "amount": 45
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "month": "2026-09",
+        "personId": "p2",
+        "components": [
+          {
+            "label": "Salaire",
+            "amount": 2950
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      }
+    ],
+    "categories": [
+      {
+        "id": "c01",
+        "name": "Prêt immo",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c02",
+        "name": "Assurance habitation",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c03",
+        "name": "Assurance voiture",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c04",
+        "name": "Assurance scooter",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c05",
+        "name": "Charges de copropriété",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c06",
+        "name": "Electricité",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c07",
+        "name": "Eau",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c08",
+        "name": "Internet + tels",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c09",
+        "name": "Courses",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c10",
+        "name": "Taxe foncière",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c11",
+        "name": "Resto",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c12",
+        "name": "Cantine",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c13",
+        "name": "Essence",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c14",
+        "name": "Shopping",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c15",
+        "name": "Vêtements",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c16",
+        "name": "Coiffeur",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c17",
+        "name": "Gestionnaire de mots de passe",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c18",
+        "name": "Mutuelle",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c19",
+        "name": "Streaming",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c20",
+        "name": "Assistance dépannage",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c21",
+        "name": "Centre de loisirs",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "c22",
+        "name": "Vacances",
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      }
+    ],
+    "budgets": [
+      {
+        "categoryId": "c01",
+        "from": "2026-10",
+        "splitKeyId": "k-40-60",
+        "amount": {
+          "kind": "monthly",
+          "value": 1200
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c02",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 35
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c03",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "annual",
+          "value": 540
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c04",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "annual",
+          "value": 240
+        },
+        "save": true,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c05",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "quarterly",
+          "value": 150
+        },
+        "save": true,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c06",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 110
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c07",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 40
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c08",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "items",
+          "items": [
+            {
+              "label": "Internet",
+              "amount": 30
+            },
+            {
+              "label": "Tels",
+              "amount": 20
+            }
+          ]
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c09",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 650
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c10",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "annual",
+          "value": 1200
+        },
+        "save": true,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c11",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 120
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z",
+        "note": "Constaté : 480 € sur 4 mois, soit 120 €/mois"
+      },
+      {
+        "categoryId": "c12",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 90
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c13",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 180
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c14",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 150
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c15",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 80
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c16",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 40
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c17",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "annual",
+          "value": 36
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c18",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 60
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c19",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "items",
+          "items": [
+            {
+              "label": "Films",
+              "amount": 15
+            },
+            {
+              "label": "Musique",
+              "amount": 11
+            }
+          ]
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c20",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "annual",
+          "value": 60
+        },
+        "save": true,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c21",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "monthly",
+          "value": 70
+        },
+        "save": false,
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "categoryId": "c22",
+        "from": "2026-10",
+        "splitKeyId": "prorata",
+        "amount": {
+          "kind": "annual",
+          "value": 3000
+        },
+        "save": true,
+        "updatedAt": "2026-09-30T12:00:00.000Z",
+        "note": "Deux semaines l’été, un week-end l’hiver"
+      }
+    ],
+    "projects": [
+      {
+        "id": "pr1",
+        "name": "Vélo électrique",
+        "items": [
+          {
+            "id": "pr1a",
+            "label": "Vélo",
+            "amount": 1400
+          },
+          {
+            "id": "pr1b",
+            "label": "Antivol",
+            "amount": 60
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "pr2",
+        "name": "Bibliothèque",
+        "items": [
+          {
+            "id": "pr2a",
+            "label": "Étagères x3",
+            "amount": 240
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      },
+      {
+        "id": "pr3",
+        "name": "Jardin",
+        "items": [
+          {
+            "id": "pr3a",
+            "label": "Tondeuse",
+            "amount": 180
+          },
+          {
+            "id": "pr3b",
+            "label": "Graines",
+            "amount": 25
+          },
+          {
+            "id": "pr3c",
+            "label": "Arrosoir",
+            "amount": 15
+          }
+        ],
+        "updatedAt": "2026-09-30T12:00:00.000Z"
+      }
+    ],
+    "settings": {
+      "prorataWindowMonths": 12
+    }
+  },
+  "note": "Un foyer FICTIF (Alice et Bruno), aux revenus et au budget inventés : revenus d’octobre 2025 à septembre 2026, budget saisi en octobre 2026. Sert aux tests et d’exemple à restaurer."
+}

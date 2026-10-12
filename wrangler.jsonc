@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "budget",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-01-15",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // Le document du couple. Pas d'`id` ici : l'espace KV est créé et lié au Worker dans le
+  // tableau de bord Cloudflare, sous le nom `BUDGET_KV`, et `wrangler deploy` HÉRITE de ce lien
+  // existant au lieu de le remplacer. Un `id` faux ferait échouer le déploiement ; l'omettre sur
+  // un Worker sans ce lien ferait créer un nouvel espace, vide.
+  "kv_namespaces": [
+    {
+      "binding": "BUDGET_KV"
+    }
+  ],
+  // Les variables d'Access (`ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`) se règlent dans le tableau de
+  // bord, pas ici : sans cette ligne, chaque `wrangler deploy` les effacerait.
+  "keep_vars": true,
+  "observability": {
+    "enabled": true
+  }
+}
