@@ -11,6 +11,9 @@
  * secondes. Pour deux personnes, c'est un cas rare que la fusion par entité du client absorbe ;
  * les versions précédentes sont en outre gardées trente jours (`state:prev:<n>`) en filet.
  *
+ * L'espace KV est facultatif : sans lien `BUDGET_KV`, le Worker sert le front et répond 501 sur
+ * `/api/*`. Le front y lit « pas de sauvegarde serveur » et garde le document sur le téléphone.
+ *
  * L'accès passe par Cloudflare Access : la règle (domaine d'e-mail) est posée devant le Worker
  * et c'est elle qui authentifie. Quand `ACCESS_TEAM_DOMAIN` et `ACCESS_AUD` sont renseignés, le
  * Worker vérifie EN PLUS le jeton qu'Access joint à chaque requête (cf. `access.ts`) : une requête
@@ -23,7 +26,8 @@ import { readAccessToken, verifyAccessToken } from './access'
 
 export interface Env {
   ASSETS: Fetcher
-  BUDGET_KV: KVNamespace
+  /** Facultatif : sans lui, pas de sauvegarde serveur, le document reste sur chaque appareil. */
+  BUDGET_KV?: KVNamespace
   /** `votre-equipe.cloudflareaccess.com` : le domaine d'équipe Zero Trust. */
   ACCESS_TEAM_DOMAIN?: string
   /** L'étiquette d'audience (AUD) de l'application Access. */
@@ -69,19 +73,19 @@ async function gate(request: Request, env: Env): Promise<Response | null> {
   }
 }
 
-async function readStored(env: Env): Promise<Stored | null> {
-  const stored = await env.BUDGET_KV.get<Stored>(STATE_KEY, 'json')
+async function readStored(kv: KVNamespace): Promise<Stored | null> {
+  const stored = await kv.get<Stored>(STATE_KEY, 'json')
   if (!stored || typeof stored.version !== 'number') return null
   return stored
 }
 
-async function handleGet(env: Env): Promise<Response> {
-  const stored = await readStored(env)
+async function handleGet(kv: KVNamespace): Promise<Response> {
+  const stored = await readStored(kv)
   if (!stored) return json({ error: 'Aucun document' }, 404)
   return json({ version: stored.version, savedAt: stored.savedAt, state: sanitizeState(stored.state) })
 }
 
-async function handlePut(request: Request, env: Env, now: Date): Promise<Response> {
+async function handlePut(request: Request, kv: KVNamespace, now: Date): Promise<Response> {
   const declared = Number(request.headers.get('content-length'))
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) return json({ error: 'Document trop volumineux' }, 413)
 
@@ -97,7 +101,7 @@ async function handlePut(request: Request, env: Env, now: Date): Promise<Respons
   const { version, state } = body as { version?: unknown; state?: unknown }
   if (typeof version !== 'number' || !Number.isInteger(version) || version < 0) return json({ error: 'Version manquante' }, 400)
 
-  const stored = await readStored(env)
+  const stored = await readStored(kv)
   const currentVersion = stored?.version ?? 0
   if (version !== currentVersion) {
     return json(
@@ -111,15 +115,15 @@ async function handlePut(request: Request, env: Env, now: Date): Promise<Respons
   const next: Stored = { version: currentVersion + 1, savedAt: now.toISOString(), state: sanitizeState(state) }
   // La version remplacée est gardée à part avant d'écrire la nouvelle : un filet, pas une histoire.
   if (stored) {
-    await env.BUDGET_KV.put(`${PREVIOUS_PREFIX}${stored.version}`, JSON.stringify(stored), { expirationTtl: PREVIOUS_TTL_S })
+    await kv.put(`${PREVIOUS_PREFIX}${stored.version}`, JSON.stringify(stored), { expirationTtl: PREVIOUS_TTL_S })
   }
-  await env.BUDGET_KV.put(STATE_KEY, JSON.stringify(next))
+  await kv.put(STATE_KEY, JSON.stringify(next))
   return json({ version: next.version, savedAt: next.savedAt })
 }
 
 /** Les versions précédentes encore gardées, les plus récentes d'abord : de quoi restaurer à la main. */
-async function handleVersions(env: Env): Promise<Response> {
-  const list = await env.BUDGET_KV.list({ prefix: PREVIOUS_PREFIX })
+async function handleVersions(kv: KVNamespace): Promise<Response> {
+  const list = await kv.list({ prefix: PREVIOUS_PREFIX })
   const versions = list.keys
     .map((key) => Number(key.name.slice(PREVIOUS_PREFIX.length)))
     .filter((n) => Number.isInteger(n))
@@ -127,9 +131,9 @@ async function handleVersions(env: Env): Promise<Response> {
   return json({ versions })
 }
 
-async function handleVersion(env: Env, requested: string): Promise<Response> {
+async function handleVersion(kv: KVNamespace, requested: string): Promise<Response> {
   if (!/^\d+$/.test(requested)) return json({ error: 'Version invalide' }, 400)
-  const stored = await env.BUDGET_KV.get<Stored>(`${PREVIOUS_PREFIX}${requested}`, 'json')
+  const stored = await kv.get<Stored>(`${PREVIOUS_PREFIX}${requested}`, 'json')
   if (!stored) return json({ error: 'Version inconnue ou expirée' }, 404)
   return json({ version: stored.version, savedAt: stored.savedAt, state: sanitizeState(stored.state) })
 }
@@ -142,21 +146,25 @@ export default {
       const refused = await gate(request, env)
       if (refused) return refused
 
+      const kv = env.BUDGET_KV
+      // Pas d'espace KV lié : une réponse que le front reconnaît, pas une panne.
+      if (!kv) return json({ error: 'Pas de sauvegarde serveur' }, 501)
+
       if (url.pathname === '/api/state') {
-        if (request.method === 'GET') return handleGet(env)
-        if (request.method === 'PUT') return handlePut(request, env, new Date())
+        if (request.method === 'GET') return handleGet(kv)
+        if (request.method === 'PUT') return handlePut(request, kv, new Date())
         return json({ error: 'Méthode non autorisée' }, 405)
       }
 
       if (url.pathname === '/api/versions') {
         if (request.method !== 'GET') return json({ error: 'Méthode non autorisée' }, 405)
-        return handleVersions(env)
+        return handleVersions(kv)
       }
 
       const version = /^\/api\/versions\/([^/]+)$/.exec(url.pathname)
       if (version) {
         if (request.method !== 'GET') return json({ error: 'Méthode non autorisée' }, 405)
-        return handleVersion(env, version[1])
+        return handleVersion(kv, version[1])
       }
 
       return json({ error: 'Route inconnue' }, 404)

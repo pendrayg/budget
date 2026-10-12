@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Conflict, SessionExpired, fetchState, putState } from '../lib/api'
+import { Conflict, NoStorage, SessionExpired, fetchState, putState } from '../lib/api'
 import { mergeStates } from '../lib/merge'
 import { defaultState, parseEnvelope, sanitizeState } from '../lib/state'
 import type { Envelope, State } from '../lib/types'
@@ -24,6 +24,8 @@ export type SyncStatus =
   | 'saving'
   /** Le serveur n'a pas répondu : les changements attendent sur ce téléphone. */
   | 'offline'
+  /** Le Worker n'a pas d'espace KV : le document ne vit que sur ce téléphone. */
+  | 'local'
   /** Le serveur a répondu autre chose qu'une session expirée ou un conflit. */
   | 'error'
 
@@ -70,6 +72,9 @@ function saveMirror(mirror: Mirror): void {
  * — fusionné avec les changements locaux non envoyés, s'il y en a. Toute modification part
  * après une demi-seconde de calme ; un conflit (409) se fusionne et repart ; une panne laisse
  * le local marqué « à envoyer ». On n'envoie JAMAIS un local périmé sans l'avoir fusionné.
+ *
+ * Sans espace KV (501), le miroir local devient le seul document : on n'envoie plus rien, et
+ * chaque retour au premier plan revérifie, au cas où un espace aurait été lié depuis.
  */
 export function useSharedState(onSessionExpired: () => void): SharedState {
   const [mirror, setMirror] = useState<Mirror>(() => loadMirror() ?? { version: 0, dirty: false, state: defaultState() })
@@ -81,6 +86,8 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const verifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inFlight = useRef(false)
+  /** Le Worker a dit qu'il n'a pas d'espace KV : rien à envoyer jusqu'à la prochaine lecture. */
+  const noStorage = useRef(false)
   const expiredRef = useRef(onSessionExpired)
   expiredRef.current = onSessionExpired
 
@@ -104,6 +111,11 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
     setStatus('loading')
     try {
       const remote = await fetchState()
+      if (noStorage.current) {
+        // Un espace KV vient d'être lié : ce qui attendait sur le téléphone repart.
+        noStorage.current = false
+        if (mirrorRef.current.dirty) setMirror((m) => ({ ...m }))
+      }
       if (remote) adopt(remote)
       else if (mirrorRef.current.version > 0) {
         // Le serveur a été vidé (nouvel espace KV) : ce téléphone a le document, il le renvoie.
@@ -112,7 +124,10 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
       setStatus('idle')
     } catch (error) {
       if (error instanceof SessionExpired) expiredRef.current()
-      else setStatus('offline')
+      else if (error instanceof NoStorage) {
+        noStorage.current = true
+        setStatus('local')
+      } else setStatus('offline')
     } finally {
       inFlight.current = false
     }
@@ -121,7 +136,7 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
   const push = useCallback(async () => {
     if (inFlight.current) return
     const sending = mirrorRef.current
-    if (!sending.dirty) return
+    if (!sending.dirty || noStorage.current) return
     inFlight.current = true
     setStatus('saving')
     try {
@@ -143,6 +158,9 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
         adopt(error.current)
         setMirror((m) => ({ ...m, dirty: true }))
         setStatus('idle')
+      } else if (error instanceof NoStorage) {
+        noStorage.current = true
+        setStatus('local')
       } else {
         setStatus('offline')
       }
@@ -175,7 +193,7 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
   useEffect(() => {
     const onHide = () => {
       const m = mirrorRef.current
-      if (m.dirty) void putState(m.version, m.state, { keepalive: true }).catch(() => {})
+      if (m.dirty && !noStorage.current) void putState(m.version, m.state, { keepalive: true }).catch(() => {})
     }
     window.addEventListener('pagehide', onHide)
     return () => window.removeEventListener('pagehide', onHide)
@@ -190,7 +208,7 @@ export function useSharedState(onSessionExpired: () => void): SharedState {
   }, [])
 
   const sync = useCallback(() => {
-    if (mirrorRef.current.dirty) void push()
+    if (mirrorRef.current.dirty && !noStorage.current) void push()
     else void pull()
   }, [push, pull])
 

@@ -43,6 +43,7 @@ export default function SettingsView({
     idle: dirty ? 'Des modifications attendent d’être envoyées.' : `À jour avec le serveur (version ${version}).`,
     loading: 'Lecture du serveur…',
     saving: 'Envoi en cours…',
+    local: 'Pas de sauvegarde serveur : les données restent sur ce téléphone. Téléchargez une sauvegarde de temps en temps.',
     offline: 'Serveur injoignable : les modifications restent sur ce téléphone et partiront plus tard.',
     error: 'Le serveur a répondu une erreur.',
   }

@@ -255,6 +255,10 @@ ligne ; le serveur fait foi.
 - Hors ligne, les changements restent sur le téléphone, marqués « à envoyer », et partent au
   prochain geste ou retour au premier plan. Un onglet quitté envoie ce qui attend
   (`keepalive`).
+- L'espace KV est **facultatif**. Sans lien `BUDGET_KV`, le Worker répond 501 sur `/api/*` :
+  l'app le lit comme « pas de sauvegarde serveur », garde le document dans le miroir local et
+  n'envoie plus rien. Les téléphones ne partagent alors plus le document. Au retour au premier
+  plan, l'app revérifie : un espace lié depuis reçoit ce qui attendait.
 - Sauvegarde (« Télécharger ») et restauration (« Restaurer ») JSON dans les réglages. Une
   restauration garde les dates de la sauvegarde.
 
@@ -324,10 +328,12 @@ de 41,32 % / 58,68 % pour octobre 2026.
 
 ## Déploiement sur Cloudflare
 
-1. L'espace KV : le créer (tableau de bord ou `npx wrangler kv namespace create BUDGET_KV`) et le
+1. L'espace KV (facultatif, mais c'est lui qui partage le document entre téléphones) : le créer (tableau de bord ou `npx wrangler kv namespace create BUDGET_KV`) et le
    lier au Worker sous le nom de binding **`BUDGET_KV`**. `wrangler.jsonc` ne porte pas d'`id` :
    `wrangler deploy` hérite du lien posé sur le Worker. Pour figer l'espace dans le code, y
    ajouter `"id": "<identifiant>"`.
+   Pour s'en passer, retirer le bloc `kv_namespaces` de `wrangler.jsonc` : sinon `wrangler
+   deploy` crée un espace vide si le Worker n'en a pas.
 2. Cloudflare Access : une application Access sur l'adresse du Worker, avec une règle « Emails
    ending in » votre domaine, et une durée de session longue (un mois). Puis, dans les
    variables du Worker (Paramètres → Variables et secrets), `ACCESS_TEAM_DOMAIN`

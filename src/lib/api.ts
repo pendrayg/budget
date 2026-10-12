@@ -3,8 +3,9 @@ import type { Envelope, State } from './types'
 
 /**
  * Le client de `/api/state`. Des issues nommées plutôt qu'un code HTTP à interpréter partout :
- * la réponse, « pas encore de document », « session Access à refaire », et le conflit de version
- * qui rend le document courant pour qu'on fusionne.
+ * la réponse, « pas encore de document », « session Access à refaire », « pas de sauvegarde
+ * serveur » (Worker sans espace KV), et le conflit de version qui rend le document courant pour
+ * qu'on fusionne.
  *
  * L'authentification est celle de Cloudflare Access, portée par son cookie : rien à joindre ici.
  * Une session expirée ne se voit pas comme un refus mais comme une REDIRECTION vers la page de
@@ -29,6 +30,13 @@ export class SessionExpired extends ApiError {
   }
 }
 
+/** Le Worker n'a pas d'espace KV : le document ne vit que sur l'appareil. */
+export class NoStorage extends ApiError {
+  constructor() {
+    super(501, 'Pas de sauvegarde serveur')
+  }
+}
+
 export class Conflict extends ApiError {
   constructor(readonly current: Envelope) {
     super(409, 'Modifié depuis un autre appareil')
@@ -44,6 +52,7 @@ function sessionLost(response: Response): boolean {
 
 async function failure(response: Response): Promise<ApiError> {
   if (sessionLost(response)) return new SessionExpired()
+  if (response.status === 501) return new NoStorage()
   let message = `HTTP ${response.status}`
   try {
     const body = (await response.json()) as { error?: unknown }

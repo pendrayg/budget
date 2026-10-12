@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, SessionExpired, fetchState, putState } from './api'
+import { ApiError, NoStorage, SessionExpired, fetchState, putState } from './api'
 import { defaultState } from './state'
 
 function respond(response: Partial<Response> & { status: number }) {
@@ -34,5 +34,13 @@ describe('session Cloudflare Access', () => {
     respond({ status: 404 })
     await fetchState()
     expect(vi.mocked(fetch).mock.calls[0][1]).toMatchObject({ redirect: 'manual' })
+  })
+})
+
+describe('sans sauvegarde serveur', () => {
+  it('lit un 501 comme l’absence d’espace KV, en lecture comme en écriture', async () => {
+    respond({ status: 501 })
+    await expect(fetchState()).rejects.toBeInstanceOf(NoStorage)
+    await expect(putState(0, defaultState())).rejects.toBeInstanceOf(NoStorage)
   })
 })

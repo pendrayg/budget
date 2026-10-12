@@ -213,3 +213,17 @@ describe('document', () => {
     expect((await worker.fetch(request('/api/state', { method: 'PUT', body: JSON.stringify({ state: {} }) }), e)).status).toBe(400)
   })
 })
+
+describe('sans espace KV', () => {
+  const bare: Env = { ASSETS: { fetch: async () => new Response('asset') } as unknown as Fetcher }
+
+  it('sert quand même le front', async () => {
+    expect(await (await worker.fetch(request('/'), bare)).text()).toBe('asset')
+  })
+
+  it('répond 501 sur l’API, en lecture comme en écriture', async () => {
+    expect((await worker.fetch(request('/api/state'), bare)).status).toBe(501)
+    expect((await worker.fetch(request('/api/state', { method: 'PUT', body: JSON.stringify({ version: 0, state: {} }) }), bare)).status).toBe(501)
+    expect((await worker.fetch(request('/api/versions'), bare)).status).toBe(501)
+  })
+})

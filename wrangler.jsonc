@@ -13,6 +13,8 @@
   // tableau de bord Cloudflare, sous le nom `BUDGET_KV`, et `wrangler deploy` HÉRITE de ce lien
   // existant au lieu de le remplacer. Un `id` faux ferait échouer le déploiement ; l'omettre sur
   // un Worker sans ce lien ferait créer un nouvel espace, vide.
+  // Ce stockage est FACULTATIF : sans ce bloc (et sans lien dans le tableau de bord), le Worker
+  // n'a pas de sauvegarde serveur et chaque téléphone garde son document en local.
   "kv_namespaces": [
     {
       "binding": "BUDGET_KV"
