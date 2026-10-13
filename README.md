@@ -182,7 +182,7 @@ deux jeux d'opérations distincts.
 La feuille `Projets` : des achats ponctuels en lignes, avec leur total. Rien à répartir. Comme
 le budget et les dépenses, les projets sont **du commun ou d'une personne** : le même sous-menu
 choisit le périmètre, et un nouveau projet naît dans celui qui est choisi. Retirer une personne
-rapatrie ses projets avec le reste. Chaque projet porte la **grue** des projets devant son nom,
+rapatrie ses projets avec le reste. Chaque projet porte la **brique** des projets devant son nom,
 puis l'icône qu'on lui choisit (le même sélecteur que les dépenses) ; sa dépense au budget, s'il
 s'épargne, reprend les deux.
 

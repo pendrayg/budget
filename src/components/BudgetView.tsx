@@ -147,7 +147,7 @@ function SectionBlock({
   section: BudgetSection
   personal: boolean
   people: readonly Person[]
-  /** Les dépenses qui épargnent un projet : la grue des projets devant leur icône. */
+  /** Les dépenses qui épargnent un projet : la brique des projets devant leur icône. */
   projectLines: Set<string>
   lines: ReturnType<typeof useOpenLine>
   onAddExpense: () => void

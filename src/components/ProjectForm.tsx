@@ -126,7 +126,7 @@ export default function ProjectForm({
         <label htmlFor={`${uid}-name`}>Nom</label>
         <Input id={`${uid}-name`} value={draft.name} autoFocus={isNew} onChange={(event) => change({ ...draft, name: event.target.value })} />
       </div>
-      {/* L'icône, après la grue de tous les projets : n'importe laquelle des icônes Nerd Font. */}
+      {/* L'icône, après la brique de tous les projets : n'importe laquelle des icônes Nerd Font. */}
       <div className="field">
         <span className="field-label">Icône</span>
         <div className="icon-field">

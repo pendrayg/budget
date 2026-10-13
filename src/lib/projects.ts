@@ -18,10 +18,10 @@ import type { Amount, BudgetGroup, BudgetVersion, CategoryIcon, Month, Project, 
  * plafonné à 100 %) ; un mois pas encore importé ne compte pas.
  */
 
-/** L'icône de TOUS les projets, devant celle qu'on leur choisit : une grue, quelque chose se construit. */
-export const PROJECT_ICON: CategoryIcon = { name: 'md-crane', code: 'f0862' }
+/** L'icône de TOUS les projets, devant celle qu'on leur choisit : une brique, quelque chose se construit. */
+export const PROJECT_ICON: CategoryIcon = { name: 'md-toy_brick', code: 'f1288' }
 
-/** Les dépenses du budget qui épargnent un projet : leur ligne porte aussi la grue des projets. */
+/** Les dépenses du budget qui épargnent un projet : leur ligne porte aussi la brique des projets. */
 export function projectCategoryIds(state: State): Set<string> {
   return new Set(state.projects.flatMap((project) => (project.budget ? [project.budget.categoryId] : [])))
 }
