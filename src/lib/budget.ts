@@ -107,6 +107,24 @@ export function addGroup(state: State, group: { id: string; name: string; save: 
   }
 }
 
+/**
+ * Passe une dépense dans la catégorie `groupId` — d'un autre budget, souvent : le commun ou celui
+ * d'une personne — à partir de `month`, avec son montant de ce mois-là ; les mois d'avant restent
+ * où ils étaient. Une catégorie qui n'existe pas encore naît dans le budget `owner`, du même type
+ * que celle d'où vient la dépense : « À épargner » ou « Dépenses », au prorata pour le commun.
+ */
+export function moveCategory(state: State, categoryId: string, groupId: string, owner: string | null, month: Month, updatedAt: string): State {
+  const current = budgetAt(state, categoryId, month) ?? versionsOf(state, categoryId).at(-1)
+  if (!current) return state
+  let next = state
+  if (!state.groups.some((g) => g.id === groupId)) {
+    const save = state.groups.find((g) => g.id === current.groupId)?.save ?? false
+    next = addGroup(state, { id: groupId, name: save ? 'À épargner' : 'Dépenses', save, ...(owner ? { owner } : {}), updatedAt }, null)
+  }
+  const group = next.groups.find((g) => g.id === groupId)!
+  return upsertVersion(next, { ...current, from: month, groupId, splitKeyId: group.splitKeyId, save: group.save, updatedAt })
+}
+
 /** Change le nom et l'épargne d'une catégorie ; sa clé fixe, si elle en a une, suit son nom. */
 export function editGroup(state: State, groupId: string, changes: { name: string; save: boolean }, updatedAt: string): State {
   const group = state.groups.find((g) => g.id === groupId)

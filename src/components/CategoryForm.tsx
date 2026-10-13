@@ -1,9 +1,11 @@
 import { Button, DeleteButton, FlatSelector, Input, Select, type FlatSelectorOption } from '@pendrayg/neomorphism-design-system'
 import { useId, useState } from 'react'
 import { PERIOD_LABELS, PERIOD_SHORT } from '../lib/amount'
-import { addCategory, budgetAt, deleteCategory, editCategory, removeVersion, upsertVersion, versionMonthly, versionsOf } from '../lib/budget'
+import { addCategory, budgetAt, deleteCategory, editCategory, moveCategory, removeVersion, upsertVersion, versionMonthly, versionsOf } from '../lib/budget'
 import { createId, formatEuro, nowIso } from '../lib/format'
 import { monthLabel } from '../lib/month'
+import { projectCategoryIds } from '../lib/projects'
+import { scopePrefix, type Scope } from '../lib/scope'
 import { sortedGroups } from '../lib/summary'
 import type { Amount, CategoryIcon, Month, Period, State } from '../lib/types'
 import CategoryGlyph from './CategoryGlyph'
@@ -12,6 +14,14 @@ import NumberField from './NumberField'
 import PeriodButton from './PeriodButton'
 
 type AmountKind = Period | 'items'
+
+const COMMON = 'common'
+const toScope = (id: string): Scope => (id === COMMON ? null : id)
+
+/** Les budgets où une dépense peut aller : le commun, puis chacun. */
+function scopeOptions(state: State): FlatSelectorOption<string>[] {
+  return [{ id: COMMON, label: 'Commun' }, ...state.people.map((person) => ({ id: person.id, label: person.name || 'Sans nom' }))]
+}
 
 const KIND_OPTIONS: FlatSelectorOption<AmountKind>[] = [
   { id: 'monthly', label: PERIOD_SHORT.monthly, ariaLabel: 'Montant mensuel' },
@@ -100,9 +110,30 @@ export default function CategoryForm({
   const isValid = (d: Draft) => d.name.trim() !== '' && state.groups.some((g) => g.id === d.groupId) && (d.kind === 'items' ? d.items.some((item) => item.amount !== null) : d.value !== null)
   const valid = isValid(draft)
   const versions = categoryId ? versionsOf(state, categoryId) : []
-  // Une dépense change de catégorie sans quitter son budget : le commun, ou celui de sa personne.
-  const groupOptions = sortedGroups(state, state.groups.find((g) => g.id === draft.groupId)?.owner ?? null).map((group) => ({ value: group.id, label: group.name }))
-  const groupName = (id: string) => state.groups.find((g) => g.id === id)?.name ?? '?'
+  // Le budget de la dépense : le commun, ou celui d'une personne. À plusieurs, elle peut passer de
+  // l'un à l'autre, à partir du mois en cours comme tout changement : les mois d'avant restent dans
+  // l'ancien. Pas celle d'un projet, qui s'épargne dans le budget du projet.
+  const budgetOf = (id: string): Scope => state.groups.find((g) => g.id === id)?.owner ?? null
+  const scope = budgetOf(draft.groupId)
+  const isProject = categoryId !== null && projectCategoryIds(state).has(categoryId)
+  const budgetOptions = state.people.length > 1 && !isProject && !isNew ? scopeOptions(state) : []
+  /** Passe la dépense dans un autre budget : dans sa catégorie du même type (à épargner ou non),
+   *  sinon sa première, sinon une catégorie qui naît pour elle. */
+  const moveTo = (target: Scope) => {
+    if (!categoryId || target === scope) return
+    const save = state.groups.find((g) => g.id === draft.groupId)?.save ?? false
+    const groups = sortedGroups(state, target)
+    const groupId = (groups.find((g) => g.save === save) ?? groups[0])?.id ?? `${scopePrefix(target)}${createId()}`
+    setDraft({ ...draft, groupId })
+    update((current) => moveCategory(current, categoryId, groupId, target, draft.from, nowIso()))
+  }
+  const groupOptions = sortedGroups(state, scope).map((group) => ({ value: group.id, label: group.name }))
+  const groupName = (id: string) => {
+    const group = state.groups.find((g) => g.id === id)
+    if (!group) return '?'
+    const owner = state.people.length > 1 && group.owner ? state.people.find((p) => p.id === group.owner)?.name : undefined
+    return owner ? `${group.name} (${owner})` : group.name
+  }
 
   /** Écrit le brouillon : la catégorie (nom, icône) et sa version du mois en cours. */
   const write = (d: Draft) => {
@@ -205,6 +236,21 @@ export default function CategoryForm({
           <NumberField id={`${uid}-value`} value={draft.value} placeholder="0,00" suffix={PERIOD_LABELS[draft.kind]} onChange={(value) => change({ ...draft, value })} />
         )}
       </div>
+
+      {/* Le budget, à plusieurs : passer au commun ou à une autre personne la range dans une
+          catégorie de ce budget-là, à partir du mois en cours. */}
+      {budgetOptions.length > 1 && (
+        <div className="field">
+          <span className="field-label">Budget</span>
+          <FlatSelector
+            label="Budget"
+            options={budgetOptions}
+            multiline={budgetOptions.length > 3}
+            value={scope ?? COMMON}
+            onChange={(id) => moveTo(toScope(id))}
+          />
+        </div>
+      )}
 
       {/* La catégorie dit comment on partage et si on épargne. En changer pose une version :
           les mois d'avant restent dans l'ancienne. */}

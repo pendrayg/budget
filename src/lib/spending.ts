@@ -2,7 +2,7 @@ import { budgetAt, versionMonthly, versionsOf } from './budget'
 import { judgedMonths } from './amount'
 import { addMonths } from './month'
 import type { StatementLine } from './statement'
-import { categoriesOf, scopePrefix, type Scope } from './scope'
+import { scopePrefix, type Scope } from './scope'
 import { firstBudgetMonth, sortedGroups } from './summary'
 import type { BudgetGroup, Category, MatchRule, Month, State, Transaction } from './types'
 
@@ -264,9 +264,6 @@ const OVER = 0.005
 export function spendingSummary(state: State, month: Month, scope: Scope = null): SpendingSummary {
   const inMonth = (t: Transaction) => t.date.startsWith(month) && (t.owner ?? null) === scope
   const transactions = state.transactions.filter(inMonth).sort(byDate)
-  // Rangée dans une dépense supprimée depuis, ou d'un autre budget : elle redevient à ranger.
-  const known = new Set(categoriesOf(state, scope).map((c) => c.id))
-  const placed = (t: Transaction) => t.ignored === true || t.saving === true || t.unplanned === true || (t.categoryId !== undefined && known.has(t.categoryId))
   const firstBudget = firstBudgetMonth(state, scope)
   const budgetMonth = firstBudget && month < firstBudget ? firstBudget : month
   const within = (months: number) => {
@@ -302,6 +299,10 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
     lines.sort((a, b) => a.category.name.localeCompare(b.category.name, 'fr'))
     return { group, lines, budget: sum(lines.map((l) => l.budget)), spent: sum(lines.map((l) => l.spent)) }
   })
+  // Rangée dans une dépense supprimée depuis, ou d'un autre budget CE MOIS-LÀ (une dépense passée
+  // d'un budget à l'autre garde ses mois d'avant dans l'ancien) : elle redevient à ranger.
+  const known = new Set(all.flatMap((section) => section.lines.map((line) => line.category.id)))
+  const placed = (t: Transaction) => t.ignored === true || t.saving === true || t.unplanned === true || (t.categoryId !== undefined && known.has(t.categoryId))
   const sections = all.filter((section) => !section.group.save)
   const saveSections = all.filter((section) => section.group.save)
   const transfers = transactions.filter((t) => t.saving === true)

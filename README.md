@@ -172,6 +172,12 @@ parts n'en tiennent pas compte ; le **reste à vivre** de l'écran Revenus, si :
 retirent du revenu la part du commun ET le budget personnel (avant le premier budget personnel,
 c'est lui qui vaut, comme pour le commun).
 
+À plusieurs, une **dépense passe d'un budget à l'autre** (du commun à une personne, d'une personne
+à une autre, ou au commun) par le sélecteur « Budget » de son formulaire, à partir du mois en
+cours : les mois d'avant restent dans l'ancien budget, avec leurs opérations rangées. Elle va dans
+une catégorie du même type (à épargner ou non) du budget choisi, ou dans une catégorie qui naît
+pour elle (`moveCategory`). Pas la dépense d'un projet, qui reste dans le budget du projet.
+
 Aux dépenses, le relevé s'**importe dans le compte choisi** : ses opérations sont à cette
 personne, sans avoir à le dire pour chacune, et se rangent dans les dépenses de son budget.
 Chaque compte apprend ses propres marchands, et un même relevé importé dans deux comptes y fait
