@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { budgetAt } from './budget'
 import { seedState } from './fixtures'
-import { activateProject, deleteProject, isProjectSaving, projectSaved, stopProject, syncProjectBudget } from './projects'
+import { activateProject, deleteProject, isProjectSaving, projectCategoryIds, projectSaved, stopProject, syncProjectBudget } from './projects'
 import { addGroup } from './budget'
 import { importStatement, placeTransaction, spendingSummary } from './spending'
 import { sanitizeState } from './state'
@@ -124,5 +124,30 @@ describe('projets communs et personnels', () => {
     const before = { ...saved, projects: saved.projects.map((p) => (p.id === 'nas' ? { ...p, owner: undefined } : p)) }
     expect(project(sanitizeState(before)).owner).toBe('p2')
     expect(project(sanitizeState(withProject())).owner).toBeUndefined()
+  })
+})
+
+describe('icône d’un projet', () => {
+  const bike = { name: 'md-bike', code: 'f00a3' }
+  const withIcon = () => ({ ...withProject(), projects: withProject().projects.map((p) => (p.id === 'nas' ? { ...p, icon: bike } : p)) })
+
+  it('se garde à l’assainissement, et s’écarte si elle est douteuse', () => {
+    expect(project(sanitizeState(withIcon())).icon).toEqual(bike)
+    const odd = { ...withProject(), projects: withProject().projects.map((p) => (p.id === 'nas' ? { ...p, icon: { name: 'x', code: 'zz' } } : p)) }
+    expect(project(sanitizeState(odd as State)).icon).toBeUndefined()
+  })
+
+  it('passe à sa dépense au budget, et la suit quand elle change', () => {
+    let state = activateProject(withIcon(), 'nas', SAVE, '2026-10', 'c-nas', T)
+    const expense = () => state.categories.find((c) => c.id === 'c-nas')!
+    expect(expense().icon).toEqual(bike)
+    expect(projectCategoryIds(state)).toEqual(new Set(['c-nas']))
+    const car = { name: 'md-car', code: 'f010b' }
+    state = { ...state, projects: state.projects.map((p) => (p.id === 'nas' ? { ...p, icon: car } : p)) }
+    state = syncProjectBudget(state, 'nas', '2026-10', T)
+    expect(expense().icon).toEqual(car)
+    state = { ...state, projects: state.projects.map((p) => (p.id === 'nas' ? { ...p, icon: undefined } : p)) }
+    state = syncProjectBudget(state, 'nas', '2026-10', T)
+    expect(expense().icon).toBeUndefined()
   })
 })

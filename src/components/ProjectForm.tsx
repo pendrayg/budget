@@ -6,7 +6,9 @@ import { currentMonth, monthLabel } from '../lib/month'
 import { scopePrefix, type Scope } from '../lib/scope'
 import { activateProject, deleteProject, isProjectSaving, projectGroup, projectMonthly, projectSaved, stopProject, syncProjectBudget } from '../lib/projects'
 import { sortedGroups } from '../lib/summary'
-import type { Month, State } from '../lib/types'
+import type { CategoryIcon, Month, State } from '../lib/types'
+import IconPicker from './IconPicker'
+import ProjectGlyph from './ProjectGlyph'
 import MonthInput from './MonthInput'
 import NumberField from './NumberField'
 
@@ -18,6 +20,7 @@ interface Line {
 
 interface Draft {
   name: string
+  icon: CategoryIcon | undefined
   target: Month | ''
   lines: Line[]
 }
@@ -25,7 +28,7 @@ interface Draft {
 function draftFor(state: State, projectId: string | null): Draft {
   const project = projectId ? state.projects.find((p) => p.id === projectId) : undefined
   const lines = (project?.items ?? []).map((item) => ({ id: item.id, label: item.label, amount: item.amount as number | null }))
-  return { name: project?.name ?? '', target: project?.target ?? '', lines: lines.length > 0 ? lines : [{ id: createId(), label: '', amount: null }] }
+  return { name: project?.name ?? '', icon: project?.icon, target: project?.target ?? '', lines: lines.length > 0 ? lines : [{ id: createId(), label: '', amount: null }] }
 }
 
 /** « de mars 2027 », « d’octobre 2026 ». */
@@ -67,6 +70,7 @@ export default function ProjectForm({
 }) {
   const uid = useId()
   const [draft, setDraft] = useState(() => draftFor(state, projectId))
+  const [choosingIcon, setChoosingIcon] = useState(false)
   const month = currentMonth()
   const project = projectId ? state.projects.find((p) => p.id === projectId) : undefined
   const owner: Scope = project ? (project.owner ?? null) : scope
@@ -88,6 +92,7 @@ export default function ProjectForm({
       const next = {
         id,
         name: d.name.trim(),
+        ...(d.icon ? { icon: d.icon } : {}),
         items: d.lines.filter((line) => line.amount !== null || line.label.trim() !== '').map((line) => ({ id: line.id, label: line.label.trim(), amount: line.amount ?? 0 })),
         ...(d.target ? { target: d.target } : {}),
         ...(previous?.budget ? { budget: previous.budget } : {}),
@@ -120,6 +125,18 @@ export default function ProjectForm({
       <div className="field">
         <label htmlFor={`${uid}-name`}>Nom</label>
         <Input id={`${uid}-name`} value={draft.name} autoFocus={isNew} onChange={(event) => change({ ...draft, name: event.target.value })} />
+      </div>
+      {/* L'icône, après la grue de tous les projets : n'importe laquelle des icônes Nerd Font. */}
+      <div className="field">
+        <span className="field-label">Icône</span>
+        <div className="icon-field">
+          <Button onClick={() => setChoosingIcon(true)}>
+            <ProjectGlyph icon={draft.icon} className="icon-preview" />
+            {draft.icon ? 'Changer' : 'Choisir une icône'}
+          </Button>
+          {draft.icon && <DeleteButton label="Retirer l’icône" onDelete={() => change({ ...draft, icon: undefined })} />}
+        </div>
+        {choosingIcon && <IconPicker value={draft.icon} onPick={(icon) => change({ ...draft, icon })} onClose={() => setChoosingIcon(false)} />}
       </div>
       <div className="field">
         <label htmlFor={`${uid}-target`}>Date cible</label>

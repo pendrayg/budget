@@ -7,6 +7,7 @@ import { inScope, type Scope } from '../lib/scope'
 import type { Project, State } from '../lib/types'
 import { useOpenLine } from '../hooks/useOpenLine'
 import ProjectForm from './ProjectForm'
+import ProjectGlyph from './ProjectGlyph'
 import ProjectSheet from './ProjectSheet'
 
 /**
@@ -69,7 +70,10 @@ export default function ProjectsView({ state, scope, update }: { state: State; s
                 onToggle={lines.toggle(project.id)}
                 title={
                   <span className="line-head">
-                    <span className="line-name">{project.name}</span>
+                    <span className="line-name">
+                      <ProjectGlyph icon={project.icon} className="line-icon" />
+                      {project.name}
+                    </span>
                     <span className="numeric">{formatEuro(projectTotal(project))}</span>
                   </span>
                 }

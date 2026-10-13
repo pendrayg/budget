@@ -11,6 +11,8 @@ import GroupForm from './GroupForm'
 import ProrataGapNotice from './ProrataGapNotice'
 import { missingForProrata } from '../lib/missing'
 import CategoryGlyph from './CategoryGlyph'
+import ProjectGlyph from './ProjectGlyph'
+import { projectCategoryIds } from '../lib/projects'
 import type { Scope } from '../lib/scope'
 import { isSolo } from '../lib/people'
 import PeopleSummary from './PeopleSummary'
@@ -49,6 +51,7 @@ export default function BudgetView({
   const history = budgetHistory(state, month, scope)
   const owner = scope ? state.people.find((person) => person.id === scope) : undefined
   const solo = isSolo(state)
+  const projectLines = projectCategoryIds(state)
   const hasGroups = summary.sections.length > 0
   const hasLines = summary.sections.some((section) => section.lines.length > 0)
 
@@ -96,6 +99,7 @@ export default function BudgetView({
               section={section}
               personal={owner !== undefined}
               people={state.people}
+              projectLines={projectLines}
               lines={lines}
               onAddExpense={() => create({ kind: 'expense', groupId: section.group.id })}
               renderForm={(categoryId) => <CategoryForm key={lines.formKey(categoryId)} categoryId={categoryId} month={month} state={state} update={update} onDone={lines.close} />}
@@ -134,6 +138,7 @@ function SectionBlock({
   section,
   personal,
   people,
+  projectLines,
   lines,
   onAddExpense,
   renderForm,
@@ -142,6 +147,8 @@ function SectionBlock({
   section: BudgetSection
   personal: boolean
   people: readonly Person[]
+  /** Les dépenses qui épargnent un projet : la grue des projets devant leur icône. */
+  projectLines: Set<string>
   lines: ReturnType<typeof useOpenLine>
   onAddExpense: () => void
   renderForm: (categoryId: string) => ReactNode
@@ -214,7 +221,11 @@ function SectionBlock({
             title={
               <span className="line-head">
                 <span className="line-name">
-                  {line.category.icon && <CategoryGlyph icon={line.category.icon} className="line-icon" />}
+                  {projectLines.has(line.category.id) ? (
+                    <ProjectGlyph icon={line.category.icon} className="line-icon" />
+                  ) : (
+                    line.category.icon && <CategoryGlyph icon={line.category.icon} className="line-icon" />
+                  )}
                   {line.category.name}
                 </span>
                 <span className="numeric">{formatEuro(line.monthly)}</span>

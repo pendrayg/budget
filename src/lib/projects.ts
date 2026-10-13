@@ -2,7 +2,7 @@ import { addCategory, budgetAt, editCategory, upsertVersion, versionMonthly, ver
 import { addMonths, monthsBetween } from './month'
 import { categoryScope, inScope, scopePrefix } from './scope'
 import { spendingMonths, spendingSummary } from './spending'
-import type { Amount, BudgetGroup, BudgetVersion, Month, Project, State } from './types'
+import type { Amount, BudgetGroup, BudgetVersion, CategoryIcon, Month, Project, State } from './types'
 
 /**
  * Un projet qu'on ÉPARGNE : avec une date cible, il devient une dépense d'une catégorie à épargner
@@ -17,6 +17,14 @@ import type { Amount, BudgetGroup, BudgetVersion, Month, Project, State } from '
  * mensualité du projet au prorata du versement vers l'épargne de ce mois-là (versé / à épargner,
  * plafonné à 100 %) ; un mois pas encore importé ne compte pas.
  */
+
+/** L'icône de TOUS les projets, devant celle qu'on leur choisit : une grue, quelque chose se construit. */
+export const PROJECT_ICON: CategoryIcon = { name: 'md-crane', code: 'f0862' }
+
+/** Les dépenses du budget qui épargnent un projet : leur ligne porte aussi la grue des projets. */
+export function projectCategoryIds(state: State): Set<string> {
+  return new Set(state.projects.flatMap((project) => (project.budget ? [project.budget.categoryId] : [])))
+}
 
 export function projectTotal(project: Project): number {
   return project.items.reduce((sum, item) => sum + item.amount, 0)
@@ -82,13 +90,13 @@ export function activateProject(state: State, projectId: string, groupId: string
   if (project.budget) return syncProjectBudget(state, projectId, month, now)
   const id = `${scopePrefix(group.owner ?? null)}${categoryId}`
   const monthly = projectMonthly(projectTotal(project), 0, month, project.target)
-  let next = addCategory(state, { id, name: project.name, updatedAt: now }, version(id, month, group, { kind: 'monthly', value: monthly }, now))
+  let next = addCategory(state, { id, name: project.name, ...(project.icon ? { icon: project.icon } : {}), updatedAt: now }, version(id, month, group, { kind: 'monthly', value: monthly }, now))
   next = upsertVersion(next, version(id, addMonths(project.target, 1), group, { kind: 'none' }, now))
   return { ...next, projects: next.projects.map((p) => (p.id === projectId ? { ...p, budget: { categoryId: id }, updatedAt: now } : p)) }
 }
 
 /**
- * Recale la dépense d'un projet sur le projet, à partir de `month` : son nom, et la mensualité qui
+ * Recale la dépense d'un projet sur le projet, à partir de `month` : son nom et son icône, et la mensualité qui
  * mène le reste (total moins l'épargne réalisée avant ce mois) à la cible, arrêtée après elle. Une
  * cible passée, ou retirée, arrête l'épargne.
  */
@@ -98,7 +106,8 @@ export function syncProjectBudget(state: State, projectId: string, month: Month,
   if (!project?.budget || !group) return state
   const id = project.budget.categoryId
   const category = state.categories.find((c) => c.id === id)
-  let next = category && category.name !== project.name ? editCategory(state, id, { name: project.name, icon: category.icon }, now) : state
+  const renamed = category && (category.name !== project.name || category.icon?.name !== project.icon?.name)
+  let next = renamed ? editCategory(state, id, { name: project.name, icon: project.icon }, now) : state
   next = dropAfter(next, id, month)
   if (!project.target || project.target < month) return upsertVersion(next, version(id, month, group, { kind: 'none' }, now))
   const monthly = projectMonthly(projectTotal(project), projectSaved(state, project, addMonths(month, -1)), month, project.target)

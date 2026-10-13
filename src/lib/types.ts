@@ -182,6 +182,9 @@ export interface Project {
   target?: Month
   /** La dépense du budget qui l'épargne, tant qu'on l'épargne. */
   budget?: { categoryId: string }
+  /** Choisie, affichée après la grue commune à tous les projets (cf. `PROJECT_ICON`) ; sa dépense
+   *  au budget la reprend. */
+  icon?: CategoryIcon
   /** Absent : un projet du commun. Sinon, la personne dont c'est le projet ; son identifiant porte
    *  le même préfixe (cf. scope.ts). */
   owner?: string
