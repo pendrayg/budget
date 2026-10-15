@@ -1198,10 +1198,11 @@ body,
    Le peu qui n'a de sens que sous lui. Rien ne s'y creuse : ce qui s'enfonçait s'ALLUME (`--lit`),
    et le bleu y est réservé à ce qui est actif — les données sont ambre (`--chart-ink`). */
 
-/* Le dépassement du budget, dans les revenus : l'orange de la palette des personnes, entre le
-   dépensé et le rouge, qui dit, lui, le dépassement des revenus (cf. SpendingChart). */
+/* Le dépassement du budget, dans les revenus : un orange tiré vers le jaune (l'orange et le jaune
+   de la palette des personnes, à parts presque égales), loin du rouge qui dit, lui, le
+   dépassement des revenus (cf. SpendingChart). */
 :root {
-  --over-budget: var(--c-orange);
+  --over-budget: color-mix(in srgb, var(--c-orange) 55%, var(--c-yellow));
 }
 
 .spend-over-budget {
