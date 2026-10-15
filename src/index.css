@@ -1198,11 +1198,27 @@ body,
    Le peu qui n'a de sens que sous lui. Rien ne s'y creuse : ce qui s'enfonçait s'ALLUME (`--lit`),
    et le bleu y est réservé à ce qui est actif — les données sont ambre (`--chart-ink`). */
 
-/* Le dépassement du budget, dans les revenus : un orange tiré vers le jaune (l'orange et le jaune
-   de la palette des personnes, à parts presque égales), loin du rouge qui dit, lui, le
-   dépassement des revenus (cf. SpendingChart). */
+/* Le dépassement du budget, dans les revenus : un orange vif, tiré vers le jaune, loin du rouge
+   qui dit, lui, le dépassement des revenus (cf. SpendingChart). Un peu plus sourd en thème clair,
+   pour tenir sur le fond blanc. */
 :root {
-  --over-budget: color-mix(in srgb, var(--c-orange) 55%, var(--c-yellow));
+  --over-budget: #ff9a00;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --over-budget: #f08a00;
+  }
+}
+
+:root[data-theme='light'] {
+  --over-budget: #f08a00;
+}
+
+/* Sous Star Wars, le dépensé est déjà ambre (--chart-ink) : l'orange s'en écarte vers le rouge,
+   sans quoi les deux tranches se confondraient. */
+:root[data-ds='star-wars'] {
+  --over-budget: #ff6a00;
 }
 
 .spend-over-budget {
