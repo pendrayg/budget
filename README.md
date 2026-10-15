@@ -134,7 +134,7 @@ premier import seulement), et seules ses opérations sont gardées — date, lib
 jamais le PDF, ni le RIB. Les montants se lisent au débit ou au crédit d'après leur colonne.
 En tête de l'écran Mois, le graphique dit, mois par mois, le dépensé dans son budget, et en rouge
 ce qui le dépasse (cf. plus haut). Dans
-un mois déplié, sous ses revenus, ses dépenses montrent d'abord les opérations **à ranger** — un appui ouvre la liste des
+un mois déplié, sous ses revenus, ses dépenses montrent d'abord les opérations **à ranger** — chacune avec, à droite de son montant, un bouton-icône qui ouvre la liste des
 dépenses, chacune avec son icône (le sélecteur natif de l'iPhone ne montre que du texte), sous
 une **recherche** active dès l'ouverture, clavier levé (accents ignorés ; Entrée prend la
 première) —, puis

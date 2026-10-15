@@ -1,4 +1,4 @@
-import { Button, DeleteButton, DisclosureButton } from '../ds'
+import { Button, DeleteButton, DisclosureButton, IconButton } from '../ds'
 import { useOpenLine } from '../hooks/useOpenLine'
 import { formatEuro, formatEuroDelta } from '../lib/format'
 import { monthLabel } from '../lib/month'
@@ -11,11 +11,28 @@ type Update = (change: (state: State) => State) => void
 
 const day = (date: string) => `${date.slice(8, 10)}/${date.slice(5, 7)}`
 
-/** Une opération : sa date, son libellé, son montant, et où elle est rangée — un appui en change. */
+/**
+ * Une opération : sa date, son libellé, son montant, et où elle est rangée — un appui en change.
+ * À ranger, elle n'a encore nulle part où être : un bouton-icône, à droite du montant, ouvre le
+ * choix, sans occuper une ligne entière.
+ */
 function TransactionRow({ transaction, state, onPlace }: { transaction: Transaction; state: State; onPlace: (transaction: Transaction) => void }) {
   const expense = transaction.categoryId ? state.categories.find((c) => c.id === transaction.categoryId) : undefined
   const where =
     expense?.name ?? (transaction.unplanned ? 'Imprévu hors catégorie' : transaction.saving ? 'Versement épargne' : transaction.ignored ? 'Pas une dépense' : undefined)
+  if (!where) {
+    return (
+      <li className="tx-row tx-row-unsorted">
+        <span className="tx-date muted">{day(transaction.date)}</span>
+        <span className="tx-label">
+          {displayLabel(transaction.label)}
+          {transaction.detail && <small className="muted"> · {transaction.detail}</small>}
+        </span>
+        <span className="numeric">{formatEuro(transaction.amount)}</span>
+        <IconButton icon="tray_arrow_down" label={`Ranger ${displayLabel(transaction.label)}, ${formatEuro(transaction.amount)}`} onClick={() => onPlace(transaction)} />
+      </li>
+    )
+  }
   return (
     <li className="tx-row">
       <span className="tx-date muted">{day(transaction.date)}</span>
@@ -24,9 +41,9 @@ function TransactionRow({ transaction, state, onPlace }: { transaction: Transact
         {transaction.detail && <small className="muted"> · {transaction.detail}</small>}
       </span>
       <span className="numeric">{formatEuro(transaction.amount)}</span>
-      <Button className="tx-place" aria-label={`Ranger ${displayLabel(transaction.label)}, ${formatEuro(transaction.amount)} : ${(where ?? 'à ranger').toLowerCase()}`} onClick={() => onPlace(transaction)}>
+      <Button className="tx-place" aria-label={`Ranger ${displayLabel(transaction.label)}, ${formatEuro(transaction.amount)} : ${where.toLowerCase()}`} onClick={() => onPlace(transaction)}>
         {expense?.icon && <CategoryGlyph icon={expense.icon} className="placement-icon" />}
-        <span className={where ? undefined : 'muted'}>{where ?? 'À ranger…'}</span>
+        <span>{where}</span>
       </Button>
     </li>
   )

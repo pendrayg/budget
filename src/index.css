@@ -1155,6 +1155,12 @@ body,
   grid-column: 1 / -1;
 }
 
+/* Une opération à ranger : sur sa ligne, après le montant, le bouton-icône qui ouvre le choix. */
+.tx-row-unsorted {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+
 /* L'icône d'une dépense dans le choix de rangement : une colonne fixe, pour que les noms
    s'alignent, avec ou sans icône. */
 .placement-icon {
