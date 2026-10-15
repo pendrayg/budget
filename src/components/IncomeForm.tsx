@@ -41,17 +41,21 @@ function total(lines: Line[]): number {
 export default function IncomeForm({
   month: initialMonth,
   chooseMonth = false,
+  person,
   state,
   update,
 }: {
   month: Month
   chooseMonth?: boolean
+  /** La personne dont on saisit les revenus, choisie ailleurs (le sous-menu du bas) : pas de sélecteur. */
+  person?: string
   state: State
   update: (change: (state: State) => State) => void
 }) {
   const uid = useId()
   const [month, setMonth] = useState(initialMonth)
-  const [personId, setPersonId] = useState(state.people[0].id)
+  const [chosen, setPersonId] = useState(state.people[0].id)
+  const personId = person ?? chosen
   const [draft, setDraft] = useState<Draft>(() => draftFor(state, initialMonth))
 
   // Changer de mois recharge ce qui est connu pour ce mois.
@@ -60,22 +64,20 @@ export default function IncomeForm({
     setDraft(draftFor(state, next))
   }
 
-  /** Écrit les revenus du mois : les lignes avec un montant, personne par personne. */
-  const write = (forMonth: Month, d: Draft) => {
+  /** Écrit le revenu du mois d'une personne : ses lignes avec un montant. Les autres n'y sont pour rien. */
+  const write = (forMonth: Month, forPerson: string, next: Line[]) => {
     const now = nowIso()
     update((current) => {
-      const others = current.incomes.filter((income) => income.month !== forMonth)
-      const entered: Income[] = current.people
-        .map((person) => ({
-          month: forMonth,
-          personId: person.id,
-          components: (d[person.id] ?? [])
-            .filter((line) => line.amount !== null)
-            .map((line) => ({ amount: line.amount ?? 0, ...(line.label.trim() ? { label: line.label.trim() } : {}) })),
-          updatedAt: now,
-        }))
-        .filter((income) => income.components.length > 0)
-      return { ...current, incomes: [...others, ...entered] }
+      const others = current.incomes.filter((income) => income.month !== forMonth || income.personId !== forPerson)
+      const entered: Income = {
+        month: forMonth,
+        personId: forPerson,
+        components: next
+          .filter((line) => line.amount !== null)
+          .map((line) => ({ amount: line.amount ?? 0, ...(line.label.trim() ? { label: line.label.trim() } : {}) })),
+        updatedAt: now,
+      }
+      return { ...current, incomes: entered.components.length > 0 ? [...others, entered] : others }
     })
   }
 
@@ -84,7 +86,7 @@ export default function IncomeForm({
   const setLines = (next: Line[]) => {
     const nextDraft = { ...draft, [personId]: next }
     setDraft(nextDraft)
-    write(month, nextDraft)
+    write(month, personId, next)
   }
   const personOptions = state.people.map((person) => ({ id: person.id, label: person.name }))
 
@@ -94,7 +96,7 @@ export default function IncomeForm({
       onSubmit={(event) => event.preventDefault()}
     >
       {chooseMonth && <MonthField id={`${uid}-month`} label="Mois" value={month} onChange={changeMonth} />}
-      {state.people.length > 1 && <FlatSelector label="Personne" options={personOptions} value={personId} onChange={setPersonId} />}
+      {!person && state.people.length > 1 && <FlatSelector label="Personne" options={personOptions} value={personId} onChange={setPersonId} />}
 
       <ul className="items">
         {lines.map((line, index) => (

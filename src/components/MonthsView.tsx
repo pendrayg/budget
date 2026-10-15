@@ -10,7 +10,7 @@ import type { Scope } from '../lib/scope'
 import { importStatement, placeTransaction, spendingMonths, spendingSummary, type Placement } from '../lib/spending'
 import { parseStatement } from '../lib/statement'
 import { incomeHistory, monthSummary, type MonthSummary } from '../lib/summary'
-import type { Month, State } from '../lib/types'
+import type { Month, Person, State } from '../lib/types'
 import IncomeChart from './IncomeChart'
 import IncomeForm from './IncomeForm'
 import MonthSpending, { OverLabel } from './MonthSpending'
@@ -32,15 +32,41 @@ function SpendingHint({ over, unsorted }: { over: number; unsorted: number }) {
 }
 
 /**
+ * Les revenus d'un mois sur le commun : ceux de chacun, et leur somme, ceux du foyer. Ils se
+ * saisissent sur le compte de chaque personne, que choisit le sous-menu du bas.
+ */
+function IncomeRecap({ people, totals }: { people: Person[]; totals: number[] }) {
+  const cell = (total: number) => (total > 0 ? formatEuro(total) : '—')
+  return (
+    <div className="income-recap">
+      <ul className="income-recap-list">
+        {people.map((person, index) => (
+          <li className="line-head" key={person.id}>
+            <span>{person.name}</span>
+            <span className="numeric">{cell(totals[index])}</span>
+          </li>
+        ))}
+        <li className="line-head income-recap-total">
+          <span>Foyer</span>
+          <span className="numeric">{formatEuro(totals.reduce((sum, total) => sum + total, 0))}</span>
+        </li>
+      </ul>
+      <p className="field-hint muted">Les revenus de chacun se saisissent sur son compte : choisissez-le dans le sous-menu du bas.</p>
+    </div>
+  )
+}
+
+/**
  * LES MOIS : ce qui est entré et ce qui est sorti. En tête le prorata et ce qu'il donne, puis
  * l'évolution des revenus et le remplissage du budget ; dessous, mois par mois, un bouton section
- * dépliante. Replié, il dit les revenus de chacun (de part et d'autre du mois à deux ; en ligne
- * seul ou à plusieurs) et, en seconde ligne, les dépassements et les opérations à ranger. Déplié,
- * il porte la saisie de ses revenus, puis ses dépenses : l'état des lieux du relevé importé.
+ * dépliante. Replié, il dit ses revenus et, en seconde ligne, les dépassements et les opérations
+ * à ranger. Déplié, ses revenus, puis ses dépenses : l'état des lieux du relevé importé.
  *
- * Les revenus sont ceux du foyer ; les dépenses, celles du compte que choisit le sous-menu du bas
- * (cf. App) — le commun, ou celui d'une personne, face à son budget à elle. Un relevé s'importe
- * dans le compte choisi. Un mois pas encore saisi se saisit par la feuille, en bas.
+ * Tout suit le compte que choisit le sous-menu du bas (cf. App). Sur le COMMUN, les revenus sont
+ * ceux du foyer — leur somme, chacun détaillé au dépli — et les dépenses celles du compte commun.
+ * Sur le compte d'une PERSONNE, ses revenus à elle, qui se saisissent là, et ses dépenses, face à
+ * son budget. Un relevé s'importe dans le compte choisi ; un mois pas encore saisi se saisit par la
+ * feuille, en bas.
  */
 export default function MonthsView({
   state,
@@ -55,7 +81,7 @@ export default function MonthsView({
   missing: Month[]
   scope: Scope
   update: (change: (state: State) => State) => void
-  onEnterMonth: (month: Month) => void
+  onEnterMonth: (month: Month, person?: string) => void
 }) {
   const lines = useOpenLine()
   const summary = monthSummary(state, month)
@@ -146,58 +172,42 @@ export default function MonthsView({
           <div className="line-buttons">
             {history.map((m) => {
               const totals = state.people.map((person) => incomeTotal(incomeOf(state, m, person.id)))
-              const incomplete = totals.some((total) => total <= 0)
               const cell = (total: number) => (total > 0 ? formatEuro(total) : '—')
+              // Sur le commun, les revenus du foyer : leur somme, à compléter tant qu'il en manque un.
+              // Sur le compte d'une personne, les siens.
+              const own = scope ? totals[state.people.findIndex((person) => person.id === scope)] : undefined
+              const incomplete = own === undefined ? totals.some((total) => total <= 0) : own <= 0
+              const shown = own ?? totals.reduce((sum, total) => sum + total, 0)
               const s = spending.get(m)
               const over = s?.overCount ?? 0
               const unsorted = s?.unsorted.length ?? 0
-              const spendingHint = over > 0 || unsorted > 0 ? <SpendingHint over={over} unsorted={unsorted} /> : undefined
-              const incomesHint = state.people.length > 2 ? state.people.map((person, index) => `${person.name} ${cell(totals[index])}`).join(' · ') : undefined
               return (
                 <DisclosureButton
                   key={m}
                   className={`line-button${incomplete || unsorted > 0 ? ' line-incomplete' : ''}`}
                   open={lines.isOpen(m)}
                   onToggle={lines.toggle(m)}
-                  // À deux, trois colonnes comme la synthèse : le revenu de la première personne à
-                  // gauche, le mois au milieu, celui de la seconde à droite. Seul : le mois, puis
-                  // son revenu. À trois et plus : le mois, le total du foyer, et chacun en indice.
+                  // Le mois à gauche, ses revenus à droite ; dessous, ses dépenses : ce qui dépasse et
+                  // ce qui reste à ranger.
                   title={
-                    state.people.length === 2 ? (
-                      <span className="income-cells">
-                        <span className="numeric">{cell(totals[0])}</span>
-                        <span className="income-month">
-                          <span>{shortMonthLabel(m)}</span>
-                          {incomplete && <span className="ds-disclosure-hint">À compléter</span>}
-                        </span>
-                        <span className="numeric">{cell(totals[1])}</span>
+                    <span className="income-cells-row">
+                      <span className="income-month">
+                        <span>{shortMonthLabel(m)}</span>
+                        {incomplete && <span className="ds-disclosure-hint">À compléter</span>}
                       </span>
-                    ) : (
-                      <span className="income-cells-row">
-                        <span className="income-month">
-                          <span>{shortMonthLabel(m)}</span>
-                          {incomplete && <span className="ds-disclosure-hint">À compléter</span>}
-                        </span>
-                        <span className="numeric">{cell(totals.reduce((sum, total) => sum + total, 0))}</span>
-                      </span>
-                    )
+                      <span className="numeric">{cell(shown)}</span>
+                    </span>
                   }
-                  // La seconde ligne : les dépenses du mois, ce qui dépasse et ce qui reste à ranger.
-                  hint={
-                    incomesHint && spendingHint ? (
-                      <>
-                        {incomesHint}
-                        {spendingHint}
-                      </>
-                    ) : (
-                      (incomesHint ?? spendingHint)
-                    )
-                  }
+                  hint={over > 0 || unsorted > 0 ? <SpendingHint over={over} unsorted={unsorted} /> : undefined}
                 >
                   <div className="month-parts">
                     <div className="month-part">
                       <h3>Revenus</h3>
-                      <IncomeForm key={lines.formKey(m)} month={m} state={state} update={update} />
+                      {scope ? (
+                        <IncomeForm key={lines.formKey(m)} month={m} person={scope} state={state} update={update} />
+                      ) : (
+                        <IncomeRecap people={state.people} totals={totals} />
+                      )}
                     </div>
                     {spending.has(m) && (
                       <div className="month-part">
@@ -220,7 +230,7 @@ export default function MonthsView({
       )}
 
       <section className="section section-actions">
-        <Button tone="primary" icon="plus" onClick={() => onEnterMonth(missing[0] ?? month)}>
+        <Button tone="primary" icon="plus" onClick={() => onEnterMonth(missing[0] ?? month, scope ?? undefined)}>
           Saisir un mois
         </Button>
         <input

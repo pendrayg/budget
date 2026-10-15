@@ -11,6 +11,7 @@ export default function IncomeSheet({
   open,
   generation,
   month,
+  person,
   state,
   update,
   onClose,
@@ -18,13 +19,15 @@ export default function IncomeSheet({
   open: boolean
   generation: number
   month: Month
+  /** Ouverte depuis le compte d'une personne : ses revenus seuls, sans sélecteur. */
+  person?: string
   state: State
   update: (change: (state: State) => State) => void
   onClose: () => void
 }) {
   return (
     <Sheet open={open} onClose={onClose} title={`Revenus ${monthLabelOf(month)}`} titleId="income-title">
-      <IncomeForm key={generation} month={month} chooseMonth state={state} update={update} />
+      <IncomeForm key={generation} month={month} chooseMonth person={person} state={state} update={update} />
     </Sheet>
   )
 }

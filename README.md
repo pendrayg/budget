@@ -82,14 +82,19 @@ lignes, une par personne.
 
 Revenus et dépenses partagent un écran, **Mois** : ce qui est entré et ce qui est sorti. Sous la
 synthèse du prorata, le graphique des revenus puis celui du remplissage du budget (cf. plus bas) ;
-dessous, chaque mois, saisi ou importé, est un bouton section dépliante. Sa première ligne dit les
-revenus : à deux, en trois colonnes comme la synthèse (le revenu de la première personne, le mois,
-le revenu de la seconde) ; seul, le mois et son revenu ; à trois et plus, le mois et le total du
-foyer, chacun en indice. Sa **seconde ligne** dit les dépenses : le nombre de dépenses en
-**dépassement**, en rouge, et le nombre d'opérations **à ranger**. Déplié, il porte la saisie de
-ses **revenus**, puis ses **dépenses**, l'état des lieux de son relevé. Les revenus sont ceux du
-foyer ; les dépenses, celles du compte que choisit le sous-menu du bas. Au pied de l'écran,
-« Saisir un mois » et « Importer un relevé ».
+dessous, chaque mois, saisi ou importé, est un bouton section dépliante. Sa première ligne dit le
+mois et ses **revenus** ; sa **seconde ligne**, ses dépenses : le nombre de dépenses en
+**dépassement**, en rouge, et, calé à droite, le nombre d'opérations **à ranger**. Déplié, ses
+revenus, puis ses **dépenses**, l'état des lieux de son relevé.
+
+Tout suit le sous-menu du bas. Sur le **commun**, les revenus sont ceux du foyer : la ligne en
+donne la somme, « à compléter » tant qu'il manque celui de quelqu'un, et le dépli les détaille,
+personne par personne, sans les saisir ; les dépenses sont celles du compte commun. Sur le compte
+d'une **personne**, ses revenus à elle, qui se saisissent dans le dépli — sans sélecteur de
+personne, le sous-menu l'a déjà choisie —, et ses dépenses, face à son budget. Au pied de l'écran,
+« Saisir un mois » (pour la personne choisie ; sur le commun, la feuille propose chacun) et
+« Importer un relevé » (dans le compte choisi). Un rappel de saisie ouvre toujours la feuille sur
+chacun : le revenu qui manque peut être celui de n'importe qui.
 
 ### Le rappel de saisie
 
@@ -274,7 +279,7 @@ ne compte pas. Payé après sa cible, l'achat se juge sur sa dernière mensualit
   ou un projet (au bas de sa fiche, avec son libellé) et « Tout effacer » (avec son libellé). Le premier appui arme la poubelle, qui passe au rouge ; le second
   supprime. Pas de boîte de confirmation.
 - **Un sous-menu, c'est `FlatSelector`** : la périodicité d'un montant, la personne dont on
-  saisit le revenu, la clé de la calculatrice.
+  saisit le revenu dans la feuille de saisie, la clé de la calculatrice.
 - **Une icône par catégorie**, devant son nom dans la ligne : n'importe laquelle des 10 764
   icônes de Nerd Fonts (la police Symbols Nerd Font que sert le design system). Le sélecteur
   cherche en anglais, ou en français pour les mots du budget (« maison », « voiture »,

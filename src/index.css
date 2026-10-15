@@ -1105,6 +1105,22 @@ body,
   text-align: right;
 }
 
+/* Les revenus d'un mois sur le commun : chacun, puis le foyer, sous un filet. */
+.income-recap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.income-recap-total {
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+  font-weight: 600;
+}
+
 /* Un mois déplié (cf. MonthsView) : ses revenus, puis ses dépenses, chacun sous son titre. */
 .month-parts {
   display: flex;

@@ -77,7 +77,7 @@ function writeScope(scope: Scope): void {
 export default function App() {
   const shared = useSharedState(reloadForAccess)
   const [section, setSection] = useState<Section>('budget')
-  const [incomeSheet, setIncomeSheet] = useState<{ open: boolean; month: Month; generation: number }>({ open: false, month: currentMonth(), generation: 0 })
+  const [incomeSheet, setIncomeSheet] = useState<{ open: boolean; month: Month; person?: string; generation: number }>({ open: false, month: currentMonth(), generation: 0 })
 
   const [chosenScope, setChosenScope] = useState<Scope>(readScope)
   // Seul, c'est soi ; un choix retenu qui ne désigne plus personne retombe sur le commun.
@@ -92,7 +92,9 @@ export default function App() {
   }
 
   const missing = useMemo(() => missingIncomeMonths(shared.state), [shared.state])
-  const openIncome = (m: Month) => setIncomeSheet((s) => ({ open: true, month: m, generation: s.generation + 1 }))
+  // Un rappel peut viser le revenu de n'importe qui : la feuille propose alors chaque personne. Le
+  // bouton des Mois, sur le compte d'une personne, ouvre ses revenus à elle.
+  const openIncome = (m: Month, person?: string) => setIncomeSheet((s) => ({ open: true, month: m, person, generation: s.generation + 1 }))
 
   const screens: Record<Section, ReactNode> = {
     budget: <BudgetView state={shared.state} month={currentMonth()} scope={scope} update={shared.update} onEnterIncome={openIncome} />,
@@ -154,7 +156,7 @@ export default function App() {
           <MenuBar className="app-menu" label="Sections" items={sections} active={current} onSelect={setSection} />
         </Footer>
 
-        <IncomeSheet open={incomeSheet.open} generation={incomeSheet.generation} month={incomeSheet.month} state={shared.state} update={shared.update} onClose={() => setIncomeSheet((s) => ({ ...s, open: false }))} />
+        <IncomeSheet open={incomeSheet.open} generation={incomeSheet.generation} month={incomeSheet.month} person={incomeSheet.person} state={shared.state} update={shared.update} onClose={() => setIncomeSheet((s) => ({ ...s, open: false }))} />
       </Screen>
       {/* Hors de l'écran : le saut couvre toute la fenêtre (position fixe), barre de menu comprise. */}
       <HyperspaceOverlay />
