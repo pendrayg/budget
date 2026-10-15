@@ -1,4 +1,5 @@
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { designSystem } from '../ds'
 import { formatEuro, formatPercent } from '../lib/format'
 import { monthLabel, shortMonthLabel } from '../lib/month'
 import { TOTAL_COLOR } from '../lib/palette'
@@ -47,6 +48,13 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
  * Comme les autres graphiques : pas d'ordonnée, l'échelle part de zéro, les montants sont dans
  * l'infobulle ; les mois du plus ancien au plus récent.
  */
+/**
+ * Sous Star Wars, une barre est une marque pleine : elle rayonne de sa teinte (`#ds-chart-groove-fill`,
+ * cité en attribut comme tout filtre du DS) et se remplit à la façon de `.ds-chart-part` (cf.
+ * index.css, `.spend-bar`). Le néomorphique les garde à plat.
+ */
+const BAR_FILTER = designSystem === 'star-wars' ? 'url(#ds-chart-groove-fill)' : undefined
+
 export default function SpendingChart({ points }: { points: FillPoint[] }) {
   // Le dépensé en deux morceaux empilés : jusqu'au budget, puis ce qui le dépasse.
   const data = points.map((p) => ({ ...p, within: Math.min(p.spent, Math.max(p.budget, 0)), excess: Math.max(0, p.spent - Math.max(p.budget, 0)) }))
@@ -74,12 +82,12 @@ export default function SpendingChart({ points }: { points: FillPoint[] }) {
           <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.4 }} />
           <Bar dataKey="budget" fill="var(--color-border)" radius={[4, 4, 0, 0]} isAnimationActive={false} name="Budget" />
           {/* L'arrondi du haut va au morceau du dessus : le dépassement s'il y en a un. */}
-          <Bar dataKey="within" stackId="depense" fill={TOTAL_COLOR} isAnimationActive={false} name="Dépensé">
+          <Bar dataKey="within" stackId="depense" fill={TOTAL_COLOR} className="spend-bar spend-within" filter={BAR_FILTER} isAnimationActive={false} name="Dépensé">
             {data.map((point) => (
               <Cell key={point.month} radius={point.excess > 0.005 ? 0 : ([4, 4, 0, 0] as unknown as number)} />
             ))}
           </Bar>
-          <Bar dataKey="excess" stackId="depense" fill="var(--color-danger)" radius={[4, 4, 0, 0]} isAnimationActive={false} name="Dépassement" />
+          <Bar dataKey="excess" stackId="depense" fill="var(--color-danger)" className="spend-bar spend-excess" filter={BAR_FILTER} radius={[4, 4, 0, 0]} isAnimationActive={false} name="Dépassement" />
         </BarChart>
       </ResponsiveContainer>
     </div>

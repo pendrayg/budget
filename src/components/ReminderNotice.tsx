@@ -1,4 +1,4 @@
-import { Button, Notice } from '@pendrayg/neomorphism-design-system'
+import { Button, Notice } from '../ds'
 import { monthLabel, monthLabelOf } from '../lib/month'
 import type { Month } from '../lib/types'
 

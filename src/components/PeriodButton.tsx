@@ -1,4 +1,4 @@
-import { Button } from '@pendrayg/neomorphism-design-system'
+import { Button } from '../ds'
 import { PERIOD_LABELS, PERIOD_SHORT, PERIODS } from '../lib/amount'
 import type { Period } from '../lib/types'
 

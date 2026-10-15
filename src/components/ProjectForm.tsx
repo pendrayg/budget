@@ -1,4 +1,4 @@
-import { Button, DeleteButton, Input, Select } from '@pendrayg/neomorphism-design-system'
+import { Button, DeleteButton, Input, Select } from '../ds'
 import { useId, useState } from 'react'
 import { budgetAt } from '../lib/budget'
 import { createId, formatEuro, nowIso } from '../lib/format'

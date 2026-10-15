@@ -1,4 +1,4 @@
-import { Button, DeleteButton, DisclosureButton, Notice } from '@pendrayg/neomorphism-design-system'
+import { Button, DeleteButton, DisclosureButton, Notice } from '../ds'
 import { useEffect, useRef, useState } from 'react'
 import { useOpenLine } from '../hooks/useOpenLine'
 import { formatEuro, formatEuroDelta, nowIso } from '../lib/format'

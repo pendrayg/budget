@@ -1,4 +1,4 @@
-import { IconButton } from '@pendrayg/neomorphism-design-system'
+import { IconButton } from '../ds'
 import { useEffect, useRef, type ReactNode } from 'react'
 
 /**

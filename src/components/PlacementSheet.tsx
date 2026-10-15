@@ -1,4 +1,4 @@
-import { Button, SearchField } from '@pendrayg/neomorphism-design-system'
+import { Button, SearchField } from '../ds'
 import { useState } from 'react'
 import { formatEuro } from '../lib/format'
 import { categoriesOf } from '../lib/scope'

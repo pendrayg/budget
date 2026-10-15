@@ -1,0 +1,4 @@
+/* Le design system néomorphique, puis la mise en page de Budget, qui le surcharge : l'ordre est
+   garanti par ce fichier, quel que soit celui dans lequel le navigateur reçoit les chunks. */
+@import '@pendrayg/neomorphism-design-system/styles.css';
+@import '../index.css';

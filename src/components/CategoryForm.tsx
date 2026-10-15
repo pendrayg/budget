@@ -1,4 +1,4 @@
-import { Button, DeleteButton, FlatSelector, Input, Select, type FlatSelectorOption } from '@pendrayg/neomorphism-design-system'
+import { Button, DeleteButton, FlatSelector, Input, Select, type FlatSelectorOption } from '../ds'
 import { useId, useState } from 'react'
 import { PERIOD_LABELS, PERIOD_SHORT } from '../lib/amount'
 import { addCategory, budgetAt, deleteCategory, editCategory, moveCategory, removeVersion, upsertVersion, versionMonthly, versionsOf } from '../lib/budget'

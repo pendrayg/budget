@@ -1,7 +1,8 @@
-import { Body, Button, ChartFilters, Footer, MenuBar, Notice, Screen, Slides, Spinner, type MenuItem } from '@pendrayg/neomorphism-design-system'
+import { Body, Button, ChartFilters, Footer, MenuBar, Notice, Screen, Slides, Spinner, type MenuItem } from './ds'
 import { useMemo, useState, type ReactNode } from 'react'
 import BudgetView from './components/BudgetView'
 import CalculatorView from './components/CalculatorView'
+import HyperspaceOverlay from './components/HyperspaceOverlay'
 import DepensesView from './components/DepensesView'
 import IncomeSheet from './components/IncomeSheet'
 import IncomesView from './components/IncomesView'
@@ -117,45 +118,49 @@ export default function App() {
   const busy = shared.status === 'loading' || shared.status === 'saving'
 
   return (
-    <Screen>
-      {/* Les filtres de relief des graphiques (DS) : une fois pour toute l'application. */}
-      <ChartFilters />
-      <span className={`sync-indicator${busy ? ' is-on' : ''}`} aria-hidden="true">
-        <Spinner compact />
-      </span>
+    <>
+      <Screen>
+        {/* Les filtres de relief des graphiques (DS) : une fois pour toute l'application. */}
+        <ChartFilters />
+        <span className={`sync-indicator${busy ? ' is-on' : ''}`} aria-hidden="true">
+          <Spinner compact />
+        </span>
 
-      <Slides at={sections.findIndex((item) => item.id === current)} role="main">
-        {sections.map(({ id }) => (
-          <Body key={id}>
-            <div className="page">
-              {/* Les rappels valent pour toute l'application : en tête de chaque écran. */}
-              {shared.notice && (
-                <Notice tone="ok" title={shared.notice} className="sync-notice">
-                  <Button tone="link" onClick={shared.dismissNotice}>
-                    Compris
-                  </Button>
-                </Notice>
-              )}
-              {shared.status === 'offline' && (
-                <Notice tone="warn" title="Serveur injoignable">
-                  Les modifications restent sur ce téléphone et partiront dès que possible.
-                </Notice>
-              )}
-              <ReminderNotice months={missing} onEnter={openIncome} />
-              {screens[id]}
-            </div>
-          </Body>
-        ))}
-      </Slides>
+        <Slides at={sections.findIndex((item) => item.id === current)} role="main">
+          {sections.map(({ id }) => (
+            <Body key={id}>
+              <div className="page">
+                {/* Les rappels valent pour toute l'application : en tête de chaque écran. */}
+                {shared.notice && (
+                  <Notice tone="ok" title={shared.notice} className="sync-notice">
+                    <Button tone="link" onClick={shared.dismissNotice}>
+                      Compris
+                    </Button>
+                  </Notice>
+                )}
+                {shared.status === 'offline' && (
+                  <Notice tone="warn" title="Serveur injoignable">
+                    Les modifications restent sur ce téléphone et partiront dès que possible.
+                  </Notice>
+                )}
+                <ReminderNotice months={missing} onEnter={openIncome} />
+                {screens[id]}
+              </div>
+            </Body>
+          ))}
+        </Slides>
 
-      <Footer>
-        {/* Le sous-menu du budget, des dépenses et des projets, au-dessus du menu, près du pouce :
-            il ne se montre que sur ces trois écrans, dont il choisit le périmètre. */}
-        {!solo && (current === 'budget' || current === 'depenses' || current === 'projets') && <ScopeSelector state={shared.state} scope={scope} onChange={chooseScope} />}
-        <MenuBar className="app-menu" label="Sections" items={sections} active={current} onSelect={setSection} />
-      </Footer>
+        <Footer>
+          {/* Le sous-menu du budget, des dépenses et des projets, au-dessus du menu, près du pouce :
+              il ne se montre que sur ces trois écrans, dont il choisit le périmètre. */}
+          {!solo && (current === 'budget' || current === 'depenses' || current === 'projets') && <ScopeSelector state={shared.state} scope={scope} onChange={chooseScope} />}
+          <MenuBar className="app-menu" label="Sections" items={sections} active={current} onSelect={setSection} />
+        </Footer>
 
-      <IncomeSheet open={incomeSheet.open} generation={incomeSheet.generation} month={incomeSheet.month} state={shared.state} update={shared.update} onClose={() => setIncomeSheet((s) => ({ ...s, open: false }))} />
-    </Screen>
+        <IncomeSheet open={incomeSheet.open} generation={incomeSheet.generation} month={incomeSheet.month} state={shared.state} update={shared.update} onClose={() => setIncomeSheet((s) => ({ ...s, open: false }))} />
+      </Screen>
+      {/* Hors de l'écran : le saut couvre toute la fenêtre (position fixe), barre de menu comprise. */}
+      <HyperspaceOverlay />
+    </>
   )
 }

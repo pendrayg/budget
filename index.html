@@ -9,6 +9,21 @@
          premier : un UA qui ignore l'attribut `media` retient la première balise. -->
     <meta name="theme-color" content="#222425" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)" />
+    <!-- Arrivée d'un saut en hyperespace (changement de design system, cf. src/lib/hyperspace.ts) :
+         la page est peinte en noir dès la première image, jusqu'à ce que le champ d'étoiles
+         reprenne. Sans cela, le rechargement laisserait entrevoir la page entre les deux moitiés
+         du saut. -->
+    <script>
+      try {
+        if (sessionStorage.getItem('budget:hyperspace') !== null) document.documentElement.dataset.arriving = ''
+      } catch {}
+    </script>
+    <style>
+      html[data-arriving],
+      html[data-arriving] body {
+        background: #000 !important;
+      }
+    </style>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Budget" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

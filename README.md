@@ -4,7 +4,8 @@ Le budget d'un foyer — seul, en couple, jusqu'à quatre —, sorti de son clas
 prorata qui en découle, les dépenses par catégorie et la part de chacun, une calculatrice de
 répartition, et les projets ponctuels. Une web app pour Safari sur iPhone, ajoutée à l'écran
 d'accueil, bâtie sur le design system néomorphique partagé
-(`@pendrayg/neomorphism-design-system`) et déployée sur Cloudflare Workers. Tous les
+(`@pendrayg/neomorphism-design-system`) — ou, au choix des Réglages, sur son jumeau Star Wars
+(`@pendrayg/star-wars-design-system`) — et déployée sur Cloudflare Workers. Tous les
 téléphones voient le même document, gardé dans un espace KV.
 
 ## Ce que fait l'application
@@ -208,8 +209,41 @@ ne compte pas. Payé après sa cible, l'achat se juge sur sa dernière mensualit
 
 - **Le design system** vient du paquet partagé avec Investment, Follow et weather-ahead : jetons,
   deux thèmes (sombre par défaut, clair si l'appareil le règle), règle de relief, boutons,
-  champs, sélecteurs, sections dépliantes, barre de menu, écrans qui glissent. Les sections du
-  budget sont des sections dépliantes ordinaires : elles ne s'enfoncent pas.
+  champs, sélecteurs, sections dépliantes, barre de menu, écrans qui glissent (ou clignotent, sous
+  Star Wars). Les sections du budget sont des sections dépliantes ordinaires : elles ne
+  s'enfoncent pas.
+- **Deux design systems, au choix des Réglages** (Apparence) : le néomorphique, par défaut, ou
+  son jumeau [`@pendrayg/star-wars-design-system`](https://www.npmjs.com/package/@pendrayg/star-wars-design-system)
+  — mêmes composants, mêmes props, mêmes classes `.ds-*` et mêmes jetons, mais plus une ombre : un
+  tube néon, les polices du générique, le grain d'un écran cathodique. Le choix est un réglage de
+  l'appareil (`src/lib/design-system.ts`, clé `budget:design-system`), comme le budget choisi
+  dans le sous-menu : il ne part ni au serveur ni dans la sauvegarde. Leurs feuilles ne pouvant
+  pas cohabiter, Budget n'importe jamais un paquet directement : tout passe par l'**adaptateur**
+  `src/ds/`, qui lit le choix, importe le paquet élu — le module attend ce chargement (`await` de
+  premier niveau, d'où la cible `es2022` du build) avant que l'application ne rende quoi que ce
+  soit — et re-exporte les seuls composants que Budget utilise, à la signature commune aux deux.
+  Chaque paquet vient avec sa feuille, `src/ds/neomorphism.css` ou `src/ds/star-wars.css`, qui
+  importe les styles du DS **puis** `index.css` : l'ordre est fixé dans un seul fichier CSS, pas
+  dans celui où le navigateur reçoit les chunks. L'adaptateur pose `data-ds` sur `<html>` ;
+  `index.css` s'en sert pour le peu qui n'a de sens que sous Star Wars (ce qui se creusait
+  s'allume, et le bleu y étant réservé à ce qui est actif, le total du budget et l'avancée d'un
+  projet passent à l'ambre des données, les barres du remplissage deviennent des marques pleines
+  cernées de néon).
+- **Les transitions sont celles du DS.** Les écrans sont les `Slides` du paquet élu : sous le
+  néomorphique, la vue **glisse** dans le sens de la barre de menu ; sous Star Wars, rien ne
+  glisse, la vue **clignote** sous le voile du DS (`.ds-screen-blink`) — la pastille du menu
+  s'éteint sur l'ancienne destination dès l'appui et se rallume sur la nouvelle, la vue change
+  voile plein. L'application ne fait que dire où l'on va ; les sections dépliantes, les
+  sélecteurs et les champs apportent aussi les leurs.
+- **Changer de DS est un saut en hyperespace**, celui du DS Star Wars (`HyperspaceJump`), dans les
+  deux sens. La page devant se recharger, le saut est coupé en deux, au seul instant où l'écran
+  est entièrement couvert, l'entrée en croisière (`src/lib/hyperspace.ts`) : la page quittée
+  joue l'accélération, puis écrit le choix, laisse une marque d'arrivée dans `sessionStorage` et
+  se recharge ; la page d'arrivée reprend en croisière et décélère sur le nouveau DS.
+  `index.html` lit la marque avant tout chargement et peint la page en noir, pour que le
+  rechargement ne laisse rien entrevoir entre les deux moitiés. La boîte du saut est reprise dans
+  `index.css` : sous le néomorphique, la feuille du DS Star Wars n'est pas là. Sous
+  `prefers-reduced-motion`, pas de saut : le choix s'écrit et la page se recharge aussitôt.
 - **Chaque ligne est un bouton section dépliante** (`DisclosureButton`) : une catégorie, un mois
   de revenus, un projet, un groupe de réglages. L'en-tête dit la ligne (nom et montant ; pour un
   mois, le revenu de chacun) ; un appui l'enfonce et déplie son
@@ -334,7 +368,9 @@ cp .dev.vars.example .dev.vars   # variables Access vides : pas de vérification
 npm run build
 npm run worker:dev   # http://127.0.0.1:8787 : le Worker, un KV local, et dist/ en statique
 npm run dev          # http://localhost:5173, l'API relayée vers 8787
-npm test             # vitest : domaine (prorata, versions, synthèse, fusion) et Worker
+npm test             # vitest : domaine (prorata, versions, synthèse, fusion), Worker, design system
+npm run lint         # oxlint
+npm run typecheck    # tsc -b
 ```
 
 Les tests de synthèse s'appuient sur `seed/couts.json`, un foyer **fictif** (Alice et Bruno, revenus
@@ -356,7 +392,7 @@ de 41,32 % / 58,68 % pour octobre 2026.
    (`equipe.cloudflareaccess.com`, dans Zero Trust → Paramètres) et `ACCESS_AUD` (l'étiquette
    d'audience, dans Zero Trust → Access → Applications → l'application). Ce ne sont pas des
    secrets. `wrangler.jsonc` porte `keep_vars` : un déploiement ne les efface pas.
-3. Le design system est public sur npm : le build Cloudflare l'installe sans rien configurer.
+3. Les deux design systems sont publics sur npm : le build Cloudflare les installe sans rien configurer.
    Commande de build `npm run build`, de déploiement `npx wrangler deploy` ; ou à la
    main, `npm run deploy`.
 4. Sur l'iPhone : ouvrir l'URL dans Safari, Partager → Sur l'écran d'accueil, puis se connecter
@@ -367,9 +403,11 @@ de 41,32 % / 58,68 % pour octobre 2026.
 ```
 index.html, public/            coquille, manifeste, icône : `icon.svg` (un cadre de viseur autour de
                                l'euro), et ses PNG pleins (180, 192, 512) rendus depuis elle
-src/main.tsx, App.tsx          entrée, les cinq écrans, les rappels, la feuille des revenus
+src/main.tsx, App.tsx          entrée, les six écrans, les rappels, la feuille des revenus, le saut
+src/ds/                        l'adaptateur du design system : le paquet élu, sa feuille, puis index.css
 src/lib/                       le domaine, pur et testé : month, amount, prorata, budget, summary,
-                               missing, merge, state (défaut, assainissement, import/export), api
+                               missing, merge, state (défaut, assainissement, import/export), api ;
+                               design-system (le DS retenu) et hyperspace (le saut qui en change)
 src/hooks/                     useSharedState (miroir, envoi, fusion), useOpenLine (une ligne ouverte)
 src/components/                écrans ; formulaires (CategoryForm, IncomeForm, ProjectForm), dans les
                                lignes et dans les feuilles de création ; Sheet, NumberField, MonthField

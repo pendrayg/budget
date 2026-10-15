@@ -1,4 +1,4 @@
-import { Button, Disclosure, DisclosureButton } from '@pendrayg/neomorphism-design-system'
+import { Button, Disclosure, DisclosureButton } from '../ds'
 import { useState, type ReactNode } from 'react'
 import { formatEuro, formatPercent } from '../lib/format'
 import { budgetHistory, monthSummary, type BudgetSection } from '../lib/summary'

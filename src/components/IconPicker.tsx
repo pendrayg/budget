@@ -1,4 +1,4 @@
-import { Button, SearchField } from '@pendrayg/neomorphism-design-system'
+import { Button, SearchField } from '../ds'
 import { useEffect, useState } from 'react'
 import { APP_ICON_LIST, iconLabel, searchIcons, type NerdIcon } from '../lib/icons'
 import type { CategoryIcon } from '../lib/types'

@@ -1,4 +1,4 @@
-import { Button, DeleteButton, FlatSelector, Input } from '@pendrayg/neomorphism-design-system'
+import { Button, DeleteButton, FlatSelector, Input } from '../ds'
 import { useId, useState } from 'react'
 import { createId, formatEuro, nowIso } from '../lib/format'
 import { incomeOf } from '../lib/prorata'

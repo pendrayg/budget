@@ -1,4 +1,4 @@
-import { Button, DeleteButton, FlatSelector, Input, Selectable, SelectToggle } from '@pendrayg/neomorphism-design-system'
+import { Button, DeleteButton, FlatSelector, Input, Selectable, SelectToggle } from '../ds'
 import { useId, useState } from 'react'
 import { addGroup, deleteGroup, editGroup, setGroupShares } from '../lib/budget'
 import { createId, formatPercent, nowIso } from '../lib/format'

@@ -1,4 +1,4 @@
-import { FlatSelector } from '@pendrayg/neomorphism-design-system'
+import { FlatSelector } from '../ds'
 import type { Scope } from '../lib/scope'
 import type { State } from '../lib/types'
 

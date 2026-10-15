@@ -1,4 +1,4 @@
-import { FlatSelector } from '@pendrayg/neomorphism-design-system'
+import { FlatSelector } from '../ds'
 import { useState } from 'react'
 import { formatEuro, formatPercent } from '../lib/format'
 import { sharesAt, split } from '../lib/prorata'

@@ -1,9 +1,11 @@
-/* Mise en page de Budget. Le design system — jetons, deux thèmes, règle de relief, échelle des
-   ombres, boutons, champs, sélecteurs, cases, messages, barre de menu, écran (Screen, Body,
-   Footer, Slides), sections dépliantes, icônes — vient du paquet partagé
-   @pendrayg/neomorphism-design-system, importé avant ce fichier (cf. main.tsx). Ici, ce qui
-   est propre à l'application : ses sections, ses cartes de chiffres, ses lignes de liste, ses
-   formulaires et sa feuille.
+/* Mise en page de Budget. Le design system — jetons, deux thèmes, règle de relief ou néon, échelle
+   des ombres, boutons, champs, sélecteurs, cases, messages, barre de menu, écran (Screen, Body,
+   Footer, Slides), sections dépliantes, icônes — vient d'un paquet,
+   @pendrayg/neomorphism-design-system ou @pendrayg/star-wars-design-system au choix des Réglages,
+   importé avant ce fichier par src/ds/*.css. Les deux ont les mêmes jetons et les mêmes classes :
+   ce qui suit vaut pour l'un comme pour l'autre, et `:root[data-ds='star-wars']` isole le peu qui
+   n'a de sens que sous l'un. Ici, ce qui est propre à l'application : ses sections, ses cartes de
+   chiffres, ses lignes de liste, ses formulaires et sa feuille.
 
    Comme Investment, l'application n'a pas de ZONES : les sections sont des blocs nus séparés par
    le blanc, le contenu va d'un bord à l'autre du corps. La bordure fine ne subsiste que sous ce
@@ -52,6 +54,37 @@ body,
   /* Le corps du DS coupe ce qui dépasse et ne garde sous son contenu que la largeur de son fondu
      (8 px) : l'ombre du dernier bouton y était rognée. La place d'une ombre, sous la page. */
   padding-bottom: var(--shadow-room);
+}
+
+/* Saut en hyperespace (cf. lib/hyperspace.ts) : la boîte du champ d'étoiles, reprise de la feuille
+   du DS Star Wars (jump.css), qui n'est pas chargée sous le néomorphique — le saut se joue dans les
+   deux sens. Noir opaque dès la première image, au-dessus de tout (scanlines comprises), et qui
+   capte les appuis : la page dessous est inerte le temps du saut. Seule la sortie s'efface. */
+.ds-jump {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: #000;
+  pointer-events: auto;
+}
+
+.ds-jump[data-phase='exit'] {
+  animation: budget-jump-fade 0.2s ease-in both;
+}
+
+@keyframes budget-jump-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.ds-jump-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 /* Synchronisation : le point du DS, en haut à droite sous la barre d'état, par-dessus le corps. */
@@ -393,7 +426,8 @@ body,
 
 .month-input:focus-within .month-display {
   --sink: 1;
-  transition: --sink 1s var(--sink-ease);
+  /* Star Wars n'a pas de --sink-ease (rien ne s'y enfonce) : la règle plus bas l'allume. */
+  transition: --sink 1s var(--sink-ease, ease);
 }
 
 .month-native {
@@ -1174,4 +1208,46 @@ body,
   padding-block: 8px;
   white-space: normal;
   text-align: left;
+}
+
+/* ---------- Sous le DS Star Wars ----------
+   Le peu qui n'a de sens que sous lui. Rien ne s'y creuse : ce qui s'enfonçait s'ALLUME (`--lit`),
+   et le bleu y est réservé à ce qui est actif — les données sont ambre (`--chart-ink`). */
+
+/* Le total du budget, en courbe comme en barre : bleu sous le néomorphique, l'encre des données
+   du DS sous Star Wars (cf. lib/palette.ts). */
+:root {
+  --total-color: #5b7fd4;
+}
+
+:root[data-ds='star-wars'] {
+  --total-color: var(--chart-ink);
+}
+
+/* Le mois engagé (cf. MonthInput) : le champ du DS ne prend pas le focus, c'est le champ natif
+   par-dessus. Il s'allume donc comme un champ engagé, à la place de se creuser. */
+:root[data-ds='star-wars'] .month-input:focus-within .month-display {
+  --lit: 1;
+  transition: --lit var(--lit-in);
+}
+
+/* L'avancée d'un projet est une donnée, pas un état : ambre, comme les graphiques. */
+:root[data-ds='star-wars'] .project-progress > span {
+  background: var(--chart-ink);
+}
+
+/* Les barres du remplissage sont des marques pleines (`.ds-chart-part` du DS) : remplies de leur
+   teinte à 22 %, cernées du trait plein du néon. Le halo est le filtre posé par SpendingChart. */
+:root[data-ds='star-wars'] .spend-within {
+  color: var(--total-color);
+}
+
+:root[data-ds='star-wars'] .spend-excess {
+  color: var(--color-danger);
+}
+
+:root[data-ds='star-wars'] .spend-bar path {
+  fill: color-mix(in srgb, currentColor 22%, transparent);
+  stroke: currentColor;
+  stroke-width: var(--neon-width);
 }

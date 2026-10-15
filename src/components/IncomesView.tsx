@@ -1,4 +1,4 @@
-import { Button, DisclosureButton } from '@pendrayg/neomorphism-design-system'
+import { Button, DisclosureButton } from '../ds'
 import { useOpenLine } from '../hooks/useOpenLine'
 import { colorOf, colorVar } from '../lib/colors'
 import { formatEuro, formatPercent } from '../lib/format'

@@ -1,11 +1,13 @@
-import { Button, DeleteButton, DisclosureButton, Input, Notice } from '@pendrayg/neomorphism-design-system'
+import { Button, DeleteButton, DisclosureButton, Input, Notice } from '../ds'
 import { useRef, useState } from 'react'
+import { DESIGN_SYSTEM_LABELS, readDesignSystem } from '../lib/design-system'
 import { colorOf } from '../lib/colors'
 import { nowIso } from '../lib/format'
 import { addPerson, isSolo, MAX_PEOPLE, peopleNames, removePerson } from '../lib/people'
 import { defaultState, exportPayload, parseImport } from '../lib/state'
 import type { PersonColor, State } from '../lib/types'
 import type { SyncStatus } from '../hooks/useSharedState'
+import AppearanceChoice from './AppearanceChoice'
 import ColorChoice from './ColorChoice'
 import NumberField from './NumberField'
 
@@ -78,7 +80,7 @@ export default function SettingsView({
       <div className="section-head">
         <div>
           <h2>Réglages</h2>
-          <p>Les personnes, le prorata et les données. La répartition se règle dans chaque catégorie du budget.</p>
+          <p>Les personnes, le prorata, l’apparence et les données. La répartition se règle dans chaque catégorie du budget.</p>
         </div>
       </div>
 
@@ -126,6 +128,14 @@ export default function SettingsView({
               }}
             />
             <p className="field-hint muted">Un an glissant par défaut : le budget d’un mois se répartit selon les revenus des douze mois qui le précèdent — l’argent reçu paie l’argent dépensé. Seuls les mois où tous les revenus sont saisis entrent dans la moyenne.</p>
+          </div>
+        </DisclosureButton>
+
+        <DisclosureButton title="Apparence" hint={DESIGN_SYSTEM_LABELS[readDesignSystem()]} icon="view_dashboard">
+          {/* Réglage de cet appareil : il ne part ni au serveur ni dans la sauvegarde. */}
+          <div className="form">
+            <AppearanceChoice />
+            <p className="field-hint muted">Le design system de l’application, sur cet appareil. Néomorphisme par défaut ; en changer passe par un saut en hyperespace.</p>
           </div>
         </DisclosureButton>
 

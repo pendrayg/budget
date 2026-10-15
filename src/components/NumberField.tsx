@@ -1,4 +1,4 @@
-import { Input } from '@pendrayg/neomorphism-design-system'
+import { Input } from '../ds'
 import { useEffect, useState } from 'react'
 import { parseNumber } from '../lib/format'
 

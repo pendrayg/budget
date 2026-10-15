@@ -1,4 +1,4 @@
-import { Button } from '@pendrayg/neomorphism-design-system'
+import { Button } from '../ds'
 import { colorVar, PERSON_COLORS } from '../lib/colors'
 import type { PersonColor } from '../lib/types'
 
