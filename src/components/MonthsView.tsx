@@ -18,10 +18,17 @@ import PlacementSheet from './PlacementSheet'
 import SpendingChart from './SpendingChart'
 import Underlined from './Underlined'
 
-/** La seconde ligne d'un mois : combien de dépenses dépassent (en rouge), puis combien d'opérations sont à ranger. */
+/**
+ * La seconde ligne d'un mois : à gauche, combien de dépenses dépassent (en rouge) ; calé à droite,
+ * sous le revenu de la dernière colonne, combien d'opérations sont à ranger.
+ */
 function SpendingHint({ over, unsorted }: { over: number; unsorted: number }) {
-  const parts = [over > 0 && <OverLabel key="over" count={over} />, unsorted > 0 && <span key="unsorted">{unsorted} à ranger</span>].filter(Boolean)
-  return <>{parts.flatMap((part, i) => (i === 0 ? [part] : [' · ', part]))}</>
+  return (
+    <span className="month-hint">
+      <span>{over > 0 && <OverLabel count={over} />}</span>
+      {unsorted > 0 && <span className="month-hint-unsorted">{unsorted} à ranger</span>}
+    </span>
+  )
 }
 
 /**
@@ -180,7 +187,6 @@ export default function MonthsView({
                     incomesHint && spendingHint ? (
                       <>
                         {incomesHint}
-                        <br />
                         {spendingHint}
                       </>
                     ) : (

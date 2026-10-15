@@ -1092,6 +1092,19 @@ body,
   text-transform: uppercase;
 }
 
+/* La seconde ligne d'un mois (cf. MonthsView) : les dépassements à gauche, ce qui reste à ranger
+   calé à droite, sous le revenu de la dernière colonne. */
+.month-hint {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.month-hint-unsorted {
+  margin-left: auto;
+  text-align: right;
+}
+
 /* Un mois déplié (cf. MonthsView) : ses revenus, puis ses dépenses, chacun sous son titre. */
 .month-parts {
   display: flex;

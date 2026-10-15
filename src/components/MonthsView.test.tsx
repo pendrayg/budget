@@ -42,7 +42,8 @@ describe('MonthsView', () => {
     const { container } = view(withStatement())
     const september = [...container.querySelectorAll('.line-button')].find((line) => /sept\. 2026/i.test(line.textContent ?? ''))
     expect(september?.textContent).toContain('2\u202f195,00')
-    expect(september?.textContent).toContain('1 dépassement · 2 à ranger')
+    expect(september?.querySelector('.month-hint')?.textContent).toBe('1 dépassement2 à ranger')
+    expect(september?.querySelector('.month-hint-unsorted')?.textContent).toBe('2 à ranger')
     expect(september?.classList.contains('line-incomplete')).toBe(true)
   })
 

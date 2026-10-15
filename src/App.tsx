@@ -29,7 +29,7 @@ type Section = 'budget' | 'mois' | 'calculatrice' | 'projets' | 'reglages'
  */
 const SECTIONS: MenuItem<Section>[] = [
   { id: 'budget', label: 'Budget', ariaLabel: 'Budget du mois', icon: 'bank' },
-  { id: 'mois', label: 'Mois', ariaLabel: 'Revenus et dépenses, mois par mois', icon: 'calendar' },
+  { id: 'mois', label: 'Mois', ariaLabel: 'Revenus et dépenses, mois par mois', icon: 'arrow_up_down' },
   { id: 'calculatrice', label: 'Calcul', ariaLabel: 'Calculatrice de répartition', icon: 'chart_donut' },
   { id: 'projets', label: 'Projets', ariaLabel: 'Projets ponctuels', icon: 'format_list_bulleted' },
   { id: 'reglages', label: 'Réglages', ariaLabel: 'Réglages', icon: 'cog' },
