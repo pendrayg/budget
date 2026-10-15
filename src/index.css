@@ -1198,6 +1198,16 @@ body,
    Le peu qui n'a de sens que sous lui. Rien ne s'y creuse : ce qui s'enfonçait s'ALLUME (`--lit`),
    et le bleu y est réservé à ce qui est actif — les données sont ambre (`--chart-ink`). */
 
+/* Le dépassement du budget, dans les revenus : l'orange de la palette des personnes, entre le
+   dépensé et le rouge, qui dit, lui, le dépassement des revenus (cf. SpendingChart). */
+:root {
+  --over-budget: var(--c-orange);
+}
+
+.spend-over-budget {
+  color: var(--over-budget);
+}
+
 /* Le total du budget, en courbe comme en barre : bleu sous le néomorphique, l'encre des données
    du DS sous Star Wars (cf. lib/palette.ts). */
 :root {
@@ -1224,6 +1234,10 @@ body,
    teinte à 22 %, cernées du trait plein du néon. Le halo est le filtre posé par SpendingChart. */
 :root[data-ds='star-wars'] .spend-within {
   color: var(--total-color);
+}
+
+:root[data-ds='star-wars'] .spend-over-budget {
+  color: var(--over-budget);
 }
 
 :root[data-ds='star-wars'] .spend-excess {

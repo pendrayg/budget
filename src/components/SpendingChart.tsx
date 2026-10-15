@@ -40,8 +40,13 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
       {point.share !== null && <Row label="Dont participation au foyer">{formatEuro(point.share)}</Row>}
       {spent !== null && budget !== null && budget > 0 && <Row label="Rempli">{formatPercent(spent / budget)}</Row>}
       {spent !== null && budget !== null && spent > budget + 0.005 && (
-        <Row label="Dépassement">
-          <span className="spend-over">{formatEuro(spent - budget)}</span>
+        <Row label="Dépassement du budget">
+          <span className="spend-over-budget">{formatEuro(spent - budget)}</span>
+        </Row>
+      )}
+      {spent !== null && income !== null && spent > income + 0.005 && (
+        <Row label="Au-delà des revenus">
+          <span className="spend-over">{formatEuro(spent - income)}</span>
         </Row>
       )}
       {remaining !== null && (
@@ -70,8 +75,8 @@ type ChartPoint = FillPoint & { top: number }
  * de ses chiffres) : d'où l'échelle, en pixels par euro, de tout ce qui s'y dessine.
  *   - les REVENUS font la barre : un contour pointillé, à l'encre discrète du DS ;
  *   - le BUDGET la fractionne : un trait pointillé en travers, à la teinte du total ;
- *   - le DÉPENSÉ la remplit depuis le bas jusqu'au trait du budget ; au-delà, seul le DÉPASSEMENT
- *     passe au rouge.
+ *   - le DÉPENSÉ la remplit depuis le bas jusqu'au trait du budget ; au-delà, le DÉPASSEMENT du
+ *     budget passe à l'orange, et ce qui dépasse les revenus eux-mêmes, au rouge.
  * Le contour gris des revenus passe SOUS le remplissage, le trait du budget par-dessus. Un mois
  * sans relevé n'a que ses revenus ; un mois sans revenu complet, que son budget et son dépensé.
  */
@@ -82,15 +87,22 @@ function MonthBar({ x = 0, y = 0, width = 0, height = 0, payload }: { x?: number
   const at = (value: number) => base - value * scale
   const budget = Math.max(payload.budget ?? 0, 0)
   const spent = payload.spent ?? 0
-  const within = Math.min(spent, budget)
-  const excess = Math.max(0, spent - budget)
+  // Trois tranches : le dépensé dans le budget (et dans les revenus) ; au-delà du budget mais
+  // dans les revenus, en orange ; au-delà des revenus, en rouge. Sans revenu connu, rien n'est rouge.
+  const income = payload.income ?? Infinity
+  const within = Math.min(spent, budget, income)
+  const overBudget = Math.max(0, Math.min(spent, income) - budget)
+  const overIncome = Math.max(0, spent - income)
   return (
     <g>
       {payload.income !== null && (
         <rect x={x} y={at(payload.income)} width={width} height={payload.income * scale} rx={3} fill="none" stroke={INCOME_COLOR} strokeWidth={1.5} strokeDasharray={DASH} />
       )}
       {within > 0 && <rect x={x} y={at(within)} width={width} height={within * scale} fill={TOTAL_COLOR} className="spend-bar spend-within" filter={BAR_FILTER} />}
-      {excess > 0 && <rect x={x} y={at(spent)} width={width} height={excess * scale} fill="var(--color-danger)" className="spend-bar spend-excess" filter={BAR_FILTER} />}
+      {overBudget > 0 && (
+        <rect x={x} y={at(budget + overBudget)} width={width} height={overBudget * scale} fill="var(--over-budget)" className="spend-bar spend-over-budget" filter={BAR_FILTER} />
+      )}
+      {overIncome > 0 && <rect x={x} y={at(spent)} width={width} height={overIncome * scale} fill="var(--color-danger)" className="spend-bar spend-excess" filter={BAR_FILTER} />}
       {payload.budget !== null && budget > 0 && <line x1={x} x2={x + width} y1={at(budget)} y2={at(budget)} stroke={TOTAL_COLOR} strokeWidth={2} strokeDasharray={DASH} />}
     </g>
   )
@@ -114,7 +126,8 @@ function EdgeTick({ x, y, payload, index = 0, last, half }: { x?: number; y?: nu
 
 /**
  * Le mois en chiffres, une barre par mois (cf. `MonthBar`) : les revenus, que le budget fractionne,
- * et le dépensé qui la remplit jusqu'au budget — en rouge ce qui le dépasse. Comme les autres
+ * et le dépensé qui la remplit jusqu'au budget — en orange ce qui le dépasse, en rouge ce qui
+ * dépasse les revenus. Comme les autres
  * graphiques : pas d'ordonnée, l'échelle part de zéro, les montants — et le reste à vivre — sont
  * dans l'infobulle ; les mois du plus ancien au plus récent.
  */

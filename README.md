@@ -82,10 +82,12 @@ Revenus et dépenses partagent un écran, **Mois** : ce qui est entré et ce qui
 synthèse du prorata, un graphique, **une barre par mois** : les **revenus** en sont la barre
 principale, un contour pointillé à l'encre discrète du DS, qui passe sous le remplissage ; le **budget** la fractionne, d'un trait
 pointillé en travers à la teinte du total ; le **dépensé** la remplit depuis le bas jusqu'à ce
-trait — au-delà, seul le **dépassement** passe au rouge. Chaque mois qui a un revenu ou un relevé y a sa barre : un
+trait — au-delà, le **dépassement du budget** passe à l'orange, et ce qui dépasse les **revenus**
+eux-mêmes, au rouge. Chaque mois qui a un revenu ou un relevé y a sa barre : un
 mois sans relevé n'a que ses revenus ; un mois où il manque le revenu de quelqu'un (sur le foyer)
 n'a que son budget et son dépensé. Au toucher,
-l'infobulle donne les revenus, le dépensé, le budget, le pourcentage rempli, le dépassement et le
+l'infobulle donne les revenus, le dépensé, le budget, le pourcentage rempli, le dépassement du
+budget, ce qui va au-delà des revenus et le
 **reste à vivre** du mois — le revenu du mois moins ce qu'on verse au foyer et son budget
 personnel (avant le premier budget saisi, c'est ce premier budget qui s'applique), en rouge s'il
 est négatif. Tout suit le compte choisi : du foyer, ou d'une personne. Sur le compte d'une
