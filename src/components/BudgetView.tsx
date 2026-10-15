@@ -264,7 +264,7 @@ function PersonalSummary({ state, month, personId, total, solo }: { state: State
         <div className="summary-person">
           <span className="summary-name">Reste à vivre</span>
           <span className="summary-amount">{formatEuro(common.remaining[personId] ?? 0)}</span>
-          <span className="summary-share muted">{solo ? 'après ce budget' : 'après le commun et ce budget'}</span>
+          <span className="summary-share muted">{solo ? 'après ce budget' : 'après sa part du foyer et ce budget'}</span>
         </div>
       )}
     </div>

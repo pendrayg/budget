@@ -59,7 +59,7 @@ export default function SettingsView({
   // Où vont les données d'une personne qu'on retire : à celle qui reste, ou au commun.
   const removalLabel = (person: { id: string; name: string }) => {
     const others = state.people.filter((p) => p.id !== person.id)
-    const to = others.length === 1 ? `à ${others[0].name}` : 'au commun'
+    const to = others.length === 1 ? `à ${others[0].name}` : 'au foyer'
     return `Confirmer : retirer ${person.name}, ses catégories et opérations vont ${to}, ses revenus sont supprimés`
   }
 
@@ -110,8 +110,8 @@ export default function SettingsView({
             )}
             <p className="field-hint muted">
               {isSolo(state)
-                ? 'Seul, pas de commun : le budget est le vôtre. Ajoutez quelqu’un pour partager.'
-                : 'Chacun a son budget et son compte à lui ; le commun se répartit entre tous. Retirer quelqu’un rapatrie ses catégories et ses opérations.'}
+                ? 'Seul, pas de foyer à partager : le budget est le vôtre. Ajoutez quelqu’un pour partager.'
+                : 'Chacun a son budget et son compte à lui ; le budget du foyer se répartit entre tous. Retirer quelqu’un rapatrie ses catégories et ses opérations.'}
             </p>
           </div>
         </DisclosureButton>

@@ -20,7 +20,7 @@ const toScope = (id: string): Scope => (id === COMMON ? null : id)
 
 /** Les budgets où une dépense peut aller : le commun, puis chacun. */
 function scopeOptions(state: State): FlatSelectorOption<string>[] {
-  return [{ id: COMMON, label: 'Commun' }, ...state.people.map((person) => ({ id: person.id, label: person.name || 'Sans nom' }))]
+  return [{ id: COMMON, label: 'Foyer' }, ...state.people.map((person) => ({ id: person.id, label: person.name || 'Sans nom' }))]
 }
 
 const KIND_OPTIONS: FlatSelectorOption<AmountKind>[] = [

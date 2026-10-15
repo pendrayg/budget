@@ -13,7 +13,7 @@ téléphones voient le même document, gardé dans un espace KV.
 ### Le budget
 
 La feuille `Mensuels` du classeur : **un seul budget**, celui en vigueur ce mois-ci — on ne
-navigue pas de mois en mois. En tête, ce que chacun **verse sur le commun**, et sous chaque
+navigue pas de mois en mois. En tête, ce que chacun **verse au foyer**, et sous chaque
 montant sa part du total. Puis les **catégories**, par ordre alphabétique, chacune une section
 dépliante — celles de départ : **Prorata épargné**, **Prorata mensuel** et **Ratio** (un prêt
 immo à 40 / 60, par exemple), et toutes celles qu'on crée. Une catégorie dit **comment on partage** ses dépenses — au **prorata**
@@ -67,8 +67,8 @@ ne compte plus, même si rien n'a été saisi depuis. La durée se règle (douze
 
 Le prorata n'est jamais stocké : il se déduit des revenus. L'écran **Mois** le montre en tête,
 en lignes — le libellé à gauche, la valeur à droite —, selon le compte choisi dans le sous-menu
-du bas. Sur le **commun** : la part de chacun, puis le **revenu moyen du foyer** (la somme de ceux
-de chacun), son **taux d'effort** ((à verser au commun + budgets personnels) / revenu moyen) et
+du bas. Sur le **foyer** : la part de chacun, puis le **revenu moyen du foyer** (la somme de ceux
+de chacun), son **taux d'effort** ((à verser au foyer + budgets personnels) / revenu moyen) et
 son **reste à vivre** (la somme de ceux de chacun). Sur le compte d'une **personne** : sa part,
 son revenu moyen, son effort et son reste. Effort et reste n'apparaissent qu'une fois un budget
 saisi. La couleur de chacun, pour les graphiques du budget, se choisit dans Réglages →
@@ -82,10 +82,10 @@ synthèse du prorata, un graphique, **une barre par mois** : les **revenus** en 
 principale, un contour pointillé à l'encre discrète du DS ; le **budget** la fractionne, d'un trait
 pointillé en travers à la teinte du total ; le **dépensé** la remplit depuis le bas jusqu'à ce
 trait — au-delà, seul le **dépassement** passe au rouge. Chaque mois qui a un revenu ou un relevé y a sa barre : un
-mois sans relevé n'a que ses revenus ; un mois où il manque le revenu de quelqu'un (sur le commun)
+mois sans relevé n'a que ses revenus ; un mois où il manque le revenu de quelqu'un (sur le foyer)
 n'a que son budget et son dépensé. Au toucher,
 l'infobulle donne les revenus, le dépensé, le budget, le pourcentage rempli, le dépassement et le
-**reste à vivre** du mois — le revenu du mois moins ce qu'on verse au commun et son budget
+**reste à vivre** du mois — le revenu du mois moins ce qu'on verse au foyer et son budget
 personnel (avant le premier budget saisi, c'est ce premier budget qui s'applique), en rouge s'il
 est négatif. Revenus et reste à vivre sont ceux du compte choisi : du foyer, ou d'une personne.
 Dessous, chaque mois, saisi ou importé, est un bouton section dépliante. Sa première ligne dit le
@@ -93,12 +93,12 @@ mois et ses **revenus** ; sa **seconde ligne**, ses dépenses : le nombre de dé
 **dépassement**, en rouge, et, calé à droite, le nombre d'opérations **à ranger**. Déplié, ses
 revenus, puis ses **dépenses**, l'état des lieux de son relevé.
 
-Tout suit le sous-menu du bas. Sur le **commun**, les revenus sont ceux du foyer : la ligne en
+Tout suit le sous-menu du bas. Sur le **foyer**, les revenus sont ceux de tous : la ligne en
 donne la somme, « à compléter » tant qu'il manque celui de quelqu'un, et le dépli les détaille,
 personne par personne, sans les saisir ; les dépenses sont celles du compte commun. Sur le compte
 d'une **personne**, ses revenus à elle, qui se saisissent dans le dépli — sans sélecteur de
 personne, le sous-menu l'a déjà choisie —, et ses dépenses, face à son budget. Au pied de l'écran,
-« Saisir un mois » (pour la personne choisie ; sur le commun, la feuille propose chacun) et
+« Saisir un mois » (pour la personne choisie ; sur le foyer, la feuille propose chacun) et
 « Importer un relevé » (dans le compte choisi). Un rappel de saisie ouvre toujours la feuille sur
 chacun : le revenu qui manque peut être celui de n'importe qui.
 
@@ -135,7 +135,7 @@ première) —, puis
 chaque **catégorie en bouton section** — seulement celles où il y a eu des opérations ce mois-ci, et dedans seulement ces dépenses-là : repliée, une ligne, son écart au budget (en vert
 en deçà, en rouge au-delà, « = » pile dessus) et son nombre de dépenses en dépassement ; dépliée, ses dépenses, chacune un bouton section qui déplie ses opérations. Une
 catégorie ouverte à la fois. Les imprévus, les catégories à épargner (jugées sur douze mois) et ce
-qui n'est **pas une dépense** (versements sur le commun, virements internes ; un versement reçu
+qui n'est **pas une dépense** (versements sur le compte commun, virements internes ; un versement reçu
 par virement l'est d'office) suivent le même modèle.
 
 Ranger une opération dans une dépense **apprend son marchand** — le libellé sans la date
@@ -172,29 +172,29 @@ Réglages → Personnes : chacun son nom et sa couleur, **« Ajouter une personn
 plus) et, par personne, de quoi la **retirer**. Une personne qui arrive ne reçoit rien des
 ratios fixes (0 %, à régler dans chaque catégorie) et n'a pas encore de revenus : tant qu'elle
 n'en a pas, aucun mois n'est complet et le prorata retombe à parts égales. Retirer quelqu'un
-**rapatrie** ses données : ses catégories, opérations et marchands appris vont au commun — ou,
-s'il ne reste qu'une personne, à elle, avec tout le commun — ; ses revenus sont supprimés ; les
+**rapatrie** ses données : ses catégories, opérations et marchands appris vont au foyer — ou,
+s'il ne reste qu'une personne, à elle, avec tout le foyer — ; ses revenus sont supprimés ; les
 ratios se ramènent aux parts des autres.
 
-**Seul**, il n'y a pas de commun : le budget est le sien, sans prorata ni ratio (les catégories
+**Seul**, il n'y a pas de foyer à partager : le budget est le sien, sans prorata ni ratio (les catégories
 n'ont que « À épargner »), sans sous-menu, et sans calculatrice au menu. Le reste à vivre est
 le revenu moyen moins ce budget.
 
 ### Les budgets et comptes personnels
 
-Sur le budget, les mois (pour leurs dépenses) et les projets, un sous-menu **Commun / Alice / Bruno** (une pastille
+Sur le budget, les mois (pour leurs dépenses) et les projets, un sous-menu **Foyer / Alice / Bruno** (une pastille
 par personne, sur deux lignes à partir de trois), en bas au-dessus du menu, choisit le budget :
-le commun, ou celui de l'une des personnes. Le choix vaut pour les trois écrans, et ce
+le foyer, ou celui de l'une des personnes. Le choix vaut pour les trois écrans, et ce
 téléphone le retient. Un budget personnel a ses propres catégories et dépenses, que sa personne
 paie seule : pas de répartition (ni prorata, ni ratio), seulement « À épargner ». Sa synthèse
 dit son total, la part du revenu qu'il prend, et le **reste à vivre** une fois versée sa part du
-commun et payé son budget. Son graphique le suit face à son seul revenu. Le budget commun et ses
+foyer et payé son budget. Son graphique le suit face à son seul revenu. Le budget du foyer et ses
 parts n'en tiennent pas compte ; le **reste à vivre** de l'écran Mois, si : synthèse et infobulle
-retirent du revenu la part du commun ET le budget personnel (avant le premier budget personnel,
-c'est lui qui vaut, comme pour le commun).
+retirent du revenu la part du foyer ET le budget personnel (avant le premier budget personnel,
+c'est lui qui vaut, comme pour le foyer).
 
-À plusieurs, une **dépense passe d'un budget à l'autre** (du commun à une personne, d'une personne
-à une autre, ou au commun) par le sélecteur « Budget » de son formulaire, à partir du mois en
+À plusieurs, une **dépense passe d'un budget à l'autre** (du foyer à une personne, d'une personne
+à une autre, ou au foyer) par le sélecteur « Budget » de son formulaire, à partir du mois en
 cours : les mois d'avant restent dans l'ancien budget, avec leurs opérations rangées. Elle va dans
 une catégorie du même type (à épargner ou non) du budget choisi, ou dans une catégorie qui naît
 pour elle (`moveCategory`). Pas la dépense d'un projet, qui reste dans le budget du projet.
@@ -207,14 +207,14 @@ deux jeux d'opérations distincts.
 ### Les projets
 
 La feuille `Projets` : des achats ponctuels en lignes, avec leur total. Rien à répartir. Comme
-le budget et les dépenses, les projets sont **du commun ou d'une personne** : le même sous-menu
+le budget et les dépenses, les projets sont **du foyer ou d'une personne** : le même sous-menu
 choisit le périmètre, et un nouveau projet naît dans celui qui est choisi. Retirer une personne
 rapatrie ses projets avec le reste. Chaque projet porte la **brique** des projets devant son nom,
 puis l'icône qu'on lui choisit (le même sélecteur que les dépenses) ; sa dépense au budget, s'il
 s'épargne, reprend les deux.
 
 Un projet peut avoir une **date cible** et s'**épargner dans le budget** : on choisit une
-catégorie à épargner **de son périmètre** (du commun pour un projet commun, du budget de la
+catégorie à épargner **de son périmètre** (du foyer pour un projet du foyer, du budget de la
 personne pour le sien), où il devient une dépense comme une autre,
 avec la répartition de sa catégorie. Sa mensualité est le reste à épargner divisé par les mois
 jusqu'à la cible (le mois en cours compris) ; elle se recalcule à chaque modification du projet,
@@ -377,7 +377,7 @@ copie de la répartition et de l'épargne de sa catégorie (`splitKeyId`, `save`
 d'avant les catégories, encore ouverte ailleurs, lise et réécrive le document sans rien perdre.
 
 Le propriétaire d'une catégorie ou d'une opération personnelle (`owner`, l'identifiant de sa
-personne ; absent pour le commun) est aussi le **préfixe de son identifiant** (`p2:…`), comme
+personne ; absent pour le foyer) est aussi le **préfixe de son identifiant** (`p2:…`), comme
 celui des règles apprises sur son compte : une app d'avant, qui ne connaît pas le champ et le perd
 en réécrivant l'entité, garde l'identifiant, où l'assainissement le retrouve (`src/lib/scope.ts`).
 

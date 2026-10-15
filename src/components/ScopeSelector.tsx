@@ -11,7 +11,7 @@ const COMMON = 'common'
  * sur deux lignes. Seul, il ne s'affiche pas (cf. App).
  */
 export default function ScopeSelector({ state, scope, onChange }: { state: State; scope: Scope; onChange: (scope: Scope) => void }) {
-  const options = [{ id: COMMON, label: 'Commun' }, ...state.people.map((person) => ({ id: person.id, label: person.name || 'Sans nom' }))]
+  const options = [{ id: COMMON, label: 'Foyer' }, ...state.people.map((person) => ({ id: person.id, label: person.name || 'Sans nom' }))]
   return (
     <FlatSelector
       className="scope-selector"

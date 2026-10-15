@@ -77,7 +77,7 @@ export default function ProjectForm({
   const groupOptions = saveGroupOptions(state, owner)
   // Où créer la catégorie à épargner qui manque : seul, « au budget » suffit.
   const ownerName = state.people.find((person) => person.id === owner)?.name
-  const budgetName = state.people.length === 1 ? 'au budget' : ownerName ? `au budget de ${ownerName}` : 'au budget commun'
+  const budgetName = state.people.length === 1 ? 'au budget' : ownerName ? `au budget de ${ownerName}` : 'au budget du foyer'
   const [groupId, setGroupId] = useState(groupOptions[0]?.value ?? '')
 
   const isNew = projectId === null
@@ -224,7 +224,7 @@ function ProjectSaving({
   total: number
   target: Month | ''
   groupOptions: { value: string; label: string }[]
-  /** « au budget commun », « au budget de Bruno » : là où créer la catégorie qui manque. */
+  /** « au budget du foyer », « au budget de Bruno » : là où créer la catégorie qui manque. */
   budgetName: string
   groupId: string
   onGroup: (groupId: string) => void
