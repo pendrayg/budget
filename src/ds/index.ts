@@ -37,8 +37,11 @@ export type DesignSystem = Pick<
   | 'Select'
   | 'Selectable'
   | 'SelectToggle'
+  | 'Shade'
   | 'Slides'
   | 'Spinner'
+  | 'cx'
+  | 'usePress'
 >
 
 export type { FlatSelectorOption, MenuItem } from '@pendrayg/neomorphism-design-system'
@@ -76,5 +79,8 @@ export const SearchField = ds.SearchField
 export const Select = ds.Select
 export const Selectable = ds.Selectable
 export const SelectToggle = ds.SelectToggle
+export const Shade = ds.Shade
 export const Slides = ds.Slides
 export const Spinner = ds.Spinner
+export const cx = ds.cx
+export const usePress = ds.usePress

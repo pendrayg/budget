@@ -1,13 +1,17 @@
-import { Button, DeleteButton, DisclosureButton, IconButton } from '../ds'
+import { Button, DeleteButton, DisclosureButton } from '../ds'
 import { useOpenLine } from '../hooks/useOpenLine'
 import { formatEuro, formatEuroDelta } from '../lib/format'
 import { monthLabel } from '../lib/month'
 import { displayLabel, removeMonth, spendingSummary, type SpendingLine } from '../lib/spending'
-import type { Month, State, Transaction } from '../lib/types'
+import type { CategoryIcon, Month, State, Transaction } from '../lib/types'
 import CategoryGlyph from './CategoryGlyph'
+import GlyphIconButton from './GlyphIconButton'
 import type { Scope } from '../lib/scope'
 
 type Update = (change: (state: State) => State) => void
+
+/** Ranger une opération : la ranger dans un dossier, une dépense du budget. */
+const PLACE_ICON: CategoryIcon = { name: 'fa-folder_plus', code: 'eec7' }
 
 const day = (date: string) => `${date.slice(8, 10)}/${date.slice(5, 7)}`
 
@@ -29,7 +33,7 @@ function TransactionRow({ transaction, state, onPlace }: { transaction: Transact
           {transaction.detail && <small className="muted"> · {transaction.detail}</small>}
         </span>
         <span className="numeric">{formatEuro(transaction.amount)}</span>
-        <IconButton icon="tray_arrow_down" label={`Ranger ${displayLabel(transaction.label)}, ${formatEuro(transaction.amount)}`} onClick={() => onPlace(transaction)} />
+        <GlyphIconButton icon={PLACE_ICON} label={`Ranger ${displayLabel(transaction.label)}, ${formatEuro(transaction.amount)}`} onClick={() => onPlace(transaction)} />
       </li>
     )
   }
