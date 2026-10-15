@@ -89,6 +89,22 @@ describe('MonthsView', () => {
     expect(onEnterMonth).toHaveBeenLastCalledWith('2026-10', state.people[1].id)
   })
 
+  it('en tête, dit sur le commun la part de chacun et les chiffres du foyer, libellé à gauche, valeur à droite', () => {
+    const { container } = view(seedState())
+    const rows = [...container.querySelectorAll('.figure-row')].map((row) => [row.querySelector('dt')?.textContent, row.querySelector('dd')?.textContent])
+    expect(rows.map(([label]) => label)).toEqual(['Part d’Alice', 'Part de Bruno', 'Revenu moyen du foyer', 'Taux d’effort', 'Reste à vivre'])
+    expect(rows[0][1]).toBe('41,3\u00a0%')
+    expect(rows[2][1]).toBe('5\u202f190,83\u00a0€')
+  })
+
+  it('en tête, dit sur le compte d’une personne ses seuls chiffres', () => {
+    const state = seedState()
+    const { container } = view(state, state.people[1].id)
+    const labels = [...container.querySelectorAll('.figure-row dt')].map((dt) => dt.textContent)
+    expect(labels).toEqual(['Part de Bruno', 'Revenu moyen', 'Taux d’effort', 'Reste à vivre'])
+    expect(container.querySelector('.figure-row dd')?.textContent).toBe('58,7\u00a0%')
+  })
+
   it('propose de saisir un mois et d’importer un relevé', () => {
     const { getByRole } = view(seedState())
     expect(getByRole('button', { name: 'Saisir un mois' })).toBeTruthy()

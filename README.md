@@ -65,24 +65,28 @@ sur les revenus d'octobre 2025 à septembre 2026. Dans cette année, seuls les m
 signale ceux qui manquent. Un revenu de plus d'un an
 ne compte plus, même si rien n'a été saisi depuis. La durée se règle (douze mois par défaut).
 
-Le prorata n'est jamais stocké : il se déduit des revenus. L'écran **Mois** montre en tête le
-prorata, les revenus moyens, le **taux d'effort** ((à verser au commun + budget personnel) / revenu moyen) et le **reste à vivre**
-de chacun ; puis le **graphique des revenus saisis** : une ligne pleine par personne, à sa
-couleur, et en pointillé de la même couleur son reste à vivre du mois — son revenu du mois moins
-sa part à verser ; avant le premier budget saisi, c'est ce premier budget qui s'applique. Le
-zéro y est marqué, et un reste à vivre **négatif** passe dessous, en rouge (dans l'infobulle
-aussi). Pas de
-légende à part : dans la synthèse, le revenu moyen de chacun est souligné d'un trait plein de sa
-couleur, son reste à vivre d'un pointillé. La couleur de chacun se choisit dans Réglages →
+Le prorata n'est jamais stocké : il se déduit des revenus. L'écran **Mois** le montre en tête,
+en lignes — le libellé à gauche, la valeur à droite —, selon le compte choisi dans le sous-menu
+du bas. Sur le **commun** : la part de chacun, puis le **revenu moyen du foyer** (la somme de ceux
+de chacun), son **taux d'effort** ((à verser au commun + budgets personnels) / revenu moyen) et
+son **reste à vivre** (la somme de ceux de chacun). Sur le compte d'une **personne** : sa part,
+son revenu moyen, son effort et son reste. Effort et reste n'apparaissent qu'une fois un budget
+saisi. La couleur de chacun, pour les graphiques du budget, se choisit dans Réglages →
 Personnes, parmi les huit de la palette (bleu, orange, aqua, jaune, rose, vert, violet, rouge),
-toutes ouvertes à chacun, même proches l'une de l'autre. À trois et plus, la synthèse passe en
-lignes, une par personne.
+toutes ouvertes à chacun, même proches l'une de l'autre.
 
 ### Les mois : revenus et dépenses
 
 Revenus et dépenses partagent un écran, **Mois** : ce qui est entré et ce qui est sorti. Sous la
-synthèse du prorata, le graphique des revenus puis celui du remplissage du budget (cf. plus bas) ;
-dessous, chaque mois, saisi ou importé, est un bouton section dépliante. Sa première ligne dit le
+synthèse du prorata, un seul graphique : le remplissage du budget en barres (cf. plus bas), et
+par-dessus les **revenus en pointillé**, à l'encre discrète du DS, comme au graphique du budget.
+Chaque mois qui a un revenu ou un relevé y a sa place : un mois sans relevé n'a que ses revenus,
+un mois où il manque le revenu de quelqu'un (sur le commun) n'a que ses barres. Au toucher,
+l'infobulle donne les revenus, le dépensé, le budget, le pourcentage rempli, le dépassement et le
+**reste à vivre** du mois — le revenu du mois moins ce qu'on verse au commun et son budget
+personnel (avant le premier budget saisi, c'est ce premier budget qui s'applique), en rouge s'il
+est négatif. Revenus et reste à vivre sont ceux du compte choisi : du foyer, ou d'une personne.
+Dessous, chaque mois, saisi ou importé, est un bouton section dépliante. Sa première ligne dit le
 mois et ses **revenus** ; sa **seconde ligne**, ses dépenses : le nombre de dépenses en
 **dépassement**, en rouge, et, calé à droite, le nombre d'opérations **à ranger**. Déplié, ses
 revenus, puis ses **dépenses**, l'état des lieux de son relevé.
@@ -120,9 +124,9 @@ Ce qu'on a **vraiment dépensé**, face au budget, dans l'écran Mois. En début
 relevé PDF du compte commun (BoursoBank) : il est lu **dans le téléphone** (pdf.js, chargé au
 premier import seulement), et seules ses opérations sont gardées — date, libellé, montant ;
 jamais le PDF, ni le RIB. Les montants se lisent au débit ou au crédit d'après leur colonne.
-En tête de l'écran Mois, sous celui des revenus, un graphique du **remplissage du budget** mois par mois : pour chaque mois, le budget
+En tête de l'écran Mois, le graphique du **remplissage du budget** mois par mois : pour chaque mois, le budget
 en piste claire et le dépensé qui la remplit jusqu'au budget ; au-delà, seul le **dépassement**
-s'empile en rouge. Au toucher, le dépensé, le budget, le pourcentage rempli et le dépassement. Dans
+s'empile en rouge. Dans
 un mois déplié, sous ses revenus, ses dépenses montrent d'abord les opérations **à ranger** — un appui ouvre la liste des
 dépenses, chacune avec son icône (le sélecteur natif de l'iPhone ne montre que du texte), sous
 une **recherche** active dès l'ouverture, clavier levé (accents ignorés ; Entrée prend la
@@ -184,7 +188,7 @@ téléphone le retient. Un budget personnel a ses propres catégories et dépens
 paie seule : pas de répartition (ni prorata, ni ratio), seulement « À épargner ». Sa synthèse
 dit son total, la part du revenu qu'il prend, et le **reste à vivre** une fois versée sa part du
 commun et payé son budget. Son graphique le suit face à son seul revenu. Le budget commun et ses
-parts n'en tiennent pas compte ; le **reste à vivre** de l'écran Mois, si : synthèse et courbe
+parts n'en tiennent pas compte ; le **reste à vivre** de l'écran Mois, si : synthèse et infobulle
 retirent du revenu la part du commun ET le budget personnel (avant le premier budget personnel,
 c'est lui qui vaut, comme pour le commun).
 

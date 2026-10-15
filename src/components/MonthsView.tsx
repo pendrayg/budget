@@ -1,7 +1,6 @@
 import { Button, DisclosureButton, Notice } from '../ds'
 import { useRef, useState } from 'react'
 import { useOpenLine } from '../hooks/useOpenLine'
-import { colorOf, colorVar } from '../lib/colors'
 import { formatEuro, formatPercent, nowIso } from '../lib/format'
 import { monthLabel, monthRange, shortMonthLabel } from '../lib/month'
 import { isSolo } from '../lib/people'
@@ -11,16 +10,14 @@ import { importStatement, placeTransaction, spendingMonths, spendingSummary, typ
 import { parseStatement } from '../lib/statement'
 import { incomeHistory, monthSummary, type MonthSummary } from '../lib/summary'
 import type { Month, Person, State } from '../lib/types'
-import IncomeChart from './IncomeChart'
 import IncomeForm from './IncomeForm'
 import MonthSpending, { OverLabel } from './MonthSpending'
 import PlacementSheet from './PlacementSheet'
-import SpendingChart from './SpendingChart'
-import Underlined from './Underlined'
+import SpendingChart, { type FillPoint } from './SpendingChart'
 
 /**
  * La seconde ligne d'un mois : à gauche, combien de dépenses dépassent (en rouge) ; calé à droite,
- * sous le revenu de la dernière colonne, combien d'opérations sont à ranger.
+ * sous les revenus, combien d'opérations sont à ranger.
  */
 function SpendingHint({ over, unsorted }: { over: number; unsorted: number }) {
   return (
@@ -57,8 +54,8 @@ function IncomeRecap({ people, totals }: { people: Person[]; totals: number[] })
 }
 
 /**
- * LES MOIS : ce qui est entré et ce qui est sorti. En tête le prorata et ce qu'il donne, puis
- * l'évolution des revenus et le remplissage du budget ; dessous, mois par mois, un bouton section
+ * LES MOIS : ce qui est entré et ce qui est sorti. En tête le prorata et ce qu'il donne, puis un
+ * graphique, le remplissage du budget et les revenus en pointillé ; dessous, mois par mois, un bouton section
  * dépliante. Replié, il dit ses revenus et, en seconde ligne, les dépassements et les opérations
  * à ranger. Déplié, ses revenus, puis ses dépenses : l'état des lieux du relevé importé.
  *
@@ -86,14 +83,30 @@ export default function MonthsView({
   const lines = useOpenLine()
   const summary = monthSummary(state, month)
   const { prorata } = summary
-  const chart = incomeHistory(state)
-  const charted = chart.length > 1
   // Les mois saisis jusqu'au mois en cours, et ceux qui ont un relevé, du plus récent au plus ancien.
   const entered = state.incomes.map((income) => income.month).sort()
   const incomeMonths = entered.length === 0 ? [] : monthRange(entered[0], entered[entered.length - 1] > month ? entered[entered.length - 1] : month)
   const spent = spendingMonths(state, scope)
   const history = [...new Set([...incomeMonths, ...spent])].sort().reverse()
   const spending = new Map(spent.map((m) => [m, spendingSummary(state, m, scope)]))
+
+  // Le graphique : chaque mois qui a un revenu ou un relevé. Les revenus et le reste à vivre sont
+  // ceux du compte choisi : d'une personne, ou du foyer — leur somme, tant que personne ne manque.
+  const incomes = new Map(incomeHistory(state).map((point) => [point.month, point]))
+  const pick = (values: Record<string, number | null>): number | null => {
+    if (scope) return values[scope] ?? null
+    const all = state.people.map((person) => values[person.id] ?? null)
+    return all.some((value) => value === null) ? null : all.reduce<number>((sum, value) => sum + (value ?? 0), 0)
+  }
+  const chartMonths = [...new Set([...incomes.keys(), ...spent])].sort()
+  const chartPoints: FillPoint[] =
+    spent.length > 0 || chartMonths.length > 1
+      ? chartMonths.map((m) => {
+          const s = spending.get(m)
+          const income = incomes.get(m)
+          return { month: m, spent: s?.spent ?? null, budget: s?.budget ?? null, income: income ? pick(income.income) : null, remaining: income ? pick(income.remaining) : null }
+        })
+      : []
 
   const fileInput = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -138,24 +151,13 @@ export default function MonthsView({
     <>
       {prorata.months.length > 0 && (
         <section className="section">
-          <IncomeSummary state={state} summary={summary} charted={charted} />
+          <IncomeSummary state={state} summary={summary} scope={scope} />
         </section>
       )}
 
-      {charted && (
-        <section className="section" aria-label="Évolution des revenus et du reste à vivre">
-          <IncomeChart history={chart} people={state.people} />
-        </section>
-      )}
-
-      {spent.length > 0 && (
-        <section className="section" aria-label="Remplissage du budget par mois">
-          <SpendingChart
-            points={[...spent].reverse().map((m) => {
-              const s = spending.get(m)!
-              return { month: m, spent: s.spent, budget: s.budget }
-            })}
-          />
+      {chartPoints.length > 0 && (
+        <section className="section" aria-label="Revenus, dépenses et budget par mois">
+          <SpendingChart points={chartPoints} />
         </section>
       )}
 
@@ -260,90 +262,47 @@ export default function MonthsView({
   )
 }
 
+/** « de Bruno », « d’Alice » : l'élision devant une voyelle ou un h muet. */
+function of(name: string): string {
+  return /^[aeiouyhàâäéèêëîïôöùûü]/i.test(name) ? `d’${name}` : `de ${name}`
+}
+
 /**
- * La synthèse : la part de chacun au prorata, son revenu moyen (souligné de sa couleur, comme sa
- * ligne du graphique), son taux d'effort et son reste à vivre (pointillé). À deux, chaque chiffre
- * de part et d'autre ; à trois et plus, une ligne par personne ; seul, pas de part — son revenu,
- * son effort, son reste.
+ * La synthèse, en lignes : le libellé à gauche, la valeur à droite. Elle suit le compte que
+ * choisit le sous-menu du bas. Sur le COMMUN, la part de chacun au prorata, puis le foyer : son
+ * revenu moyen (la somme de ceux de chacun), son taux d'effort (ce qu'il verse au commun et paie
+ * de budgets personnels, sur ce revenu) et son reste à vivre (la somme de ceux de chacun). Sur le
+ * compte d'une PERSONNE, ou seul : sa part, son revenu moyen, son effort, son reste. Effort et
+ * reste ne se disent qu'une fois un budget saisi.
  */
-function IncomeSummary({ state, summary, charted }: { state: State; summary: MonthSummary; charted: boolean }) {
+function IncomeSummary({ state, summary, scope }: { state: State; summary: MonthSummary; scope: Scope }) {
   const { prorata } = summary
   const people = state.people
   // De quoi juger un effort : un budget commun, ou un budget personnel (seul, il n'y a que lui).
   const budgeted = summary.total > 0 || Object.values(summary.personal).some((total) => total > 0)
-  const color = (index: number) => colorVar(colorOf(people, index))
-  const effort = (id: string) => (summary.effort[id] === null ? '—' : formatPercent(summary.effort[id] ?? 0))
-  const remaining = (id: string, index: number) => (
-    <Underlined shown={charted && summary.remaining[id] !== null} color={color(index)} dashed>
-      {summary.remaining[id] === null ? '—' : formatEuro(summary.remaining[id] ?? 0)}
-    </Underlined>
-  )
-  const average = (id: string, index: number) => (
-    <Underlined shown={charted} color={color(index)}>
-      {formatEuro(prorata.averages[id])}
-    </Underlined>
-  )
-
-  if (people.length > 2) {
-    return (
-      <div className="summary-card summary-rows" aria-label="Moyennes et prorata">
-        {/* L'en-tête des colonnes, que quatre lignes de chiffres ne diraient pas d'elles-mêmes. */}
-        <div className="summary-row income-row income-row-head muted" aria-hidden="true">
-          <span className="summary-figure">Part</span>
-          <span className="summary-figure">Revenu moyen</span>
-          {budgeted && <span className="summary-figure">Effort</span>}
-          {budgeted && <span className="summary-figure">Reste à vivre</span>}
-        </div>
-        {people.map((person, index) => (
-          <div className="summary-row income-row" key={person.id}>
-            <span className="summary-name">{person.name}</span>
-            <span className="summary-share">{formatPercent(prorata.shares[person.id])}</span>
-            <span className="summary-figure">{average(person.id, index)}</span>
-            {budgeted && <span className="summary-figure muted">{effort(person.id)}</span>}
-            {budgeted && <span className="summary-figure muted">{remaining(person.id, index)}</span>}
-          </div>
-        ))}
-      </div>
-    )
-  }
+  const person = scope ? people.find((p) => p.id === scope) : undefined
+  const counted = person ? [person] : people
+  const average = counted.reduce((sum, p) => sum + (prorata.averages[p.id] ?? 0), 0)
+  const paid = counted.reduce((sum, p) => sum + (summary.due[p.id] ?? 0) + (summary.personal[p.id] ?? 0), 0)
+  const remainders = counted.map((p) => summary.remaining[p.id]).filter((value): value is number => value !== null && value !== undefined)
+  const rows: Array<{ label: string; value: string }> = [
+    ...(people.length > 1 ? counted.map((p) => ({ label: `Part ${of(p.name)}`, value: formatPercent(prorata.shares[p.id] ?? 0) })) : []),
+    { label: person ? 'Revenu moyen' : 'Revenu moyen du foyer', value: formatEuro(average) },
+    ...(budgeted
+      ? [
+          { label: 'Taux d’effort', value: average > 0 ? formatPercent(paid / average) : '—' },
+          { label: 'Reste à vivre', value: remainders.length > 0 ? formatEuro(remainders.reduce((sum, value) => sum + value, 0)) : '—' },
+        ]
+      : []),
+  ]
   return (
-    <div className="summary-card" aria-label="Moyennes et prorata">
-      {people.length > 1 && (
-        <div className="summary-line summary-line-hero">
-          {people.map((person) => (
-            <span className="summary-figure" key={person.id}>
-              <span className="summary-name">{person.name}</span> {formatPercent(prorata.shares[person.id])}
-            </span>
-          ))}
+    <dl className="figures" aria-label="Moyennes et prorata">
+      {rows.map((row) => (
+        <div className="figure-row" key={row.label}>
+          <dt>{row.label}</dt>
+          <dd className="numeric">{row.value}</dd>
         </div>
-      )}
-      <div className="summary-line summary-line-mid">
-        {people.map((person, index) => (
-          <span className="summary-figure" key={person.id}>
-            {people.length === 1 && <span className="summary-name">Revenu moyen</span>} {average(person.id, index)}
-          </span>
-        ))}
-      </div>
-      {budgeted && (
-        <>
-          <div className="summary-line summary-line-minor muted">
-            {people.map((person) => (
-              <span className="summary-figure" key={person.id}>
-                {people.length === 1 && 'Taux d’effort '}
-                {effort(person.id)}
-              </span>
-            ))}
-          </div>
-          <div className="summary-line summary-line-minor muted">
-            {people.map((person, index) => (
-              <span className="summary-figure" key={person.id}>
-                {people.length === 1 && 'Reste à vivre '}
-                {remaining(person.id, index)}
-              </span>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+      ))}
+    </dl>
   )
 }

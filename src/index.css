@@ -160,49 +160,29 @@ body,
   gap: 10px;
 }
 
-.summary-line {
+/* La synthèse des Mois : une ligne par chiffre, le libellé à gauche, la valeur à droite. */
+.figures {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.figure-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  gap: 12px;
 }
 
-.summary-line-hero {
-  font-size: clamp(18px, 6.4cqi, 32px);
+.figure-row dt {
+  color: var(--color-muted);
 }
 
-.summary-line-mid {
-  font-size: clamp(14px, 4.4cqi, 20px);
-}
-
-.summary-line-minor {
-  font-size: clamp(12px, 3.8cqi, 15px);
-  font-weight: 500;
-}
-
-.summary-figure {
-  white-space: nowrap;
-}
-
-/* La légende du graphique des revenus, dans la synthèse : le revenu moyen de chacun est souligné
-   d'un trait plein de sa couleur, son reste à vivre d'un pointillé, comme ses deux lignes. La
-   couleur vient de la personne (`--trait`), le texte reste à l'encre du texte. */
-.summary-underline {
-  padding-bottom: 3px;
-  border-bottom: 2px solid var(--trait);
-}
-
-.summary-underline-dashed {
-  border-bottom-style: dashed;
-}
-
-.summary-figure:last-child:not(:first-child) {
-  margin-left: auto;
+.figure-row dd {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 /* La synthèse du budget : la part de chacun, le prénom au-dessus, la répartition dessous ; la
@@ -245,26 +225,6 @@ body,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* La synthèse des revenus à trois et plus : part, moyenne, effort, reste, serrés sur la ligne. */
-.income-row {
-  flex-wrap: wrap;
-  font-variant-numeric: tabular-nums;
-}
-
-.income-row .summary-name {
-  flex: 1 0 100%;
-}
-
-.income-row .summary-figure {
-  font-weight: 600;
-}
-
-.income-row-head .summary-figure {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
 }
 
 .summary-row .summary-amount {
@@ -901,25 +861,6 @@ body,
   width: 20px;
   height: 20px;
   border-radius: 50%;
-}
-
-/* Le trait de couleur d'une personne, à côté de son nom dans l'infobulle. */
-.chart-swatch {
-  display: inline-block;
-  width: 16px;
-  height: 2px;
-  border-radius: 1px;
-}
-
-.chart-tooltip-person + .chart-tooltip-person {
-  margin-top: 6px;
-}
-
-.chart-tooltip-name {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-weight: 600;
 }
 
 .chart-tooltip-row {
