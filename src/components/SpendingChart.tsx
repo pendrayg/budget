@@ -12,8 +12,10 @@ export interface FillPoint {
   spent: number | null
   budget: number | null
   income: number | null
-  /** Le revenu du mois moins ce qu'on verse au commun et son budget personnel. */
+  /** Le revenu du mois moins ce qu'on verse au foyer et son budget personnel. */
   remaining: number | null
+  /** Sur le compte d'une personne, sa participation au foyer, comptée dans le budget et le dépensé. */
+  share: number | null
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -35,6 +37,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
       {income !== null && <Row label="Revenus">{formatEuro(income)}</Row>}
       {spent !== null && <Row label="Dépensé">{formatEuro(spent)}</Row>}
       {budget !== null && <Row label="Budget">{formatEuro(budget)}</Row>}
+      {point.share !== null && <Row label="Dont participation au foyer">{formatEuro(point.share)}</Row>}
       {spent !== null && budget !== null && budget > 0 && <Row label="Rempli">{formatPercent(spent / budget)}</Row>}
       {spent !== null && budget !== null && spent > budget + 0.005 && (
         <Row label="Dépassement">
@@ -69,8 +72,8 @@ type ChartPoint = FillPoint & { top: number }
  *   - le BUDGET la fractionne : un trait pointillé en travers, à la teinte du total ;
  *   - le DÉPENSÉ la remplit depuis le bas jusqu'au trait du budget ; au-delà, seul le DÉPASSEMENT
  *     passe au rouge.
- * Les traits se posent par-dessus le remplissage, pour rester lisibles. Un mois sans relevé n'a que
- * ses revenus ; un mois sans revenu complet, que son budget et son dépensé.
+ * Le contour gris des revenus passe SOUS le remplissage, le trait du budget par-dessus. Un mois
+ * sans relevé n'a que ses revenus ; un mois sans revenu complet, que son budget et son dépensé.
  */
 function MonthBar({ x = 0, y = 0, width = 0, height = 0, payload }: { x?: number; y?: number; width?: number; height?: number; payload?: ChartPoint }) {
   if (!payload || payload.top <= 0 || height <= 0) return <g />
@@ -83,11 +86,11 @@ function MonthBar({ x = 0, y = 0, width = 0, height = 0, payload }: { x?: number
   const excess = Math.max(0, spent - budget)
   return (
     <g>
-      {within > 0 && <rect x={x} y={at(within)} width={width} height={within * scale} fill={TOTAL_COLOR} className="spend-bar spend-within" filter={BAR_FILTER} />}
-      {excess > 0 && <rect x={x} y={at(spent)} width={width} height={excess * scale} fill="var(--color-danger)" className="spend-bar spend-excess" filter={BAR_FILTER} />}
       {payload.income !== null && (
         <rect x={x} y={at(payload.income)} width={width} height={payload.income * scale} rx={3} fill="none" stroke={INCOME_COLOR} strokeWidth={1.5} strokeDasharray={DASH} />
       )}
+      {within > 0 && <rect x={x} y={at(within)} width={width} height={within * scale} fill={TOTAL_COLOR} className="spend-bar spend-within" filter={BAR_FILTER} />}
+      {excess > 0 && <rect x={x} y={at(spent)} width={width} height={excess * scale} fill="var(--color-danger)" className="spend-bar spend-excess" filter={BAR_FILTER} />}
       {payload.budget !== null && budget > 0 && <line x1={x} x2={x + width} y1={at(budget)} y2={at(budget)} stroke={TOTAL_COLOR} strokeWidth={2} strokeDasharray={DASH} />}
     </g>
   )

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { seedState } from './fixtures'
-import { monthSummary } from './summary'
+import { dueAt, firstBudgetMonth, monthSummary } from './summary'
 
 describe('monthSummary', () => {
   it('retrouve le budget de l’exemple d’octobre 2026', () => {
@@ -163,5 +163,15 @@ describe('incomeHistory', () => {
     const { incomeHistory } = await import('./summary')
     const { defaultState } = await import('./state')
     expect(incomeHistory(defaultState())).toEqual([])
+  })
+})
+
+describe('dueAt', () => {
+  it('donne la participation d’une personne au foyer, celle du premier budget avant lui', () => {
+    const state = seedState()
+    const bruno = state.people[1].id
+    expect(dueAt(state, '2026-10', bruno)).toBeCloseTo(monthSummary(state, '2026-10').due[bruno])
+    const first = firstBudgetMonth(state)!
+    expect(dueAt(state, '2000-01', bruno)).toBeCloseTo(monthSummary(state, first).due[bruno])
   })
 })

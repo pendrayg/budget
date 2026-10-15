@@ -8,7 +8,7 @@ import { incomeOf, incomeTotal } from '../lib/prorata'
 import type { Scope } from '../lib/scope'
 import { importStatement, placeTransaction, spendingMonths, spendingSummary, type Placement } from '../lib/spending'
 import { parseStatement } from '../lib/statement'
-import { incomeHistory, monthSummary, type MonthSummary } from '../lib/summary'
+import { dueAt, incomeHistory, monthSummary, personalTotal, type MonthSummary } from '../lib/summary'
 import type { Month, Person, State } from '../lib/types'
 import IncomeForm from './IncomeForm'
 import MonthSpending, { OverLabel } from './MonthSpending'
@@ -99,12 +99,20 @@ export default function MonthsView({
     return all.some((value) => value === null) ? null : all.reduce<number>((sum, value) => sum + (value ?? 0), 0)
   }
   const chartMonths = [...new Set([...incomes.keys(), ...spent])].sort()
+  // Sur le compte d'une personne, sa participation au foyer compte dans son budget et dans son
+  // dépensé : c'est de l'argent qui sort, chaque mois, au même titre que son budget à elle. Elle
+  // est connue sans relevé ; ses dépenses à elle ne le sont qu'avec.
   const chartPoints: FillPoint[] =
     spent.length > 0 || chartMonths.length > 1
       ? chartMonths.map((m) => {
           const s = spending.get(m)
           const income = incomes.get(m)
-          return { month: m, spent: s?.spent ?? null, budget: s?.budget ?? null, income: income ? pick(income.income) : null, remaining: income ? pick(income.remaining) : null }
+          const point = { month: m, income: income ? pick(income.income) : null, remaining: income ? pick(income.remaining) : null }
+          if (!scope) return { ...point, spent: s?.spent ?? null, budget: s?.budget ?? null, share: null }
+          const share = dueAt(state, m, scope)
+          const budget = (s?.budget ?? personalTotal(state, m, scope)) + share
+          const known = s !== undefined || share > 0
+          return { ...point, spent: known ? (s?.spent ?? 0) + share : null, budget: known || budget > 0 ? budget : null, share: share > 0 ? share : null }
         })
       : []
 
@@ -269,11 +277,12 @@ function of(name: string): string {
 
 /**
  * La synthèse, en lignes : le libellé à gauche, la valeur à droite. Elle suit le compte que
- * choisit le sous-menu du bas. Sur le COMMUN, la part de chacun au prorata, puis le foyer : son
- * revenu moyen (la somme de ceux de chacun), son taux d'effort (ce qu'il verse au commun et paie
- * de budgets personnels, sur ce revenu) et son reste à vivre (la somme de ceux de chacun). Sur le
- * compte d'une PERSONNE, ou seul : sa part, son revenu moyen, son effort, son reste. Effort et
- * reste ne se disent qu'une fois un budget saisi.
+ * choisit le sous-menu du bas. Sur le FOYER, la part de chacun au prorata, puis le foyer : son
+ * revenu moyen (la somme de ceux de chacun), son taux d'effort (ce qu'il verse sur le compte
+ * commun et paie de budgets personnels, sur ce revenu) et son reste à vivre (la somme de ceux de
+ * chacun). Sur le compte d'une PERSONNE, ou seul : sa part, son revenu moyen, sa participation au
+ * foyer (à plusieurs), son effort, son reste. Effort et reste ne se disent qu'une fois un budget
+ * saisi.
  */
 function IncomeSummary({ state, summary, scope }: { state: State; summary: MonthSummary; scope: Scope }) {
   const { prorata } = summary
@@ -290,6 +299,8 @@ function IncomeSummary({ state, summary, scope }: { state: State; summary: Month
     { label: person ? 'Revenu moyen' : 'Revenu moyen du foyer', value: formatEuro(average) },
     ...(budgeted
       ? [
+          // Sur le compte d'une personne, ce qu'elle verse au foyer ce mois-ci : sa part de son budget.
+          ...(person && people.length > 1 ? [{ label: 'Participation au foyer', value: formatEuro(summary.due[person.id] ?? 0) }] : []),
           { label: 'Taux d’effort', value: average > 0 ? formatPercent(paid / average) : '—' },
           { label: 'Reste à vivre', value: remainders.length > 0 ? formatEuro(remainders.reduce((sum, value) => sum + value, 0)) : '—' },
         ]

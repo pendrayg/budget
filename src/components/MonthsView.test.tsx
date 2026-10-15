@@ -101,7 +101,7 @@ describe('MonthsView', () => {
     const state = seedState()
     const { container } = view(state, state.people[1].id)
     const labels = [...container.querySelectorAll('.figure-row dt')].map((dt) => dt.textContent)
-    expect(labels).toEqual(['Part de Bruno', 'Revenu moyen', 'Taux d’effort', 'Reste à vivre'])
+    expect(labels).toEqual(['Part de Bruno', 'Revenu moyen', 'Participation au foyer', 'Taux d’effort', 'Reste à vivre'])
     expect(container.querySelector('.figure-row dd')?.textContent).toBe('58,7\u00a0%')
   })
 

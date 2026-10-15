@@ -123,6 +123,17 @@ export function personalTotal(state: State, month: Month, personId: string): num
   return monthSummary(state, month < first ? first : month, personId).total
 }
 
+/**
+ * La participation d'une personne au foyer un mois donné : ce qu'elle verse sur le compte commun,
+ * sa part du budget du foyer. Avant le premier budget du foyer, c'est ce premier budget qui vaut,
+ * comme pour le reste à vivre (cf. `incomeHistory`).
+ */
+export function dueAt(state: State, month: Month, personId: string): number {
+  const first = firstBudgetMonth(state)
+  if (!first) return 0
+  return monthSummary(state, month < first ? first : month).due[personId] ?? 0
+}
+
 /** Le mois du premier budget d'un périmètre (le commun par défaut) : avant lui, c'est lui qui vaut. */
 export function firstBudgetMonth(state: State, scope: Scope = null): Month | undefined {
   const groupIds = new Set(groupsOf(state, scope).map((group) => group.id))

@@ -70,7 +70,8 @@ en lignes — le libellé à gauche, la valeur à droite —, selon le compte ch
 du bas. Sur le **foyer** : la part de chacun, puis le **revenu moyen du foyer** (la somme de ceux
 de chacun), son **taux d'effort** ((à verser au foyer + budgets personnels) / revenu moyen) et
 son **reste à vivre** (la somme de ceux de chacun). Sur le compte d'une **personne** : sa part,
-son revenu moyen, son effort et son reste. Effort et reste n'apparaissent qu'une fois un budget
+son revenu moyen, sa **participation au foyer** (ce qu'elle verse sur le compte commun ce
+mois-ci), son effort et son reste. Effort et reste n'apparaissent qu'une fois un budget
 saisi. La couleur de chacun, pour les graphiques du budget, se choisit dans Réglages →
 Personnes, parmi les huit de la palette (bleu, orange, aqua, jaune, rose, vert, violet, rouge),
 toutes ouvertes à chacun, même proches l'une de l'autre.
@@ -79,7 +80,7 @@ toutes ouvertes à chacun, même proches l'une de l'autre.
 
 Revenus et dépenses partagent un écran, **Mois** : ce qui est entré et ce qui est sorti. Sous la
 synthèse du prorata, un graphique, **une barre par mois** : les **revenus** en sont la barre
-principale, un contour pointillé à l'encre discrète du DS ; le **budget** la fractionne, d'un trait
+principale, un contour pointillé à l'encre discrète du DS, qui passe sous le remplissage ; le **budget** la fractionne, d'un trait
 pointillé en travers à la teinte du total ; le **dépensé** la remplit depuis le bas jusqu'à ce
 trait — au-delà, seul le **dépassement** passe au rouge. Chaque mois qui a un revenu ou un relevé y a sa barre : un
 mois sans relevé n'a que ses revenus ; un mois où il manque le revenu de quelqu'un (sur le foyer)
@@ -87,7 +88,10 @@ n'a que son budget et son dépensé. Au toucher,
 l'infobulle donne les revenus, le dépensé, le budget, le pourcentage rempli, le dépassement et le
 **reste à vivre** du mois — le revenu du mois moins ce qu'on verse au foyer et son budget
 personnel (avant le premier budget saisi, c'est ce premier budget qui s'applique), en rouge s'il
-est négatif. Revenus et reste à vivre sont ceux du compte choisi : du foyer, ou d'une personne.
+est négatif. Tout suit le compte choisi : du foyer, ou d'une personne. Sur le compte d'une
+personne, sa **participation au foyer** compte dans son budget comme dans son dépensé — c'est de
+l'argent qui sort, chaque mois, au même titre que son budget à elle — et l'infobulle la détaille ;
+connue sans relevé, elle remplit sa barre même les mois où elle n'a rien importé.
 Dessous, chaque mois, saisi ou importé, est un bouton section dépliante. Sa première ligne dit le
 mois et ses **revenus** ; sa **seconde ligne**, ses dépenses : le nombre de dépenses en
 **dépassement**, en rouge, et, calé à droite, le nombre d'opérations **à ranger**. Déplié, ses
