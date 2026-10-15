@@ -1198,11 +1198,11 @@ body,
    Le peu qui n'a de sens que sous lui. Rien ne s'y creuse : ce qui s'enfonçait s'ALLUME (`--lit`),
    et le bleu y est réservé à ce qui est actif — les données sont ambre (`--chart-ink`). */
 
-/* Le dépassement du budget, dans les revenus : un orange franc (#d7622c), loin du rouge qui dit,
-   lui, le dépassement des revenus (cf. SpendingChart), et de l'ambre des données sous Star Wars.
+/* Le dépassement du budget, dans les revenus : un orange citrouille (#ff7518), loin du rouge qui
+   dit, lui, le dépassement des revenus (cf. SpendingChart), et de l'ambre des données sous Star Wars.
    Le même dans les deux thèmes et les deux DS. */
 :root {
-  --over-budget: #d7622c;
+  --over-budget: #ff7518;
 }
 
 .spend-over-budget {
