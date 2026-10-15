@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Bar, Cell, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { designSystem } from '../ds'
 import { formatEuro, formatPercent } from '../lib/format'
 import { monthLabel, shortMonthLabel } from '../lib/month'
@@ -51,31 +51,80 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
 }
 
 /**
- * Sous Star Wars, une barre est une marque pleine : elle rayonne de sa teinte (`#ds-chart-groove-fill`,
+ * Sous Star Wars, le dépensé est une marque pleine : il rayonne de sa teinte (`#ds-chart-groove-fill`,
  * cité en attribut comme tout filtre du DS) et se remplit à la façon de `.ds-chart-part` (cf.
- * index.css, `.spend-bar`). Le néomorphique les garde à plat.
+ * index.css, `.spend-bar`). Le néomorphique le garde à plat.
  */
 const BAR_FILTER = designSystem === 'star-wars' ? 'url(#ds-chart-groove-fill)' : undefined
 
+/** Le trait pointillé des deux contours : les revenus, et le budget à remplir. */
+const DASH = '4 3'
+
+type ChartPoint = FillPoint & { top: number }
+
 /**
- * Le mois en chiffres, mois par mois : pour chaque mois, le budget en piste claire, et le dépensé
- * qui la remplit par-dessus, jusqu'au budget ; au-delà, SEUL le dépassement passe à la couleur du
- * danger, empilé sur le reste : on voit d'un coup d'œil de combien on a dépassé. Par-dessus, les
- * REVENUS en pointillé, à l'encre discrète du DS, comme au graphique du budget : ils cadrent sans
- * rivaliser. Un mois sans relevé n'a que ses revenus ; un mois sans revenu complet, que ses barres.
- * Comme les autres graphiques : pas d'ordonnée, l'échelle part de zéro, les montants — et le reste
- * à vivre — sont dans l'infobulle ; les mois du plus ancien au plus récent.
+ * LA barre d'un mois, dessinée d'un tenant. recharts la pose à la hauteur de `top` (le plus haut
+ * de ses chiffres) : d'où l'échelle, en pixels par euro, de tout ce qui s'y dessine.
+ *   - les REVENUS, la barre principale : un contour pointillé, à l'encre discrète du DS ;
+ *   - le BUDGET, la barre à remplir : un contour pointillé à la teinte du total, rentré dans
+ *     celle des revenus ;
+ *   - le DÉPENSÉ, qui la remplit jusqu'au budget ; au-delà, seul le DÉPASSEMENT passe au rouge.
+ * Un mois sans relevé n'a que ses revenus ; un mois sans revenu complet, que son budget et son
+ * dépensé.
+ */
+function MonthBar({ x = 0, y = 0, width = 0, height = 0, payload }: { x?: number; y?: number; width?: number; height?: number; payload?: ChartPoint }) {
+  if (!payload || payload.top <= 0 || height <= 0) return <g />
+  const base = y + height
+  const scale = height / payload.top
+  const at = (value: number) => base - value * scale
+  const inset = Math.min(4, width / 6)
+  const inner = { x: x + inset, width: Math.max(0, width - 2 * inset) }
+  const budget = Math.max(payload.budget ?? 0, 0)
+  const spent = payload.spent ?? 0
+  const within = Math.min(spent, budget)
+  const excess = Math.max(0, spent - budget)
+  return (
+    <g>
+      {payload.income !== null && (
+        <rect x={x} y={at(payload.income)} width={width} height={payload.income * scale} rx={3} fill="none" stroke={INCOME_COLOR} strokeWidth={1.5} strokeDasharray={DASH} />
+      )}
+      {payload.budget !== null && budget > 0 && (
+        <rect {...inner} y={at(budget)} height={budget * scale} rx={2} fill="none" stroke={TOTAL_COLOR} strokeWidth={1.5} strokeDasharray={DASH} />
+      )}
+      {within > 0 && <rect {...inner} y={at(within)} height={within * scale} rx={2} fill={TOTAL_COLOR} className="spend-bar spend-within" filter={BAR_FILTER} />}
+      {excess > 0 && <rect {...inner} y={at(spent)} height={excess * scale} rx={2} fill="var(--color-danger)" className="spend-bar spend-excess" filter={BAR_FILTER} />}
+    </g>
+  )
+}
+
+/**
+ * Un repère de mois. Le graphique va d'un bord à l'autre du contenu : le premier repère s'aligne
+ * sur le bord gauche de sa barre, le dernier sur le bord droit de la sienne, les autres se
+ * centrent — sans quoi les deux extrêmes déborderaient du cadre.
+ */
+function EdgeTick({ x, y, payload, index = 0, last, half }: { x?: number; y?: number; payload?: { value: string }; index?: number; last: number; half: number }) {
+  if (x === undefined || y === undefined || !payload) return <g />
+  const anchor = index === 0 && last > 0 ? 'start' : index === last ? 'end' : 'middle'
+  const at = anchor === 'start' ? x - half : anchor === 'end' ? x + half : x
+  return (
+    <text x={at} y={y} dy={12} textAnchor={anchor} fill="var(--color-muted)" fontSize={12}>
+      {shortMonthLabel(payload.value)}
+    </text>
+  )
+}
+
+/**
+ * Le mois en chiffres, une barre par mois (cf. `MonthBar`) : les revenus, le budget qu'ils
+ * financent, et le dépensé qui le remplit — en rouge ce qui le dépasse. Comme les autres
+ * graphiques : pas d'ordonnée, l'échelle part de zéro, les montants — et le reste à vivre — sont
+ * dans l'infobulle ; les mois du plus ancien au plus récent.
  */
 export default function SpendingChart({ points }: { points: FillPoint[] }) {
-  // Le dépensé en deux morceaux empilés : jusqu'au budget, puis ce qui le dépasse.
-  const data = points.map((p) => {
-    if (p.spent === null) return { ...p, within: null, excess: null }
-    const budget = Math.max(p.budget ?? 0, 0)
-    return { ...p, within: Math.min(p.spent, budget), excess: Math.max(0, p.spent - budget) }
-  })
-  const high = niceCeiling(Math.max(...points.flatMap((p) => [p.spent ?? 0, p.budget ?? 0, p.income ?? 0]), 0))
+  const data: ChartPoint[] = points.map((p) => ({ ...p, top: Math.max(p.income ?? 0, p.budget ?? 0, p.spent ?? 0) }))
+  const ticks = monthTicks(data.length).map((i) => data[i].month)
+  const high = niceCeiling(Math.max(...data.map((p) => p.top), 0))
   // Une barre étroite quand il y a beaucoup de mois, jamais plus large qu'un pouce.
-  const barSize = Math.max(10, Math.min(36, Math.floor(280 / Math.max(points.length, 1))))
+  const barSize = Math.max(12, Math.min(40, Math.floor(300 / Math.max(points.length, 1))))
   const described = points.map((p) =>
     [
       monthLabel(p.month),
@@ -87,51 +136,22 @@ export default function SpendingChart({ points }: { points: FillPoint[] }) {
       .join(', '),
   )
   return (
-    <div className="chart-body" role="img" aria-label={`Revenus et remplissage du budget par mois : ${described.join(' ; ')}`}>
+    <div className="chart-body" role="img" aria-label={`Revenus, budget et dépensé par mois : ${described.join(' ; ')}`}>
       <ResponsiveContainer width="100%" height="100%">
-        {/* Les deux barres d'un mois se superposent (`barGap` négatif) : la piste, puis le dépensé. */}
-        <ComposedChart data={data} margin={{ top: 8, right: 0, bottom: 0, left: 0 }} barGap={-barSize} barSize={barSize}>
+        <BarChart data={data} margin={{ top: 8, right: 0, bottom: 0, left: 0 }} barSize={barSize}>
           <XAxis
             dataKey="month"
-            tickFormatter={shortMonthLabel}
             // Au plus quatre repères, le dernier toujours montré : douze mois ne tiennent pas côte à côte.
-            ticks={monthTicks(data.length).map((i) => data[i].month)}
+            ticks={ticks}
             interval={0}
-            tick={{ fill: 'var(--color-muted)', fontSize: 12 }}
+            tick={(props: { x?: number; y?: number; payload?: { value: string }; index?: number }) => <EdgeTick {...props} last={ticks.length - 1} half={barSize / 2} />}
             axisLine={{ stroke: 'var(--color-border)' }}
             tickLine={false}
           />
           <YAxis hide domain={[0, high]} />
           <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.4 }} />
-          <Bar dataKey="budget" fill="var(--color-border)" radius={[4, 4, 0, 0]} isAnimationActive={false} name="Budget" />
-          {/* L'arrondi du haut va au morceau du dessus : le dépassement s'il y en a un. */}
-          <Bar dataKey="within" stackId="depense" fill={TOTAL_COLOR} className="spend-bar spend-within" filter={BAR_FILTER} isAnimationActive={false} name="Dépensé">
-            {data.map((point) => (
-              <Cell key={point.month} radius={(point.excess ?? 0) > 0.005 ? 0 : ([4, 4, 0, 0] as unknown as number)} />
-            ))}
-          </Bar>
-          <Bar dataKey="excess" stackId="depense" fill="var(--color-danger)" className="spend-bar spend-excess" filter={BAR_FILTER} radius={[4, 4, 0, 0]} isAnimationActive={false} name="Dépassement" />
-          {/* Un mois isolé, sans voisin à qui se relier, garde un point : sans lui, son revenu ne se verrait pas. */}
-          <Line
-            type="linear"
-            dataKey="income"
-            stroke={INCOME_COLOR}
-            strokeWidth={2}
-            strokeDasharray="5 4"
-            dot={(props: { cx?: number; cy?: number; index?: number }) => {
-              const i = props.index ?? 0
-              const alone = data[i]?.income !== null && (data[i - 1]?.income ?? null) === null && (data[i + 1]?.income ?? null) === null
-              return alone && props.cx !== undefined && props.cy !== undefined ? (
-                <circle key={i} cx={props.cx} cy={props.cy} r={3} fill={INCOME_COLOR} />
-              ) : (
-                <g key={i} />
-              )
-            }}
-            activeDot={{ r: 4, fill: INCOME_COLOR, stroke: 'var(--color-bg)', strokeWidth: 2 }}
-            isAnimationActive={false}
-            name="Revenus"
-          />
-        </ComposedChart>
+          <Bar dataKey="top" shape={(props: unknown) => <MonthBar {...(props as Parameters<typeof MonthBar>[0])} />} isAnimationActive={false} name="Mois" />
+        </BarChart>
       </ResponsiveContainer>
     </div>
   )

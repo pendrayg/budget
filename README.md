@@ -78,10 +78,12 @@ toutes ouvertes à chacun, même proches l'une de l'autre.
 ### Les mois : revenus et dépenses
 
 Revenus et dépenses partagent un écran, **Mois** : ce qui est entré et ce qui est sorti. Sous la
-synthèse du prorata, un seul graphique : le remplissage du budget en barres (cf. plus bas), et
-par-dessus les **revenus en pointillé**, à l'encre discrète du DS, comme au graphique du budget.
-Chaque mois qui a un revenu ou un relevé y a sa place : un mois sans relevé n'a que ses revenus,
-un mois où il manque le revenu de quelqu'un (sur le commun) n'a que ses barres. Au toucher,
+synthèse du prorata, un graphique, **une barre par mois** : les **revenus** en sont la barre
+principale, un contour pointillé à l'encre discrète du DS ; dedans, le **budget** est la barre à
+remplir, un contour pointillé à la teinte du total, que le **dépensé** remplit — au-delà du budget,
+seul le **dépassement** passe au rouge. Chaque mois qui a un revenu ou un relevé y a sa barre : un
+mois sans relevé n'a que ses revenus ; un mois où il manque le revenu de quelqu'un (sur le commun)
+n'a que son budget et son dépensé. Au toucher,
 l'infobulle donne les revenus, le dépensé, le budget, le pourcentage rempli, le dépassement et le
 **reste à vivre** du mois — le revenu du mois moins ce qu'on verse au commun et son budget
 personnel (avant le premier budget saisi, c'est ce premier budget qui s'applique), en rouge s'il
@@ -124,9 +126,8 @@ Ce qu'on a **vraiment dépensé**, face au budget, dans l'écran Mois. En début
 relevé PDF du compte commun (BoursoBank) : il est lu **dans le téléphone** (pdf.js, chargé au
 premier import seulement), et seules ses opérations sont gardées — date, libellé, montant ;
 jamais le PDF, ni le RIB. Les montants se lisent au débit ou au crédit d'après leur colonne.
-En tête de l'écran Mois, le graphique du **remplissage du budget** mois par mois : pour chaque mois, le budget
-en piste claire et le dépensé qui la remplit jusqu'au budget ; au-delà, seul le **dépassement**
-s'empile en rouge. Dans
+En tête de l'écran Mois, le graphique dit, mois par mois, le dépensé dans son budget, et en rouge
+ce qui le dépasse (cf. plus haut). Dans
 un mois déplié, sous ses revenus, ses dépenses montrent d'abord les opérations **à ranger** — un appui ouvre la liste des
 dépenses, chacune avec son icône (le sélecteur natif de l'iPhone ne montre que du texte), sous
 une **recherche** active dès l'ouverture, clavier levé (accents ignorés ; Entrée prend la

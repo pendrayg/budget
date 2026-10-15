@@ -1230,7 +1230,7 @@ body,
   color: var(--color-danger);
 }
 
-:root[data-ds='star-wars'] .spend-bar path {
+:root[data-ds='star-wars'] .spend-bar {
   fill: color-mix(in srgb, currentColor 22%, transparent);
   stroke: currentColor;
   stroke-width: var(--neon-width);
