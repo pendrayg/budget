@@ -3,9 +3,8 @@ import { useMemo, useState, type ReactNode } from 'react'
 import BudgetView from './components/BudgetView'
 import CalculatorView from './components/CalculatorView'
 import HyperspaceOverlay from './components/HyperspaceOverlay'
-import DepensesView from './components/DepensesView'
 import IncomeSheet from './components/IncomeSheet'
-import IncomesView from './components/IncomesView'
+import MonthsView from './components/MonthsView'
 import ProjectsView from './components/ProjectsView'
 import ReminderNotice from './components/ReminderNotice'
 import ScopeSelector from './components/ScopeSelector'
@@ -17,21 +16,20 @@ import { isSolo, scopeFor } from './lib/people'
 import type { Scope } from './lib/scope'
 import type { Month } from './lib/types'
 
-type Section = 'budget' | 'revenus' | 'depenses' | 'calculatrice' | 'projets' | 'reglages'
+type Section = 'budget' | 'mois' | 'calculatrice' | 'projets' | 'reglages'
 
 /**
- * Les six destinations (cinq pour une personne seule : rien à répartir, pas de calculatrice). Le
- * BUDGET ouvre la marche : c'est la feuille qu'on consultait, ce que
- * chacun verse ce mois-ci. Les revenus la nourrissent, les dépenses (les relevés importés) en font
- * l'état des lieux, la calculatrice la prolonge à une somme
- * quelconque, les projets sont à part, et les réglages sont une destination comme une autre.
+ * Les cinq destinations (quatre pour une personne seule : rien à répartir, pas de calculatrice). Le
+ * BUDGET ouvre la marche : c'est la feuille qu'on consultait, ce que chacun verse ce mois-ci. Les
+ * MOIS disent ce qui est entré et sorti : les revenus qui le nourrissent, et les dépenses (les
+ * relevés importés) qui en font l'état des lieux, mois par mois. La calculatrice le prolonge à une
+ * somme quelconque, les projets sont à part, et les réglages sont une destination comme une autre.
  * Les saisies (un revenu, une catégorie, un projet) sont des ACTIONS : elles s'ouvrent en
  * feuille, pas en destination.
  */
 const SECTIONS: MenuItem<Section>[] = [
   { id: 'budget', label: 'Budget', ariaLabel: 'Budget du mois', icon: 'bank' },
-  { id: 'revenus', label: 'Revenus', ariaLabel: 'Revenus et prorata', icon: 'tray_arrow_down' },
-  { id: 'depenses', label: 'Dépenses', ariaLabel: 'Dépenses réelles, d’après les relevés', icon: 'tray_arrow_up' },
+  { id: 'mois', label: 'Mois', ariaLabel: 'Revenus et dépenses, mois par mois', icon: 'calendar' },
   { id: 'calculatrice', label: 'Calcul', ariaLabel: 'Calculatrice de répartition', icon: 'chart_donut' },
   { id: 'projets', label: 'Projets', ariaLabel: 'Projets ponctuels', icon: 'format_list_bulleted' },
   { id: 'reglages', label: 'Réglages', ariaLabel: 'Réglages', icon: 'cog' },
@@ -98,8 +96,7 @@ export default function App() {
 
   const screens: Record<Section, ReactNode> = {
     budget: <BudgetView state={shared.state} month={currentMonth()} scope={scope} update={shared.update} onEnterIncome={openIncome} />,
-    revenus: <IncomesView state={shared.state} month={currentMonth()} missing={missing} update={shared.update} onEnterMonth={openIncome} />,
-    depenses: <DepensesView state={shared.state} scope={scope} update={shared.update} />,
+    mois: <MonthsView state={shared.state} month={currentMonth()} missing={missing} scope={scope} update={shared.update} onEnterMonth={openIncome} />,
     calculatrice: <CalculatorView state={shared.state} month={currentMonth()} />,
     projets: <ProjectsView state={shared.state} scope={scope} update={shared.update} />,
     reglages: (
@@ -153,7 +150,7 @@ export default function App() {
         <Footer>
           {/* Le sous-menu du budget, des dépenses et des projets, au-dessus du menu, près du pouce :
               il ne se montre que sur ces trois écrans, dont il choisit le périmètre. */}
-          {!solo && (current === 'budget' || current === 'depenses' || current === 'projets') && <ScopeSelector state={shared.state} scope={scope} onChange={chooseScope} />}
+          {!solo && (current === 'budget' || current === 'mois' || current === 'projets') && <ScopeSelector state={shared.state} scope={scope} onChange={chooseScope} />}
           <MenuBar className="app-menu" label="Sections" items={sections} active={current} onSelect={setSection} />
         </Footer>
 

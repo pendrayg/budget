@@ -65,7 +65,7 @@ sur les revenus d'octobre 2025 à septembre 2026. Dans cette année, seuls les m
 signale ceux qui manquent. Un revenu de plus d'un an
 ne compte plus, même si rien n'a été saisi depuis. La durée se règle (douze mois par défaut).
 
-Le prorata n'est jamais stocké : il se déduit des revenus. L'écran Revenus montre en tête le
+Le prorata n'est jamais stocké : il se déduit des revenus. L'écran **Mois** montre en tête le
 prorata, les revenus moyens, le **taux d'effort** ((à verser au commun + budget personnel) / revenu moyen) et le **reste à vivre**
 de chacun ; puis le **graphique des revenus saisis** : une ligne pleine par personne, à sa
 couleur, et en pointillé de la même couleur son reste à vivre du mois — son revenu du mois moins
@@ -75,11 +75,21 @@ aussi). Pas de
 légende à part : dans la synthèse, le revenu moyen de chacun est souligné d'un trait plein de sa
 couleur, son reste à vivre d'un pointillé. La couleur de chacun se choisit dans Réglages →
 Personnes, parmi les huit de la palette (bleu, orange, aqua, jaune, rose, vert, violet, rouge),
-toutes ouvertes à chacun, même proches l'une de l'autre. Dessous,
-chaque mois saisi : à deux, en trois colonnes comme la synthèse (le revenu de la première
-personne, le mois, le revenu de la seconde) ; seul, le mois et son revenu ; à trois et plus, le
-mois et le total du foyer, chacun en indice. À trois et plus, la synthèse aussi passe en lignes,
-une par personne.
+toutes ouvertes à chacun, même proches l'une de l'autre. À trois et plus, la synthèse passe en
+lignes, une par personne.
+
+### Les mois : revenus et dépenses
+
+Revenus et dépenses partagent un écran, **Mois** : ce qui est entré et ce qui est sorti. Sous la
+synthèse du prorata, le graphique des revenus puis celui du remplissage du budget (cf. plus bas) ;
+dessous, chaque mois, saisi ou importé, est un bouton section dépliante. Sa première ligne dit les
+revenus : à deux, en trois colonnes comme la synthèse (le revenu de la première personne, le mois,
+le revenu de la seconde) ; seul, le mois et son revenu ; à trois et plus, le mois et le total du
+foyer, chacun en indice. Sa **seconde ligne** dit les dépenses : le nombre de dépenses en
+**dépassement**, en rouge, et le nombre d'opérations **à ranger**. Déplié, il porte la saisie de
+ses **revenus**, puis ses **dépenses**, l'état des lieux de son relevé. Les revenus sont ceux du
+foyer ; les dépenses, celles du compte que choisit le sous-menu du bas. Au pied de l'écran,
+« Saisir un mois » et « Importer un relevé ».
 
 ### Le rappel de saisie
 
@@ -101,14 +111,14 @@ portée de pouce — la somme au plus bas, juste au-dessus du clavier quand il s
 
 ### Les dépenses : l'état des lieux
 
-Ce qu'on a **vraiment dépensé**, face au budget. En début de mois, « Importer un relevé » prend le
+Ce qu'on a **vraiment dépensé**, face au budget, dans l'écran Mois. En début de mois, « Importer un relevé » prend le
 relevé PDF du compte commun (BoursoBank) : il est lu **dans le téléphone** (pdf.js, chargé au
 premier import seulement), et seules ses opérations sont gardées — date, libellé, montant ;
 jamais le PDF, ni le RIB. Les montants se lisent au débit ou au crédit d'après leur colonne.
-Au-dessus, un graphique du **remplissage du budget** mois par mois : pour chaque mois, le budget
+En tête de l'écran Mois, sous celui des revenus, un graphique du **remplissage du budget** mois par mois : pour chaque mois, le budget
 en piste claire et le dépensé qui la remplit jusqu'au budget ; au-delà, seul le **dépassement**
-s'empile en rouge. Au toucher, le dépensé, le budget, le pourcentage rempli et le dépassement. Chaque mois est ensuite une ligne, comme les
-revenus : son **écart au budget** (négatif en vert, surdépense en rouge), le nombre de dépenses en **dépassement**, le montant des **imprévus** et ce qui reste à ranger. Déplié, il montre d'abord les opérations **à ranger** — un appui ouvre la liste des
+s'empile en rouge. Au toucher, le dépensé, le budget, le pourcentage rempli et le dépassement. Dans
+un mois déplié, sous ses revenus, ses dépenses montrent d'abord les opérations **à ranger** — un appui ouvre la liste des
 dépenses, chacune avec son icône (le sélecteur natif de l'iPhone ne montre que du texte), sous
 une **recherche** active dès l'ouverture, clavier levé (accents ignorés ; Entrée prend la
 première) —, puis
@@ -162,14 +172,14 @@ le revenu moyen moins ce budget.
 
 ### Les budgets et comptes personnels
 
-Sur le budget, les dépenses et les projets, un sous-menu **Commun / Alice / Bruno** (une pastille
+Sur le budget, les mois (pour leurs dépenses) et les projets, un sous-menu **Commun / Alice / Bruno** (une pastille
 par personne, sur deux lignes à partir de trois), en bas au-dessus du menu, choisit le budget :
 le commun, ou celui de l'une des personnes. Le choix vaut pour les trois écrans, et ce
 téléphone le retient. Un budget personnel a ses propres catégories et dépenses, que sa personne
 paie seule : pas de répartition (ni prorata, ni ratio), seulement « À épargner ». Sa synthèse
 dit son total, la part du revenu qu'il prend, et le **reste à vivre** une fois versée sa part du
 commun et payé son budget. Son graphique le suit face à son seul revenu. Le budget commun et ses
-parts n'en tiennent pas compte ; le **reste à vivre** de l'écran Revenus, si : synthèse et courbe
+parts n'en tiennent pas compte ; le **reste à vivre** de l'écran Mois, si : synthèse et courbe
 retirent du revenu la part du commun ET le budget personnel (avant le premier budget personnel,
 c'est lui qui vaut, comme pour le commun).
 
@@ -253,8 +263,9 @@ ne compte pas. Payé après sa cible, l'achat se juge sur sa dernière mensualit
   fil de la saisie, dès que ce qui est saisi est valable (une catégorie a un nom et un montant).
   L'en-tête de la ligne suit aussitôt. Seule la création attend « Créer », pour qu'une catégorie ou
   un projet ne naisse pas à la première lettre tapée.
-- **Six destinations** dans la barre de menu : Budget, Revenus, Dépenses, Calcul, Projets, Réglages. Ce
-  qui n'a pas encore de ligne — une nouvelle catégorie, un mois à saisir, un nouveau projet —
+- **Cinq destinations** dans la barre de menu : Budget, Mois, Calcul, Projets, Réglages — revenus
+  et dépenses partagent l'écran Mois, pour que la destination courante ait la place de dire son
+  nom à côté de son icône (sur un écran de 440 px, sous les deux DS). Ce qui n'a pas encore de ligne — une nouvelle catégorie, un mois à saisir, un nouveau projet —
   s'ouvre en feuille (`<dialog>` natif), pas en destination.
 - **Pas de zones** : comme Investment, les sections sont des blocs nus séparés par le blanc, le
   contenu va d'un bord à l'autre.
@@ -403,7 +414,7 @@ de 41,32 % / 58,68 % pour octobre 2026.
 ```
 index.html, public/            coquille, manifeste, icône : `icon.svg` (un cadre de viseur autour de
                                l'euro), et ses PNG pleins (180, 192, 512) rendus depuis elle
-src/main.tsx, App.tsx          entrée, les six écrans, les rappels, la feuille des revenus, le saut
+src/main.tsx, App.tsx          entrée, les cinq écrans, les rappels, la feuille des revenus, le saut
 src/ds/                        l'adaptateur du design system : le paquet élu, sa feuille, puis index.css
 src/lib/                       le domaine, pur et testé : month, amount, prorata, budget, summary,
                                missing, merge, state (défaut, assainissement, import/export), api ;
