@@ -57,7 +57,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
  */
 const BAR_FILTER = designSystem === 'star-wars' ? 'url(#ds-chart-groove-fill)' : undefined
 
-/** Le trait pointillé des deux contours : les revenus, et le budget à remplir. */
+/** Le pointillé du contour des revenus et du trait du budget. */
 const DASH = '4 3'
 
 type ChartPoint = FillPoint & { top: number }
@@ -65,34 +65,30 @@ type ChartPoint = FillPoint & { top: number }
 /**
  * LA barre d'un mois, dessinée d'un tenant. recharts la pose à la hauteur de `top` (le plus haut
  * de ses chiffres) : d'où l'échelle, en pixels par euro, de tout ce qui s'y dessine.
- *   - les REVENUS, la barre principale : un contour pointillé, à l'encre discrète du DS ;
- *   - le BUDGET, la barre à remplir : un contour pointillé à la teinte du total, rentré dans
- *     celle des revenus ;
- *   - le DÉPENSÉ, qui la remplit jusqu'au budget ; au-delà, seul le DÉPASSEMENT passe au rouge.
- * Un mois sans relevé n'a que ses revenus ; un mois sans revenu complet, que son budget et son
- * dépensé.
+ *   - les REVENUS font la barre : un contour pointillé, à l'encre discrète du DS ;
+ *   - le BUDGET la fractionne : un trait pointillé en travers, à la teinte du total ;
+ *   - le DÉPENSÉ la remplit depuis le bas jusqu'au trait du budget ; au-delà, seul le DÉPASSEMENT
+ *     passe au rouge.
+ * Les traits se posent par-dessus le remplissage, pour rester lisibles. Un mois sans relevé n'a que
+ * ses revenus ; un mois sans revenu complet, que son budget et son dépensé.
  */
 function MonthBar({ x = 0, y = 0, width = 0, height = 0, payload }: { x?: number; y?: number; width?: number; height?: number; payload?: ChartPoint }) {
   if (!payload || payload.top <= 0 || height <= 0) return <g />
   const base = y + height
   const scale = height / payload.top
   const at = (value: number) => base - value * scale
-  const inset = Math.min(4, width / 6)
-  const inner = { x: x + inset, width: Math.max(0, width - 2 * inset) }
   const budget = Math.max(payload.budget ?? 0, 0)
   const spent = payload.spent ?? 0
   const within = Math.min(spent, budget)
   const excess = Math.max(0, spent - budget)
   return (
     <g>
+      {within > 0 && <rect x={x} y={at(within)} width={width} height={within * scale} fill={TOTAL_COLOR} className="spend-bar spend-within" filter={BAR_FILTER} />}
+      {excess > 0 && <rect x={x} y={at(spent)} width={width} height={excess * scale} fill="var(--color-danger)" className="spend-bar spend-excess" filter={BAR_FILTER} />}
       {payload.income !== null && (
         <rect x={x} y={at(payload.income)} width={width} height={payload.income * scale} rx={3} fill="none" stroke={INCOME_COLOR} strokeWidth={1.5} strokeDasharray={DASH} />
       )}
-      {payload.budget !== null && budget > 0 && (
-        <rect {...inner} y={at(budget)} height={budget * scale} rx={2} fill="none" stroke={TOTAL_COLOR} strokeWidth={1.5} strokeDasharray={DASH} />
-      )}
-      {within > 0 && <rect {...inner} y={at(within)} height={within * scale} rx={2} fill={TOTAL_COLOR} className="spend-bar spend-within" filter={BAR_FILTER} />}
-      {excess > 0 && <rect {...inner} y={at(spent)} height={excess * scale} rx={2} fill="var(--color-danger)" className="spend-bar spend-excess" filter={BAR_FILTER} />}
+      {payload.budget !== null && budget > 0 && <line x1={x} x2={x + width} y1={at(budget)} y2={at(budget)} stroke={TOTAL_COLOR} strokeWidth={2} strokeDasharray={DASH} />}
     </g>
   )
 }
@@ -114,8 +110,8 @@ function EdgeTick({ x, y, payload, index = 0, last, half }: { x?: number; y?: nu
 }
 
 /**
- * Le mois en chiffres, une barre par mois (cf. `MonthBar`) : les revenus, le budget qu'ils
- * financent, et le dépensé qui le remplit — en rouge ce qui le dépasse. Comme les autres
+ * Le mois en chiffres, une barre par mois (cf. `MonthBar`) : les revenus, que le budget fractionne,
+ * et le dépensé qui la remplit jusqu'au budget — en rouge ce qui le dépasse. Comme les autres
  * graphiques : pas d'ordonnée, l'échelle part de zéro, les montants — et le reste à vivre — sont
  * dans l'infobulle ; les mois du plus ancien au plus récent.
  */

@@ -79,9 +79,9 @@ toutes ouvertes à chacun, même proches l'une de l'autre.
 
 Revenus et dépenses partagent un écran, **Mois** : ce qui est entré et ce qui est sorti. Sous la
 synthèse du prorata, un graphique, **une barre par mois** : les **revenus** en sont la barre
-principale, un contour pointillé à l'encre discrète du DS ; dedans, le **budget** est la barre à
-remplir, un contour pointillé à la teinte du total, que le **dépensé** remplit — au-delà du budget,
-seul le **dépassement** passe au rouge. Chaque mois qui a un revenu ou un relevé y a sa barre : un
+principale, un contour pointillé à l'encre discrète du DS ; le **budget** la fractionne, d'un trait
+pointillé en travers à la teinte du total ; le **dépensé** la remplit depuis le bas jusqu'à ce
+trait — au-delà, seul le **dépassement** passe au rouge. Chaque mois qui a un revenu ou un relevé y a sa barre : un
 mois sans relevé n'a que ses revenus ; un mois où il manque le revenu de quelqu'un (sur le commun)
 n'a que son budget et son dépensé. Au toucher,
 l'infobulle donne les revenus, le dépensé, le budget, le pourcentage rempli, le dépassement et le
