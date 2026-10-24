@@ -180,6 +180,8 @@ export interface Project {
   items: ProjectItem[]
   /** Le mois visé pour l'achat. */
   target?: Month
+  /** Le mois où son épargne commence, s'il ne commence pas tout de suite : avant, rien ne s'épargne. */
+  start?: Month
   /** La dépense du budget qui l'épargne, tant qu'on l'épargne. */
   budget?: { categoryId: string }
   /** Choisie, affichée après la brique commune à tous les projets (cf. `PROJECT_ICON`) ; sa dépense

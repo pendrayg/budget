@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { budgetAt } from './budget'
 import { seedState } from './fixtures'
-import { activateProject, deleteProject, isProjectSaving, projectCategoryIds, projectSaved, stopProject, syncProjectBudget } from './projects'
+import { activateProject, deleteProject, isProjectSaving, projectCategoryIds, projectSaved, savingStart, stopProject, syncProjectBudget } from './projects'
 import { addGroup } from './budget'
 import { importStatement, placeTransaction, spendingSummary } from './spending'
 import { sanitizeState } from './state'
@@ -149,5 +149,42 @@ describe('icône d’un projet', () => {
     state = { ...state, projects: state.projects.map((p) => (p.id === 'nas' ? { ...p, icon: undefined } : p)) }
     state = syncProjectBudget(state, 'nas', '2026-10', T)
     expect(expense().icon).toBeUndefined()
+  })
+})
+
+describe('date de début d’un projet', () => {
+  const starting = (state: State, start: string) => ({ ...state, projects: state.projects.map((p) => (p.id === 'nas' ? { ...p, start } : p)) })
+
+  it('fait partir l’épargne de sa date de début, la mensualité répartie de là à la cible', () => {
+    const state = activateProject(starting(withProject(), '2027-01'), 'nas', SAVE, '2026-10', 'c-nas', T)
+    const id = project(state).budget!.categoryId
+    expect(budgetAt(state, id, '2026-12')).toBeUndefined()
+    // 391 € sur trois mois, de janvier à mars.
+    expect(budgetAt(state, id, '2027-01')?.amount).toEqual({ kind: 'monthly', value: 130.33 })
+    expect(budgetAt(state, id, '2027-04')?.amount).toEqual({ kind: 'none' })
+    // Prévue, l'épargne compte comme lancée : le projet n'est pas « arrêté ».
+    expect(isProjectSaving(state, project(state), '2026-10')).toBe(true)
+  })
+
+  it('ignore une date de début passée : l’épargne part du mois en cours', () => {
+    expect(savingStart({ ...project(withProject()), start: '2026-01' }, '2026-10')).toBe('2026-10')
+  })
+
+  it('suspend l’épargne en cours jusqu’à une date de début qu’on repousse', () => {
+    let state = activateProject(withProject(), 'nas', SAVE, '2026-10', 'c-nas', T)
+    state = syncProjectBudget(starting(state, '2027-01'), 'nas', '2026-11', T)
+    const id = project(state).budget!.categoryId
+    expect(budgetAt(state, id, '2026-10')?.amount).toEqual({ kind: 'monthly', value: 65.17 })
+    expect(budgetAt(state, id, '2026-11')?.amount).toEqual({ kind: 'none' })
+    expect(budgetAt(state, id, '2027-01')?.amount.kind).toBe('monthly')
+  })
+
+  it('ne s’épargne pas quand la date de début est après la cible', () => {
+    const before = starting(withProject('2027-03'), '2027-06')
+    expect(activateProject(before, 'nas', SAVE, '2026-10', 'c-nas', T)).toBe(before)
+  })
+
+  it('se garde à l’assainissement', () => {
+    expect(sanitizeState(starting(withProject(), '2027-01')).projects.find((p) => p.id === 'nas')?.start).toBe('2027-01')
   })
 })

@@ -333,6 +333,7 @@ function projects(value: unknown, categoryIds: Set<string>, personIds: string[])
       : []
     const project: Project = { id: item.id, name: text(item.name, 'Sans nom'), items, updatedAt: stamp(item.updatedAt) }
     if (isMonth(item.target)) project.target = item.target
+    if (isMonth(item.start)) project.start = item.start
     const icon = categoryIcon(item.icon)
     if (icon) project.icon = icon
     if (isRecord(item.budget) && typeof item.budget.categoryId === 'string' && categoryIds.has(item.budget.categoryId)) project.budget = { categoryId: item.budget.categoryId }

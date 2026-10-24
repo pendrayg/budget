@@ -11,14 +11,16 @@ import ProjectGlyph from './ProjectGlyph'
 import ProjectSheet from './ProjectSheet'
 
 /**
- * Sous le nom d'un projet : sa cible, et s'il s'épargne (ou s'est épargné) dans le budget, sa
+ * Sous le nom d'un projet : sa date de début (si elle est à venir), sa cible, et s'il s'épargne (ou s'est épargné) dans le budget, sa
  * complétion — l'épargne réellement versée face à son total, en barre et en chiffres.
  */
 function ProjectHint({ state, project }: { state: State; project: Project }) {
   const month = currentMonth()
   const total = projectTotal(project)
   const target = project.target ? `Pour ${monthLabel(project.target).toLowerCase()}` : null
-  if (!project.budget) return target ?? project.items.map((item) => item.label || formatEuro(item.amount)).join(', ')
+  // Une épargne qui ne commence que plus tard le dit.
+  const start = project.start && project.start > month ? `Dès ${monthLabel(project.start).toLowerCase()}` : null
+  if (!project.budget) return target ? [start, target].filter(Boolean).join(' · ') : project.items.map((item) => item.label || formatEuro(item.amount)).join(', ')
   const saved = projectSaved(state, project, month)
   const ratio = total > 0 ? Math.min(1, saved / total) : 0
   const status = isProjectSaving(state, project, month) ? null : 'épargne arrêtée'
@@ -29,7 +31,7 @@ function ProjectHint({ state, project }: { state: State; project: Project }) {
       </span>
       <span>
         {formatEuro(saved)} épargnés · {formatPercent(ratio)}
-        {[target, status].filter(Boolean).map((part) => ` · ${part}`)}
+        {[start, target, status].filter(Boolean).map((part) => ` · ${part}`)}
       </span>
     </span>
   )

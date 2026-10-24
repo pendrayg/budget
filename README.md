@@ -82,8 +82,7 @@ Revenus et dépenses partagent un écran, **Mois** : ce qui est entré et ce qui
 synthèse du prorata, un graphique, **une barre par mois** : les **revenus** en sont la barre
 principale, un contour pointillé à l'encre discrète du DS, qui passe sous le remplissage ; le **budget** la fractionne, d'un trait
 pointillé en travers à la teinte du total ; le **dépensé** la remplit depuis le bas jusqu'à ce
-trait — au-delà, le **dépassement du budget** passe à l'orange, et ce qui dépasse les **revenus**
-eux-mêmes, au rouge. Chaque mois qui a un revenu ou un relevé y a sa barre : un
+trait — au-delà, le **dépassement** passe au rouge, d'emblée. Chaque mois qui a un revenu ou un relevé y a sa barre : un
 mois sans relevé n'a que ses revenus ; un mois où il manque le revenu de quelqu'un (sur le foyer)
 n'a que son budget et son dépensé. Au toucher,
 l'infobulle donne les revenus, le dépensé, le budget, le pourcentage rempli, le dépassement du
@@ -224,7 +223,11 @@ catégorie à épargner **de son périmètre** (du foyer pour un projet du foyer
 personne pour le sien), où il devient une dépense comme une autre,
 avec la répartition de sa catégorie. Sa mensualité est le reste à épargner divisé par les mois
 jusqu'à la cible (le mois en cours compris) ; elle se recalcule à chaque modification du projet,
-à partir du mois en cours, et s'arrête après la cible. On peut arrêter puis reprendre ; supprimer
+à partir du mois en cours, et s'arrête après la cible. Une **date de début** fait partir l'épargne
+plus tard : rien ne s'épargne avant elle, la mensualité se répartit de là à la cible, et la ligne
+du projet le dit (« Dès janvier 2027 ») ; repoussée sur un projet déjà épargné, elle suspend son
+épargne jusqu'à elle. Une date de début passée ne change rien, et une date de début après la cible
+empêche de l'épargner. On peut arrêter puis reprendre ; supprimer
 un projet épargné arrête sa dépense, dont l'histoire reste au budget. Sa ligne montre sa
 **complétion** : l'épargne réellement versée — chaque mois importé, sa mensualité au prorata du
 « Versement épargne » de ce mois face au « à épargner » (plafonné à 100 %) ; un mois non importé

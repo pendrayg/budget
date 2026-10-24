@@ -22,13 +22,14 @@ interface Draft {
   name: string
   icon: CategoryIcon | undefined
   target: Month | ''
+  start: Month | ''
   lines: Line[]
 }
 
 function draftFor(state: State, projectId: string | null): Draft {
   const project = projectId ? state.projects.find((p) => p.id === projectId) : undefined
   const lines = (project?.items ?? []).map((item) => ({ id: item.id, label: item.label, amount: item.amount as number | null }))
-  return { name: project?.name ?? '', icon: project?.icon, target: project?.target ?? '', lines: lines.length > 0 ? lines : [{ id: createId(), label: '', amount: null }] }
+  return { name: project?.name ?? '', icon: project?.icon, target: project?.target ?? '', start: project?.start ?? '', lines: lines.length > 0 ? lines : [{ id: createId(), label: '', amount: null }] }
 }
 
 /** « de mars 2027 », « d’octobre 2026 ». */
@@ -52,7 +53,8 @@ function saveGroupOptions(state: State, scope: Scope): { value: string; label: s
  *
  * Avec une date cible, un projet qui existe peut s'ÉPARGNER dans le budget : on choisit une
  * catégorie à épargner, il y devient une dépense dont la mensualité mène son total à la cible
- * (cf. `src/lib/projects.ts`). Le modifier ensuite recale cette mensualité, à partir du mois en cours.
+ * (cf. `src/lib/projects.ts`), à partir du mois en cours ou de sa date de début, si elle est plus
+ * tard. Le modifier ensuite recale cette mensualité.
  */
 export default function ProjectForm({
   projectId,
@@ -95,13 +97,16 @@ export default function ProjectForm({
         ...(d.icon ? { icon: d.icon } : {}),
         items: d.lines.filter((line) => line.amount !== null || line.label.trim() !== '').map((line) => ({ id: line.id, label: line.label.trim(), amount: line.amount ?? 0 })),
         ...(d.target ? { target: d.target } : {}),
+        ...(d.start ? { start: d.start } : {}),
         ...(previous?.budget ? { budget: previous.budget } : {}),
         ...(owner ? { owner } : {}),
         updatedAt: now,
       }
       const written = { ...current, projects: [...current.projects.filter((p) => p.id !== id), next] }
-      // Épargné en ce moment : sa dépense suit le projet (nom, total, cible).
-      return isProjectSaving(current, next, month) ? syncProjectBudget(written, id, month, now) : written
+      // Épargné (ou dont l'épargne est prévue) : sa dépense suit le projet (nom, total, début, cible).
+      // On le lit sur le projet d'avant : une date de début qu'on avance ne doit pas l'arrêter.
+      const saving = (previous && isProjectSaving(current, previous, month)) || isProjectSaving(current, next, month)
+      return saving ? syncProjectBudget(written, id, month, now) : written
     })
   }
 
@@ -139,6 +144,14 @@ export default function ProjectForm({
         {choosingIcon && <IconPicker value={draft.icon} onPick={(icon) => change({ ...draft, icon })} onClose={() => setChoosingIcon(false)} />}
       </div>
       <div className="field">
+        <label htmlFor={`${uid}-start`}>Date de début</label>
+        {/* Le mois où l'épargne commence ; vide, elle commence dès qu'on la lance. */}
+        <div className="target-field">
+          <MonthInput id={`${uid}-start`} value={draft.start} placeholder="Dès maintenant" onChange={(start) => change({ ...draft, start })} />
+          {draft.start && <DeleteButton label="Retirer la date de début" onDelete={() => change({ ...draft, start: '' })} />}
+        </div>
+      </div>
+      <div className="field">
         <label htmlFor={`${uid}-target`}>Date cible</label>
         {/* Le sélecteur de mois natif ; vide, le projet n'a pas de cible. Celui d'iOS ne sait pas
             se vider : la corbeille retire la date. */}
@@ -171,6 +184,7 @@ export default function ProjectForm({
           month={month}
           total={total}
           target={draft.target}
+          start={draft.start}
           groupOptions={groupOptions}
           budgetName={budgetName}
           groupId={groupId}
@@ -212,6 +226,7 @@ function ProjectSaving({
   month,
   total,
   target,
+  start,
   groupOptions,
   budgetName,
   groupId,
@@ -223,6 +238,7 @@ function ProjectSaving({
   month: Month
   total: number
   target: Month | ''
+  start: Month | ''
   groupOptions: { value: string; label: string }[]
   /** « au budget du foyer », « au budget de Bruno » : là où créer la catégorie qui manque. */
   budgetName: string
@@ -236,11 +252,22 @@ function ProjectSaving({
   const saving = isProjectSaving(state, project, month)
   const saved = projectSaved(state, project, month)
   const group = projectGroup(state, project)
-  const current = project.budget ? budgetAt(state, project.budget.categoryId, month) : undefined
+  // L'épargne part ce mois-ci, ou à la date de début si elle est plus tard.
+  const from = start !== '' && start > month ? start : month
+  const current = project.budget ? budgetAt(state, project.budget.categoryId, from) : undefined
   const monthly = current && current.amount.kind === 'monthly' ? current.amount.value : 0
-  const reachable = target !== '' && target >= month && total > 0
-  const preview = reachable ? projectMonthly(total, saved, month, target) : 0
-  const why = target === '' ? 'Donnez-lui une date cible pour l’épargner.' : target < month ? 'Sa date cible est passée.' : total <= 0 ? 'Ajoutez-lui des lignes chiffrées.' : null
+  const reachable = target !== '' && target >= from && total > 0
+  const preview = reachable ? projectMonthly(total, saved, from, target) : 0
+  const why =
+    target === ''
+      ? 'Donnez-lui une date cible pour l’épargner.'
+      : target < month
+        ? 'Sa date cible est passée.'
+        : target < from
+          ? 'Sa date de début est après sa date cible.'
+          : total <= 0
+            ? 'Ajoutez-lui des lignes chiffrées.'
+            : null
 
   return (
     <div className="field project-saving">
@@ -248,7 +275,7 @@ function ProjectSaving({
       {saving ? (
         <>
           <p className="field-hint muted">
-            Dans <strong>{group?.name}</strong> : {formatEuro(monthly)} par mois jusqu’en {monthLabel(project.target ?? month).toLowerCase()}. Déjà de côté : {formatEuro(saved)} sur {formatEuro(total)}.
+            Dans <strong>{group?.name}</strong> : {formatEuro(monthly)} par mois{from > month ? `, à partir ${fromMonth(from)},` : ''} jusqu’en {monthLabel(project.target ?? month).toLowerCase()}. Déjà de côté : {formatEuro(saved)} sur {formatEuro(total)}.
           </p>
           <Button onClick={() => update((s) => stopProject(s, projectId, month, nowIso()))}>Arrêter d’épargner</Button>
         </>
@@ -268,7 +295,7 @@ function ProjectSaving({
             Catégorie à épargner
           </label>
           <Select id={`${uid}-group`} options={groupOptions} value={groupId} onChange={(event) => onGroup(event.target.value)} />
-          <p className="field-hint muted">{reachable ? target === month ? `${formatEuro(preview)} en ${monthLabel(month).toLowerCase()}.` : `${formatEuro(preview)} par mois, ${fromMonth(month)} à ${monthLabel(target).toLowerCase()}.` : why}</p>
+          <p className="field-hint muted">{reachable ? target === from ? `${formatEuro(preview)} en ${monthLabel(from).toLowerCase()}.` : `${formatEuro(preview)} par mois, ${fromMonth(from)} à ${monthLabel(target).toLowerCase()}.` : why}</p>
           <Button tone="primary" disabled={!reachable || !groupId} onClick={() => update((s) => activateProject(s, projectId, groupId, month, createId(), nowIso()))}>
             Commencer à épargner
           </Button>

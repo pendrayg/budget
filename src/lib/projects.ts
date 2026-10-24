@@ -12,7 +12,8 @@ import type { Amount, BudgetGroup, BudgetVersion, CategoryIcon, Month, Project, 
  * la complétion se lit toujours.
  *
  * La mensualité est le RESTE à épargner, divisé par les mois restants jusqu'à la cible (le mois en
- * cours compris) ; elle se recalcule à chaque modification du projet, à partir du mois en cours,
+ * cours compris, ou la date de début du projet, si elle est plus tard : avant elle, rien ne
+ * s'épargne) ; elle se recalcule à chaque modification du projet, à partir du mois en cours,
  * et s'arrête après la cible. La complétion est l'épargne RÉALISÉE : chaque mois importé, la
  * mensualité du projet au prorata du versement vers l'épargne de ce mois-là (versé / à épargner,
  * plafonné à 100 %) ; un mois pas encore importé ne compte pas.
@@ -56,9 +57,14 @@ export function projectSaved(state: State, project: Project, upTo: Month): numbe
   return cents(saved)
 }
 
-/** On l'épargne ce mois-ci : sa dépense y a une mensualité. */
+/** Le mois où l'épargne d'un projet part, vue de `month` : ce mois-ci, ou sa date de début si elle est plus tard. */
+export function savingStart(project: Project, month: Month): Month {
+  return project.start && project.start > month ? project.start : month
+}
+
+/** On l'épargne : sa dépense a une mensualité ce mois-ci — ou, s'il commence plus tard, à sa date de début. */
 export function isProjectSaving(state: State, project: Project, month: Month): boolean {
-  const version = project.budget ? budgetAt(state, project.budget.categoryId, month) : undefined
+  const version = project.budget ? budgetAt(state, project.budget.categoryId, savingStart(project, month)) : undefined
   return version !== undefined && version.amount.kind !== 'none'
 }
 
@@ -79,18 +85,21 @@ function dropAfter(state: State, categoryId: string, month: Month): State {
 }
 
 /**
- * Commence à épargner un projet dans une catégorie à épargner, à partir de `month` : sa dépense
- * naît (identifiant `categoryId`, préfixé du propriétaire de la catégorie), avec sa mensualité
- * jusqu'à la cible. Un projet déjà lié reprend sa dépense (cf. `syncProjectBudget`).
+ * Commence à épargner un projet dans une catégorie à épargner, à partir de `month` — ou de sa date
+ * de début, si elle est plus tard : sa dépense naît (identifiant `categoryId`, préfixé du
+ * propriétaire de la catégorie), avec sa mensualité jusqu'à la cible. Un projet déjà lié reprend sa
+ * dépense (cf. `syncProjectBudget`).
  */
 export function activateProject(state: State, projectId: string, groupId: string, month: Month, categoryId: string, now: string): State {
   const project = state.projects.find((p) => p.id === projectId)
   const group = state.groups.find((g) => g.id === groupId)
   if (!project?.target || !group || !inScope(group, project.owner ?? null)) return state
+  const from = savingStart(project, month)
+  if (from > project.target) return state
   if (project.budget) return syncProjectBudget(state, projectId, month, now)
   const id = `${scopePrefix(group.owner ?? null)}${categoryId}`
-  const monthly = projectMonthly(projectTotal(project), 0, month, project.target)
-  let next = addCategory(state, { id, name: project.name, ...(project.icon ? { icon: project.icon } : {}), updatedAt: now }, version(id, month, group, { kind: 'monthly', value: monthly }, now))
+  const monthly = projectMonthly(projectTotal(project), 0, from, project.target)
+  let next = addCategory(state, { id, name: project.name, ...(project.icon ? { icon: project.icon } : {}), updatedAt: now }, version(id, from, group, { kind: 'monthly', value: monthly }, now))
   next = upsertVersion(next, version(id, addMonths(project.target, 1), group, { kind: 'none' }, now))
   return { ...next, projects: next.projects.map((p) => (p.id === projectId ? { ...p, budget: { categoryId: id }, updatedAt: now } : p)) }
 }
@@ -98,7 +107,8 @@ export function activateProject(state: State, projectId: string, groupId: string
 /**
  * Recale la dépense d'un projet sur le projet, à partir de `month` : son nom et son icône, et la mensualité qui
  * mène le reste (total moins l'épargne réalisée avant ce mois) à la cible, arrêtée après elle. Une
- * cible passée, ou retirée, arrête l'épargne.
+ * date de début plus tard suspend l'épargne jusqu'à elle, et la mensualité part de là. Une cible
+ * passée, retirée, ou d'avant la date de début, arrête l'épargne.
  */
 export function syncProjectBudget(state: State, projectId: string, month: Month, now: string): State {
   const project = state.projects.find((p) => p.id === projectId)
@@ -109,9 +119,11 @@ export function syncProjectBudget(state: State, projectId: string, month: Month,
   const renamed = category && (category.name !== project.name || category.icon?.name !== project.icon?.name)
   let next = renamed ? editCategory(state, id, { name: project.name, icon: project.icon }, now) : state
   next = dropAfter(next, id, month)
-  if (!project.target || project.target < month) return upsertVersion(next, version(id, month, group, { kind: 'none' }, now))
-  const monthly = projectMonthly(projectTotal(project), projectSaved(state, project, addMonths(month, -1)), month, project.target)
-  next = upsertVersion(next, version(id, month, group, { kind: 'monthly', value: monthly }, now))
+  const from = savingStart(project, month)
+  if (!project.target || project.target < from) return upsertVersion(next, version(id, month, group, { kind: 'none' }, now))
+  if (from > month) next = upsertVersion(next, version(id, month, group, { kind: 'none' }, now))
+  const monthly = projectMonthly(projectTotal(project), projectSaved(state, project, addMonths(month, -1)), from, project.target)
+  next = upsertVersion(next, version(id, from, group, { kind: 'monthly', value: monthly }, now))
   return upsertVersion(next, version(id, addMonths(project.target, 1), group, { kind: 'none' }, now))
 }
 
