@@ -546,6 +546,27 @@ body,
   padding-inline: 0;
 }
 
+/* « Sauf vacances zone » et sa liste, sur une ligne : une phrase à compléter. Le libellé garde
+   l'encre et la casse du texte, comme celui d'une case à cocher. */
+.zone-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.field .zone-field > label {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.zone-field > .ds-select {
+  width: 7.5em;
+}
+
 /* Une case à cocher et son libellé, sur une ligne : toute la ligne la coche. Un libellé de phrase,
    pas un intitulé de champ : il garde l'encre et la casse du texte. */
 .field label.check-field {

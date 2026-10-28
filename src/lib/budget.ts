@@ -1,5 +1,5 @@
 import { monthlyAmount } from './amount'
-import type { BudgetVersion, Category, CategoryIcon, Month, SchoolZone, Shares, State } from './types'
+import type { BudgetVersion, Category, CategoryIcon, Month, Shares, State } from './types'
 
 /** Les versions d'une catégorie, de la plus ancienne à la plus récente. */
 export function versionsOf(state: State, categoryId: string): BudgetVersion[] {
@@ -83,8 +83,8 @@ export function deleteCategory(state: State, categoryId: string): State {
 }
 
 /** Le budget d'une version pour un mois donné, 0 pour une version « plus budgété » (cf. `monthlyAmount`). */
-export function versionMonthly(version: BudgetVersion, month: Month, zone?: SchoolZone): number {
-  return monthlyAmount(version.amount, month, zone)
+export function versionMonthly(version: BudgetVersion, month: Month): number {
+  return monthlyAmount(version.amount, month)
 }
 
 /* ---------- Les catégories de l'écran (`groups`) ---------- */

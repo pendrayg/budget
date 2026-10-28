@@ -1,5 +1,5 @@
 import { describeDays, scheduledDays } from './calendar'
-import type { Amount, Month, Period, SchoolZone } from './types'
+import type { Amount, Month, Period } from './types'
 
 /**
  * Le classeur ramenait chaque dépense au mois à la main : `540/12`, `150/3`, `15+11`.
@@ -50,11 +50,11 @@ export function judgedMonths(amount: Amount): number {
 /**
  * Le budget d'un mois. Chaque item a sa périodicité (mensuelle par défaut) : un abonnement annuel
  * et un mensuel se somment au mois. Un prix par jour se multiplie par le nombre de ses jours dans
- * CE mois (cf. calendar.ts) : il faut le mois, et la zone des vacances scolaires s'il les saute.
+ * CE mois (cf. calendar.ts) : il faut le mois.
  */
-export function monthlyAmount(amount: Amount, month: Month, zone?: SchoolZone): number {
+export function monthlyAmount(amount: Amount, month: Month): number {
   if (amount.kind === 'none') return 0
-  if (amount.kind === 'days') return Math.round(amount.value * scheduledDays(month, amount, zone) * 100) / 100
+  if (amount.kind === 'days') return Math.round(amount.value * scheduledDays(month, amount) * 100) / 100
   if (amount.kind === 'items') return amount.items.reduce((sum, item) => sum + item.amount / PERIOD_DIVISOR[item.period ?? 'monthly'], 0)
   return amount.value / PERIOD_DIVISOR[amount.kind]
 }
@@ -65,7 +65,7 @@ export function describeAmount(amount: Amount, formatEuro: (value: number) => st
   if (amount.kind === 'items') return `${amount.items.length} ${amount.items.length > 1 ? 'items' : 'item'}`
   if (amount.kind === 'monthly') return ''
   if (amount.kind === 'days') {
-    const except = [amount.skipPublicHolidays && 'jours fériés', amount.skipSchoolHolidays && 'vacances scolaires'].filter(Boolean)
+    const except = [amount.skipPublicHolidays && 'jours fériés', amount.schoolZone && `vacances zone ${amount.schoolZone}`].filter(Boolean)
     return `${formatEuro(amount.value)} par jour, ${describeDays(amount.days)}${except.length > 0 ? `, sauf ${except.join(' et ')}` : ''}`
   }
   return `${formatEuro(amount.value)} ${PERIOD_LABELS[amount.kind]}`

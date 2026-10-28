@@ -36,26 +36,25 @@ describe('scheduledDays', () => {
 
   it('retire les vacances scolaires de la zone', () => {
     // Toussaint 2026 : du 17 octobre au 1er novembre.
-    expect(scheduledDays('2026-10', { days: CANTINE, skipSchoolHolidays: true }, 'B')).toBe(10)
-    // Sans zone, elles ne peuvent pas l'être : le mois compte comme un mois d'école.
-    expect(scheduledDays('2026-10', { days: CANTINE, skipSchoolHolidays: true })).toBe(18)
+    expect(scheduledDays('2026-10', { days: CANTINE, schoolZone: 'B' })).toBe(10)
+    // Sans zone, rien n'est retiré : le mois compte comme un mois d'école.
+    expect(scheduledDays('2026-10', { days: CANTINE })).toBe(18)
   })
 
   it('retire les jours fériés, et le pont de l’Ascension avec les vacances', () => {
     expect(scheduledDays('2027-05', { days: CANTINE, skipPublicHolidays: true })).toBe(15)
-    expect(scheduledDays('2027-05', { days: CANTINE, skipPublicHolidays: true, skipSchoolHolidays: true }, 'B')).toBe(14)
+    expect(scheduledDays('2027-05', { days: CANTINE, skipPublicHolidays: true, schoolZone: 'B' })).toBe(14)
   })
 
   it('tombe à zéro en août, école fermée', () => {
-    expect(scheduledDays('2027-08', { days: CANTINE, skipSchoolHolidays: true }, 'A')).toBe(0)
+    expect(scheduledDays('2027-08', { days: CANTINE, schoolZone: 'A' })).toBe(0)
   })
 })
 
 describe('scheduleWarning', () => {
-  it('prévient sans zone, ou au-delà du calendrier publié', () => {
-    expect(scheduleWarning('2026-10', { days: CANTINE, skipSchoolHolidays: true })).toMatch(/zone/)
-    expect(scheduleWarning('2028-10', { days: CANTINE, skipSchoolHolidays: true }, 'B')).toMatch(/pas encore publiées/)
-    expect(scheduleWarning('2026-10', { days: CANTINE, skipSchoolHolidays: true }, 'B')).toBeNull()
+  it('prévient au-delà du calendrier publié', () => {
+    expect(scheduleWarning('2028-10', { days: CANTINE, schoolZone: 'B' })).toMatch(/pas encore publiées/)
+    expect(scheduleWarning('2026-10', { days: CANTINE, schoolZone: 'B' })).toBeNull()
     expect(scheduleWarning('2026-10', { days: CANTINE })).toBeNull()
   })
 })

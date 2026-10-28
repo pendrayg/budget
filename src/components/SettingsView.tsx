@@ -1,13 +1,11 @@
-import { Button, DeleteButton, DisclosureButton, FlatSelector, Input, Notice } from '../ds'
+import { Button, DeleteButton, DisclosureButton, Input, Notice } from '../ds'
 import { useRef, useState } from 'react'
 import { DESIGN_SYSTEM_LABELS, readDesignSystem } from '../lib/design-system'
 import { colorOf } from '../lib/colors'
 import { nowIso } from '../lib/format'
 import { addPerson, isSolo, MAX_PEOPLE, peopleNames, removePerson } from '../lib/people'
 import { defaultState, exportPayload, parseImport } from '../lib/state'
-import { SCHOOL_CALENDAR_UNTIL, SCHOOL_ZONES } from '../lib/calendar'
-import { monthLabel } from '../lib/month'
-import type { PersonColor, SchoolZone, State } from '../lib/types'
+import type { PersonColor, State } from '../lib/types'
 import type { SyncStatus } from '../hooks/useSharedState'
 import AppearanceChoice from './AppearanceChoice'
 import ColorChoice from './ColorChoice'
@@ -130,27 +128,6 @@ export default function SettingsView({
               }}
             />
             <p className="field-hint muted">Un an glissant par défaut : le budget d’un mois se répartit selon les revenus des douze mois qui le précèdent — l’argent reçu paie l’argent dépensé. Seuls les mois où tous les revenus sont saisis entrent dans la moyenne.</p>
-          </div>
-        </DisclosureButton>
-
-        {/* La zone des vacances scolaires du foyer : les dépenses « par jour » qui s'arrêtent
-            pendant les vacances (la cantine) la lisent. Partagée, comme le prorata. */}
-        <DisclosureButton title="Vacances scolaires" hint={state.settings.schoolZone ? `Zone ${state.settings.schoolZone}` : 'Aucune zone'} icon="calendar">
-          <div className="form">
-            <FlatSelector
-              label="Zone des vacances scolaires"
-              options={[{ id: 'none', label: 'Aucune' }, ...SCHOOL_ZONES.map((zone) => ({ id: zone, label: `Zone ${zone}` }))]}
-              value={state.settings.schoolZone ?? 'none'}
-              onChange={(id) =>
-                update((s) => {
-                  const { schoolZone: _previous, ...rest } = s.settings
-                  return { ...s, settings: id === 'none' ? rest : { ...rest, schoolZone: id as SchoolZone } }
-                })
-              }
-            />
-            <p className="field-hint muted">
-              Pour les dépenses « par jour » qui s’arrêtent pendant les vacances, comme la cantine. Le calendrier de l’Éducation nationale est connu jusqu’en {monthLabel(SCHOOL_CALENDAR_UNTIL.slice(0, 7)).toLowerCase()}.
-            </p>
           </div>
         </DisclosureButton>
 

@@ -122,7 +122,7 @@ describe('prix par jour', () => {
     const clean = sanitizeState({
       ...seed,
       budgets: [
-        { ...first, amount: { kind: 'days', value: 4.5, days: [5, 1, 4, 2, 2, 9], skipPublicHolidays: true, skipSchoolHolidays: 'oui' } },
+        { ...first, amount: { kind: 'days', value: 4.5, days: [5, 1, 4, 2, 2, 9], skipPublicHolidays: true, schoolZone: 'Z' } },
         { ...second, amount: { kind: 'days', value: 3, days: [] } },
         ...seed.budgets.slice(2),
       ],
@@ -131,9 +131,11 @@ describe('prix par jour', () => {
     expect(clean.budgets.some((v) => v.categoryId === second.categoryId && v.from === second.from && v.amount.kind === 'days')).toBe(false)
   })
 
-  it('garde la zone des vacances scolaires, et écarte une zone inconnue', () => {
-    expect(sanitizeState({ ...seedState(), settings: { prorataWindowMonths: 12, schoolZone: 'B' } }).settings.schoolZone).toBe('B')
-    expect(sanitizeState({ ...seedState(), settings: { prorataWindowMonths: 12, schoolZone: 'Z' } }).settings.schoolZone).toBeUndefined()
+  it('garde la zone dont les vacances sont retirées', () => {
+    const seed = seedState()
+    const [first] = seed.budgets
+    const clean = sanitizeState({ ...seed, budgets: [{ ...first, amount: { kind: 'days', value: 4.5, days: [1], schoolZone: 'C' } }, ...seed.budgets.slice(1)] })
+    expect(clean.budgets.find((v) => v.categoryId === first.categoryId && v.from === first.from)?.amount).toEqual({ kind: 'days', value: 4.5, days: [1], schoolZone: 'C' })
   })
 })
 
