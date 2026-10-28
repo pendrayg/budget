@@ -280,7 +280,8 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
       const version = budgetAt(state, category.id, budgetMonth) ?? (own.length > 0 ? versionsOf(state, category.id)[0] : undefined)
       const groupId = version?.groupId ?? versionsOf(state, category.id).at(-1)?.groupId
       if (groupId !== group.id) continue
-      const budget = version && version.amount.kind !== 'none' ? versionMonthly(version) : 0
+      const zone = state.settings.schoolZone
+      const budget = version && version.amount.kind !== 'none' ? versionMonthly(version, budgetMonth, zone) : 0
       if (budget === 0 && own.length === 0) continue
       const spent = sum(own.map((t) => t.amount))
       if (group.save) {
@@ -290,7 +291,8 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
         const months = judged ? judgedMonths(judged.amount) : 12
         const inWindow = within(months)
         const yearSpent = sum(state.transactions.filter((t) => t.categoryId === category.id && inWindow(t)).map((t) => t.amount))
-        const yearBudget = (judged ? versionMonthly(judged) : 0) * months
+        // Mois par mois : un prix par jour ne coûte pas autant en août qu'en mars.
+        const yearBudget = judged ? Array.from({ length: months }, (_, back) => versionMonthly(judged, addMonths(budgetMonth, -back), zone)).reduce((a, b) => a + b, 0) : 0
         lines.push({ category, budget, spent, transactions: own, year: { spent: yearSpent, budget: yearBudget, months }, over: yearSpent > yearBudget + OVER })
       } else {
         lines.push({ category, budget, spent, transactions: own, over: spent > budget + OVER })

@@ -101,11 +101,23 @@ export interface AmountItem {
 
 export type Period = 'monthly' | 'quarterly' | 'semiannual' | 'annual' | 'biennial'
 
+/** Un jour de la semaine, à la norme ISO : 1 = lundi, 7 = dimanche. */
+export type Weekday = 1 | 2 | 3 | 4 | 5 | 6 | 7
+
+/** Une zone de vacances scolaires de la France métropolitaine. */
+export type SchoolZone = 'A' | 'B' | 'C'
+
 export type Amount =
   /** Un montant et sa périodicité, ramené au mois. */
   | { kind: Period; value: number }
   /** Une somme d'items (« Films + Musique »), chacun à sa périodicité (mensuelle si absente). */
   | { kind: 'items'; items: AmountItem[] }
+  /**
+   * Un prix par JOUR, certains jours de la semaine (la cantine : lundi, mardi, jeudi, vendredi),
+   * sauf jours fériés et vacances scolaires s'il le faut : le mois coûte le prix fois le nombre de
+   * ces jours dans le mois (cf. calendar.ts).
+   */
+  | { kind: 'days'; value: number; days: Weekday[]; skipPublicHolidays?: boolean; skipSchoolHolidays?: boolean }
   /** Plus budgété à partir de ce mois : l'archivage. */
   | { kind: 'none' }
 
@@ -196,6 +208,8 @@ export interface Project {
 export interface Settings {
   /** Nombre de mois complets pris dans la moyenne du prorata. */
   prorataWindowMonths: number
+  /** La zone des vacances scolaires du foyer, pour les dépenses qui s'arrêtent pendant (cf. calendar.ts). */
+  schoolZone?: SchoolZone
 }
 
 export interface State {

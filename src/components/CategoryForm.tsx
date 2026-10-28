@@ -1,19 +1,20 @@
-import { Button, DeleteButton, FlatSelector, Input, Select, type FlatSelectorOption } from '../ds'
+import { Button, Checkbox, DeleteButton, FlatSelector, Input, Select, type FlatSelectorOption } from '../ds'
 import { useId, useState } from 'react'
-import { PERIOD_LABELS, PERIOD_SHORT } from '../lib/amount'
+import { monthlyAmount, PERIOD_LABELS, PERIOD_SHORT } from '../lib/amount'
+import { scheduledDays, scheduleWarning, WEEKDAY_NAMES, WEEKDAY_SHORT, WEEKDAYS } from '../lib/calendar'
 import { addCategory, budgetAt, deleteCategory, editCategory, moveCategory, removeVersion, upsertVersion, versionMonthly, versionsOf } from '../lib/budget'
 import { createId, formatEuro, nowIso } from '../lib/format'
 import { monthLabel } from '../lib/month'
 import { projectCategoryIds } from '../lib/projects'
 import { scopePrefix, type Scope } from '../lib/scope'
 import { sortedGroups } from '../lib/summary'
-import type { Amount, CategoryIcon, Month, Period, State } from '../lib/types'
+import type { Amount, CategoryIcon, Month, Period, State, Weekday } from '../lib/types'
 import CategoryGlyph from './CategoryGlyph'
 import IconPicker from './IconPicker'
 import NumberField from './NumberField'
 import PeriodButton from './PeriodButton'
 
-type AmountKind = Period | 'items'
+type AmountKind = Period | 'items' | 'days'
 
 const COMMON = 'common'
 const toScope = (id: string): Scope => (id === COMMON ? null : id)
@@ -30,6 +31,7 @@ const KIND_OPTIONS: FlatSelectorOption<AmountKind>[] = [
   { id: 'annual', label: PERIOD_SHORT.annual, ariaLabel: 'Montant annuel' },
   { id: 'biennial', label: PERIOD_SHORT.biennial, ariaLabel: 'Montant sur deux ans' },
   { id: 'items', label: 'Items', ariaLabel: 'Somme d’items' },
+  { id: 'days', label: 'Jours', ariaLabel: 'Prix par jour, certains jours de la semaine' },
 ]
 
 interface DraftItem {
@@ -47,6 +49,10 @@ interface Draft {
   kind: AmountKind
   value: number | null
   items: DraftItem[]
+  /** Pour un prix par jour : les jours de la semaine, et ce qu'on en retire. */
+  days: Weekday[]
+  skipPublicHolidays: boolean
+  skipSchoolHolidays: boolean
   groupId: string
   note: string
   from: Month
@@ -62,6 +68,10 @@ function draftFrom(state: State, categoryId: string | null, month: Month, groupI
     kind: amount.kind === 'none' ? 'monthly' : amount.kind,
     value: amount.kind === 'items' || amount.kind === 'none' ? null : amount.value,
     items: amount.kind === 'items' ? amount.items.map((item) => ({ id: createId(), label: item.label, amount: item.amount, period: item.period ?? 'monthly' })) : [blankItem()],
+    // Par défaut, les jours d'école : du lundi au vendredi, hors jours fériés.
+    days: amount.kind === 'days' ? amount.days : [1, 2, 3, 4, 5],
+    skipPublicHolidays: amount.kind === 'days' ? (amount.skipPublicHolidays ?? false) : true,
+    skipSchoolHolidays: amount.kind === 'days' ? (amount.skipSchoolHolidays ?? false) : false,
     groupId: version?.groupId ?? groupId ?? state.groups[0]?.id ?? '',
     note: version?.note ?? '',
     from: month,
@@ -71,6 +81,15 @@ function draftFrom(state: State, categoryId: string | null, month: Month, groupI
 function toAmount(draft: Draft): Amount {
   if (draft.kind === 'items') {
     return { kind: 'items', items: draft.items.filter((item) => item.amount !== null).map((item) => ({ label: item.label.trim(), amount: item.amount ?? 0, ...(item.period !== 'monthly' ? { period: item.period } : {}) })) }
+  }
+  if (draft.kind === 'days') {
+    return {
+      kind: 'days',
+      value: draft.value ?? 0,
+      days: [...draft.days].sort((a, b) => a - b),
+      ...(draft.skipPublicHolidays ? { skipPublicHolidays: true } : {}),
+      ...(draft.skipSchoolHolidays ? { skipSchoolHolidays: true } : {}),
+    }
   }
   return { kind: draft.kind, value: draft.value ?? 0 }
 }
@@ -107,7 +126,7 @@ export default function CategoryForm({
   const [choosingIcon, setChoosingIcon] = useState(false)
 
   const isNew = categoryId === null
-  const isValid = (d: Draft) => d.name.trim() !== '' && state.groups.some((g) => g.id === d.groupId) && (d.kind === 'items' ? d.items.some((item) => item.amount !== null) : d.value !== null)
+  const isValid = (d: Draft) => d.name.trim() !== '' && state.groups.some((g) => g.id === d.groupId) && (d.kind === 'items' ? d.items.some((item) => item.amount !== null) : d.value !== null && (d.kind !== 'days' || d.days.length > 0))
   const valid = isValid(draft)
   const versions = categoryId ? versionsOf(state, categoryId) : []
   // Le budget de la dépense : le commun, ou celui d'une personne. À plusieurs, elle peut passer de
@@ -197,7 +216,7 @@ export default function CategoryForm({
 
       <div className="field">
         <span className="field-label">Montant</span>
-        <FlatSelector label="Périodicité" options={KIND_OPTIONS} value={draft.kind} onChange={(kind) => change({ ...draft, kind })} />
+        <FlatSelector label="Périodicité" options={KIND_OPTIONS} multiline value={draft.kind} onChange={(kind) => change({ ...draft, kind })} />
         {draft.kind === 'items' ? (
           <ul className="items">
             {draft.items.map((item, index) => (
@@ -232,6 +251,8 @@ export default function CategoryForm({
               </Button>
             </li>
           </ul>
+        ) : draft.kind === 'days' ? (
+          <DaysField uid={uid} draft={draft} month={month} state={state} onChange={change} />
         ) : (
           <NumberField id={`${uid}-value`} value={draft.value} placeholder="0,00" suffix={PERIOD_LABELS[draft.kind]} onChange={(value) => change({ ...draft, value })} />
         )}
@@ -274,7 +295,11 @@ export default function CategoryForm({
                 <li className="history-row" key={version.from}>
                   <span>{monthLabel(version.from)}</span>
                   <span className="numeric">
-                    {version.amount.kind === 'none' ? 'plus budgété' : formatEuro(versionMonthly(version))}
+                    {version.amount.kind === 'none'
+                      ? 'plus budgété'
+                      : version.amount.kind === 'days'
+                        ? `${formatEuro(version.amount.value)} par jour`
+                        : formatEuro(versionMonthly(version, version.from))}
                     <small className="muted"> · {groupName(version.groupId)}</small>
                   </span>
                   <DeleteButton
@@ -303,3 +328,48 @@ export default function CategoryForm({
     </form>
   )
 }
+
+/**
+ * Un prix par JOUR (cf. lib/calendar.ts) : le prix d'un jour, les jours de la semaine où la dépense
+ * revient — des boutons à bascule, un par jour —, et ce qu'on en retire : les jours fériés, les
+ * vacances scolaires de la zone du foyer. Dessous, ce que ça donne pour le mois : le nombre de
+ * jours et le montant, qui varient d'un mois à l'autre.
+ */
+function DaysField({ uid, draft, month, state, onChange }: { uid: string; draft: Draft; month: Month; state: State; onChange: (draft: Draft) => void }) {
+  const zone = state.settings.schoolZone
+  const schedule = { days: draft.days, skipPublicHolidays: draft.skipPublicHolidays, skipSchoolHolidays: draft.skipSchoolHolidays }
+  const count = scheduledDays(month, schedule, zone)
+  const total = monthlyAmount({ kind: 'days', value: draft.value ?? 0, ...schedule }, month, zone)
+  const warning = scheduleWarning(month, schedule, zone)
+  const toggle = (day: Weekday) => onChange({ ...draft, days: draft.days.includes(day) ? draft.days.filter((d) => d !== day) : [...draft.days, day] })
+  return (
+    <>
+      <NumberField id={`${uid}-value`} value={draft.value} placeholder="0,00" suffix="par jour" onChange={(value) => onChange({ ...draft, value })} />
+      <div className="weekday-row" role="group" aria-label="Jours de la semaine">
+        {WEEKDAYS.map((day) => {
+          const on = draft.days.includes(day)
+          return (
+            <Button key={day} size="sm" className="weekday" active={on} aria-pressed={on} aria-label={WEEKDAY_NAMES[day]} onClick={() => toggle(day)}>
+              {WEEKDAY_SHORT[day]}
+            </Button>
+          )
+        })}
+      </div>
+      <label className="check-field">
+        <Checkbox checked={draft.skipPublicHolidays} onChange={(event) => onChange({ ...draft, skipPublicHolidays: event.target.checked })} />
+        Sauf jours fériés
+      </label>
+      <label className="check-field">
+        <Checkbox checked={draft.skipSchoolHolidays} onChange={(event) => onChange({ ...draft, skipSchoolHolidays: event.target.checked })} />
+        Sauf vacances scolaires{zone ? ` (zone ${zone})` : ''}
+      </label>
+      <p className="field-hint muted">
+        {draft.days.length === 0
+          ? 'Choisissez au moins un jour.'
+          : `En ${monthLabel(month).toLowerCase()} : ${count} jour${count > 1 ? 's' : ''}, soit ${formatEuro(total)}.`}
+        {warning && ` ${warning}`}
+      </p>
+    </>
+  )
+}
+

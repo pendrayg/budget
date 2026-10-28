@@ -23,6 +23,7 @@ export type DesignSystem = Pick<
   | 'Body'
   | 'Button'
   | 'ChartFilters'
+  | 'Checkbox'
   | 'DeleteButton'
   | 'Disclosure'
   | 'DisclosureButton'
@@ -65,6 +66,7 @@ const ds: DesignSystem = id === 'star-wars' ? await import('./star-wars') : awai
 export const Body = ds.Body
 export const Button = ds.Button
 export const ChartFilters = ds.ChartFilters
+export const Checkbox = ds.Checkbox
 export const DeleteButton = ds.DeleteButton
 export const Disclosure = ds.Disclosure
 export const DisclosureButton = ds.DisclosureButton

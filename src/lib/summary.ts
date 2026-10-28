@@ -66,7 +66,7 @@ export function monthSummary(state: State, month: Month, scope: Scope = null): M
     for (const category of state.categories) {
       const version = budgetAt(state, category.id, month)
       if (!version || version.amount.kind === 'none' || version.groupId !== group.id) continue
-      const monthly = versionMonthly(version)
+      const monthly = versionMonthly(version, month, state.settings.schoolZone)
       lines.push({ category, version, monthly, shares: split(monthly, shares) })
     }
     lines.sort((a, b) => a.category.name.localeCompare(b.category.name, 'fr'))
@@ -177,7 +177,7 @@ export function budgetHistory(state: State, upTo: Month, scope: Scope = null): B
   const totalAt = (month: Month) =>
     state.categories.reduce((sum, category) => {
       const version = budgetAt(state, category.id, month)
-      return version && groupIds.has(version.groupId) ? sum + versionMonthly(version) : sum
+      return version && groupIds.has(version.groupId) ? sum + versionMonthly(version, month, state.settings.schoolZone) : sum
     }, 0)
   const points: BudgetPoint[] = []
   for (let month = start; month <= upTo; month = addMonths(month, 1)) {

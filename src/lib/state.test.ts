@@ -115,6 +115,28 @@ describe('périodicités', () => {
   })
 })
 
+describe('prix par jour', () => {
+  it('garde les jours (triés, sans doublon) et ce qu’on en retire, et écarte une version sans jour', () => {
+    const seed = seedState()
+    const [first, second] = seed.budgets
+    const clean = sanitizeState({
+      ...seed,
+      budgets: [
+        { ...first, amount: { kind: 'days', value: 4.5, days: [5, 1, 4, 2, 2, 9], skipPublicHolidays: true, skipSchoolHolidays: 'oui' } },
+        { ...second, amount: { kind: 'days', value: 3, days: [] } },
+        ...seed.budgets.slice(2),
+      ],
+    })
+    expect(clean.budgets.find((v) => v.categoryId === first.categoryId && v.from === first.from)?.amount).toEqual({ kind: 'days', value: 4.5, days: [1, 2, 4, 5], skipPublicHolidays: true })
+    expect(clean.budgets.some((v) => v.categoryId === second.categoryId && v.from === second.from && v.amount.kind === 'days')).toBe(false)
+  })
+
+  it('garde la zone des vacances scolaires, et écarte une zone inconnue', () => {
+    expect(sanitizeState({ ...seedState(), settings: { prorataWindowMonths: 12, schoolZone: 'B' } }).settings.schoolZone).toBe('B')
+    expect(sanitizeState({ ...seedState(), settings: { prorataWindowMonths: 12, schoolZone: 'Z' } }).settings.schoolZone).toBeUndefined()
+  })
+})
+
 describe('couleur des personnes', () => {
   it('garde une couleur connue, écarte une couleur inconnue', () => {
     const seed = seedState()

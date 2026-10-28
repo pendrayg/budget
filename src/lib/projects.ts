@@ -49,7 +49,7 @@ export function projectSaved(state: State, project: Project, upTo: Month): numbe
   for (let month = first.from; month <= upTo; month = addMonths(month, 1)) {
     if (!imported.has(month)) continue
     const version = budgetAt(state, categoryId, month)
-    const monthly = version ? versionMonthly(version) : 0
+    const monthly = version ? versionMonthly(version, month, state.settings.schoolZone) : 0
     if (monthly <= 0) continue
     const { transferred, toSave } = spendingSummary(state, month, scope).savings
     if (toSave > 0) saved += monthly * Math.min(1, Math.max(0, transferred) / toSave)

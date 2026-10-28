@@ -20,6 +20,7 @@ import type {
   SplitKey,
   State,
   Transaction,
+  Weekday,
 } from './types'
 
 /**
@@ -191,6 +192,12 @@ function amount(value: unknown): Amount | null {
     return { kind: 'items', items }
   }
   if (!finite(value.value)) return null
+  if (value.kind === 'days') {
+    // Les jours de la semaine, de 1 (lundi) à 7 (dimanche), sans doublon ; aucun jour, pas de dépense.
+    const days = [...new Set(Array.isArray(value.days) ? value.days : [])].filter((day): day is Weekday => Number.isInteger(day) && (day as number) >= 1 && (day as number) <= 7).sort((a, b) => a - b)
+    if (days.length === 0) return null
+    return { kind: 'days', value: value.value, days, ...(value.skipPublicHolidays === true ? { skipPublicHolidays: true } : {}), ...(value.skipSchoolHolidays === true ? { skipSchoolHolidays: true } : {}) }
+  }
   // Une ancienne version « 4 mois » devient mensuelle, ramenée au mois : l'historique garde ses montants.
   if (fourMonths(value.kind)) return { kind: 'monthly', value: value.value / 4 }
   const kind = period(value.kind)
@@ -384,7 +391,8 @@ function rules(value: unknown, categoryIds: Set<string>): MatchRule[] {
 
 function settings(value: unknown): Settings {
   const window = isRecord(value) && finite(value.prorataWindowMonths) ? Math.round(value.prorataWindowMonths) : DEFAULT_WINDOW_MONTHS
-  return { prorataWindowMonths: Math.min(60, Math.max(1, window)) }
+  const zone = isRecord(value) && (value.schoolZone === 'A' || value.schoolZone === 'B' || value.schoolZone === 'C') ? value.schoolZone : undefined
+  return { prorataWindowMonths: Math.min(60, Math.max(1, window)), ...(zone ? { schoolZone: zone } : {}) }
 }
 
 /** Un état propre, quoi qu'on lui donne. */
