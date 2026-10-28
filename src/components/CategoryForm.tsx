@@ -338,13 +338,13 @@ export default function CategoryForm({
   )
 }
 
-/** La liste des zones de vacances scolaires. */
-const ZONE_OPTIONS = SCHOOL_ZONES.map((zone) => ({ value: zone, label: zone }))
+/** Les zones de vacances scolaires, en choix du sélecteur plat. */
+const ZONE_OPTIONS: FlatSelectorOption<SchoolZone>[] = SCHOOL_ZONES.map((zone) => ({ id: zone, label: zone, ariaLabel: `Zone ${zone}` }))
 
 /**
  * Un prix par JOUR (cf. lib/calendar.ts) : le prix d'un jour, les jours de la semaine où la dépense
  * revient — des boutons à bascule, un par jour —, et ce qu'on en retire : les jours fériés, et les
- * vacances scolaires d'une zone, cochées et choisies sur la ligne même (« ☑ Sauf vacances zone [B] »).
+ * vacances scolaires d'une zone (« ☑ Sauf vacances zone », puis A, B ou C au sélecteur plat).
  * Dessous, ce que ça donne pour le mois : le nombre de jours et le montant, qui varient d'un mois
  * à l'autre.
  */
@@ -371,19 +371,19 @@ function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft;
         <Checkbox checked={draft.skipPublicHolidays} onChange={(event) => onChange({ ...draft, skipPublicHolidays: event.target.checked })} />
         Sauf jours fériés
       </label>
-      {/* Une case, comme pour les jours fériés, puis la zone à compléter : « ☑ Sauf vacances zone [B] ».
-          La liste tient sur la ligne, là où trois choix côte à côte la déborderaient ; choisir une
-          zone coche la case. */}
+      {/* Une case, comme pour les jours fériés, « ☑ Sauf vacances zone », et la zone dessous, au
+          sélecteur plat : à côté du libellé, ses trois choix débordaient l'écran. Choisir une zone
+          coche la case. */}
       <div className="zone-field">
         <label className="check-field">
           <Checkbox checked={draft.skipSchoolHolidays} onChange={(event) => onChange({ ...draft, skipSchoolHolidays: event.target.checked })} />
           Sauf vacances zone
         </label>
-        <Select
-          aria-label="Zone des vacances scolaires"
+        <FlatSelector
+          label="Zone des vacances scolaires"
           options={ZONE_OPTIONS}
           value={draft.schoolZone}
-          onChange={(event) => onChange({ ...draft, skipSchoolHolidays: true, schoolZone: event.target.value as SchoolZone })}
+          onChange={(zone) => onChange({ ...draft, skipSchoolHolidays: true, schoolZone: zone })}
         />
       </div>
       <p className="field-hint muted">

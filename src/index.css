@@ -546,19 +546,12 @@ body,
   padding-inline: 0;
 }
 
-/* « ☑ Sauf vacances zone [B] » : la case et son libellé, puis la liste, sur une ligne. */
+/* « ☑ Sauf vacances zone », puis les zones au sélecteur plat, dessous et de toute la largeur : à
+   côté du libellé, ses trois choix débordaient l'écran d'un téléphone. */
 .zone-field {
   display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.field .zone-field > label {
-  white-space: nowrap;
-}
-
-.zone-field > .ds-select {
-  width: 7.5em;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Une case à cocher et son libellé, sur une ligne : toute la ligne la coche. Un libellé de phrase,
