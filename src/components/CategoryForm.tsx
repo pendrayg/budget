@@ -52,11 +52,18 @@ interface Draft {
   /** Pour un prix par jour : les jours de la semaine, et ce qu'on en retire. */
   days: Weekday[]
   skipPublicHolidays: boolean
-  /** La zone dont les vacances scolaires sont retirées, ou `null` : on ne les retire pas. */
-  schoolZone: SchoolZone | null
+  /** Retire-t-on les vacances scolaires, et de quelle zone (gardée même décochée, pour la recocher). */
+  skipSchoolHolidays: boolean
+  schoolZone: SchoolZone
   groupId: string
   note: string
   from: Month
+}
+
+/** La zone qu'une autre dépense « par jour » retire déjà : le foyer n'en a souvent qu'une. À défaut, la A. */
+function knownZone(state: State): SchoolZone {
+  for (const version of state.budgets) if (version.amount.kind === 'days' && version.amount.schoolZone) return version.amount.schoolZone
+  return 'A'
 }
 
 function draftFrom(state: State, categoryId: string | null, month: Month, groupId: string | undefined): Draft {
@@ -72,7 +79,8 @@ function draftFrom(state: State, categoryId: string | null, month: Month, groupI
     // Par défaut, les jours d'école : du lundi au vendredi, hors jours fériés.
     days: amount.kind === 'days' ? amount.days : [1, 2, 3, 4, 5],
     skipPublicHolidays: amount.kind === 'days' ? (amount.skipPublicHolidays ?? false) : true,
-    schoolZone: amount.kind === 'days' ? (amount.schoolZone ?? null) : null,
+    skipSchoolHolidays: amount.kind === 'days' && amount.schoolZone !== undefined,
+    schoolZone: (amount.kind === 'days' ? amount.schoolZone : undefined) ?? knownZone(state),
     groupId: version?.groupId ?? groupId ?? state.groups[0]?.id ?? '',
     note: version?.note ?? '',
     from: month,
@@ -89,7 +97,7 @@ function toAmount(draft: Draft): Amount {
       value: draft.value ?? 0,
       days: [...draft.days].sort((a, b) => a - b),
       ...(draft.skipPublicHolidays ? { skipPublicHolidays: true } : {}),
-      ...(draft.schoolZone ? { schoolZone: draft.schoolZone } : {}),
+      ...(draft.skipSchoolHolidays ? { schoolZone: draft.schoolZone } : {}),
     }
   }
   return { kind: draft.kind, value: draft.value ?? 0 }
@@ -330,18 +338,18 @@ export default function CategoryForm({
   )
 }
 
-/** La liste de la zone dont les vacances scolaires sont retirées : aucune, ou la zone. */
-const ZONE_OPTIONS = [{ value: 'none', label: 'aucune' }, ...SCHOOL_ZONES.map((zone) => ({ value: zone, label: zone }))]
+/** La liste des zones de vacances scolaires. */
+const ZONE_OPTIONS = SCHOOL_ZONES.map((zone) => ({ value: zone, label: zone }))
 
 /**
  * Un prix par JOUR (cf. lib/calendar.ts) : le prix d'un jour, les jours de la semaine où la dépense
  * revient — des boutons à bascule, un par jour —, et ce qu'on en retire : les jours fériés, et les
- * vacances scolaires d'une zone, choisie sur la ligne même (« Sauf vacances zone [B] »).
+ * vacances scolaires d'une zone, cochées et choisies sur la ligne même (« ☑ Sauf vacances zone [B] »).
  * Dessous, ce que ça donne pour le mois : le nombre de jours et le montant, qui varient d'un mois
  * à l'autre.
  */
 function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft; month: Month; onChange: (draft: Draft) => void }) {
-  const schedule = { days: draft.days, skipPublicHolidays: draft.skipPublicHolidays, ...(draft.schoolZone ? { schoolZone: draft.schoolZone } : {}) }
+  const schedule = { days: draft.days, skipPublicHolidays: draft.skipPublicHolidays, ...(draft.skipSchoolHolidays ? { schoolZone: draft.schoolZone } : {}) }
   const count = scheduledDays(month, schedule)
   const total = monthlyAmount({ kind: 'days', value: draft.value ?? 0, ...schedule }, month)
   const warning = scheduleWarning(month, schedule)
@@ -363,15 +371,19 @@ function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft;
         <Checkbox checked={draft.skipPublicHolidays} onChange={(event) => onChange({ ...draft, skipPublicHolidays: event.target.checked })} />
         Sauf jours fériés
       </label>
-      {/* Une phrase à compléter : « Sauf vacances zone [B] ». La liste tient sur la ligne, là où
-          quatre choix côte à côte la déborderaient. */}
+      {/* Une case, comme pour les jours fériés, puis la zone à compléter : « ☑ Sauf vacances zone [B] ».
+          La liste tient sur la ligne, là où trois choix côte à côte la déborderaient ; choisir une
+          zone coche la case. */}
       <div className="zone-field">
-        <label htmlFor={`${uid}-zone`}>Sauf vacances zone</label>
+        <label className="check-field">
+          <Checkbox checked={draft.skipSchoolHolidays} onChange={(event) => onChange({ ...draft, skipSchoolHolidays: event.target.checked })} />
+          Sauf vacances zone
+        </label>
         <Select
-          id={`${uid}-zone`}
+          aria-label="Zone des vacances scolaires"
           options={ZONE_OPTIONS}
-          value={draft.schoolZone ?? 'none'}
-          onChange={(event) => onChange({ ...draft, schoolZone: event.target.value === 'none' ? null : (event.target.value as SchoolZone) })}
+          value={draft.schoolZone}
+          onChange={(event) => onChange({ ...draft, skipSchoolHolidays: true, schoolZone: event.target.value as SchoolZone })}
         />
       </div>
       <p className="field-hint muted">

@@ -546,8 +546,7 @@ body,
   padding-inline: 0;
 }
 
-/* « Sauf vacances zone » et sa liste, sur une ligne : une phrase à compléter. Le libellé garde
-   l'encre et la casse du texte, comme celui d'une case à cocher. */
+/* « ☑ Sauf vacances zone [B] » : la case et son libellé, puis la liste, sur une ligne. */
 .zone-field {
   display: flex;
   align-items: center;
@@ -555,11 +554,6 @@ body,
 }
 
 .field .zone-field > label {
-  color: var(--color-text);
-  font-size: 14px;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
   white-space: nowrap;
 }
 

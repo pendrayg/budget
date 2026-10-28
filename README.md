@@ -46,8 +46,9 @@ faisait la division dans la cellule.
 Une dépense peut aussi se compter **par jour**, certains jours de la semaine : la cantine à
 4,50 € les lundis, mardis, jeudis et vendredis, **sauf jours fériés** et **sauf vacances zone B**.
 Sept boutons à bascule choisissent les jours (du lundi au vendredi par défaut), une case retire les
-jours fériés, et une phrase à compléter, « Sauf vacances zone [aucune, A, B, C] », retire les
-vacances scolaires de la zone choisie — chaque dépense a la sienne. Le budget d'un mois est alors le
+jours fériés, et une autre, « Sauf vacances zone [A, B, C] », les vacances scolaires de la zone
+choisie à sa suite — chaque dépense a la sienne ; la première proposée est celle d'une autre
+dépense « par jour », et choisir une zone coche la case. Le budget d'un mois est alors le
 prix d'un jour multiplié par le nombre de ces jours **dans ce mois** : il varie d'un mois à l'autre
 et tombe à zéro en août, et le formulaire dit ce que donne le mois en cours (« En octobre 2026 :
 10 jours, soit 45,00 € »). Une dépense à épargner « par jour » se juge, sur l'année glissante,
