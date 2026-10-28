@@ -546,25 +546,18 @@ body,
   padding-inline: 0;
 }
 
-/* « ☑ Sauf vacances zone », puis les zones au sélecteur plat, dessous et de toute la largeur : à
-   côté du libellé, ses trois choix débordaient l'écran d'un téléphone. */
-.zone-field {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* Ce qu'on retire d'une dépense « par jour » : quatre boutons à bascule — Fériés, Zone A, B, C —
+   qui se partagent la largeur, comme les jours au-dessus. */
+.except-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: calc(var(--shadow-room) / 2);
 }
 
-/* Une case à cocher et son libellé, sur une ligne : toute la ligne la coche. Un libellé de phrase,
-   pas un intitulé de champ : il garde l'encre et la casse du texte. */
-.field label.check-field {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--color-text);
-  font-size: 14px;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
+.except-row .ds-button {
+  min-width: 0;
+  padding-inline: 4px;
+  white-space: nowrap;
 }
 
 .toolbar {
