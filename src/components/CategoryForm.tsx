@@ -358,7 +358,10 @@ function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft;
       </div>
       {/* Ce qu'on retire, en boutons à bascule comme les jours : les jours fériés, et les vacances
           d'une zone — une seule à la fois, un second appui sur la sienne la retire. */}
-      <div className="except-row" role="group" aria-label="Sauf">
+      <span className="field-label" id={`${uid}-except`}>
+        Sauf
+      </span>
+      <div className="except-row" role="group" aria-labelledby={`${uid}-except`}>
         <Button
           size="sm"
           active={draft.skipPublicHolidays}
