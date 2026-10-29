@@ -299,7 +299,7 @@ export default function CategoryForm({
                     {version.amount.kind === 'none'
                       ? 'plus budgété'
                       : version.amount.kind === 'days'
-                        ? `${formatEuro(version.amount.value)} par jour`
+                        ? `${formatEuro(version.amount.value)}/j`
                         : formatEuro(versionMonthly(version, version.from))}
                     <small className="muted"> · {groupName(version.groupId)}</small>
                   </span>
