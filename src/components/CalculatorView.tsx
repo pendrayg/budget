@@ -15,8 +15,10 @@ export default function CalculatorView({ state, month }: { state: State; month: 
   const [amount, setAmount] = useState<number | null>(null)
   const [keyId, setKeyId] = useState('prorata')
 
-  // Le prorata, puis le ratio de chaque catégorie qui en a un, à son nom.
-  const ratios = state.splitKeys.filter((key) => key.kind === 'fixed' && state.groups.some((group) => group.splitKeyId === key.id))
+  // Le prorata, puis le ratio de chaque catégorie qui en a un, à son nom — sauf un ratio où une
+  // seule personne a une part (100 / 0) : il n'y a rien à répartir, la somme est à elle.
+  const shared = (keyId: string) => Object.values(sharesAt(state, keyId, month)).filter((share) => share > 0).length > 1
+  const ratios = state.splitKeys.filter((key) => key.kind === 'fixed' && state.groups.some((group) => group.splitKeyId === key.id) && shared(key.id))
   const options = [
     { id: 'prorata', label: 'Prorata' },
     ...ratios
