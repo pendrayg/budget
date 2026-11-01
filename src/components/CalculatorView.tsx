@@ -1,6 +1,6 @@
 import { FlatSelector } from '../ds'
 import { useState } from 'react'
-import { formatEuro, formatPercent } from '../lib/format'
+import { formatPercent } from '../lib/format'
 import { sharesAt, split } from '../lib/prorata'
 import { sortedGroups } from '../lib/summary'
 import type { Month, State } from '../lib/types'
@@ -42,7 +42,7 @@ export default function CalculatorView({ state, month }: { state: State; month: 
       </div>
 
       <div className="calc-result" aria-live="polite">
-        <PeopleSummary people={state.people} label="Part de chacun" amount={(person) => formatEuro(parts[person.id] ?? 0)} detail={(person) => formatPercent(shares[person.id] ?? 0)} />
+        <PeopleSummary people={state.people} label="Part de chacun" amount={(person) => parts[person.id] ?? 0} detail={(person) => formatPercent(shares[person.id] ?? 0)} />
       </div>
 
       <div className="form calc-inputs">

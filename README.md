@@ -151,6 +151,10 @@ La feuille `Calculatrice` : une somme, une clé (prorata ou parts fixes), la par
 part de chacun en haut ; la clé et la somme en bas de l'écran, au-dessus de la barre de menu, à
 portée de pouce — la somme au plus bas, juste au-dessus du clavier quand il s'ouvre.
 
+Les gros montants du haut — la part de chacun ici et dans l'écran Budget, le budget et le reste à
+vivre d'une personne — **se copient d'un clic**, sans bouton qui l'annonce : le presse-papier reçoit
+« 1234,56 », tel qu'on le colle dans un virement, et le montant dit « Copié » une seconde.
+
 ### Les dépenses : l'état des lieux
 
 Ce qu'on a **vraiment dépensé**, face au budget, dans l'écran Mois. En début de mois, « Importer un relevé » prend le

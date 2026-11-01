@@ -16,6 +16,7 @@ import { projectCategoryIds } from '../lib/projects'
 import type { Scope } from '../lib/scope'
 import { isSolo } from '../lib/people'
 import PeopleSummary from './PeopleSummary'
+import CopyAmount from './CopyAmount'
 
 /**
  * La feuille `Mensuels` du classeur : LE budget, celui en vigueur ce mois-ci — pas de navigation
@@ -63,7 +64,7 @@ export default function BudgetView({
         {owner ? (
           hasLines && <PersonalSummary state={state} month={month} personId={owner.id} total={summary.total} solo={solo} />
         ) : hasLines ? (
-          <PeopleSummary people={state.people} label="Part de chacun" amount={(person) => formatEuro(summary.due[person.id])} detail={(person) => formatPercent(summary.effective[person.id])} />
+          <PeopleSummary people={state.people} label="Part de chacun" amount={(person) => summary.due[person.id] ?? 0} detail={(person) => formatPercent(summary.effective[person.id])} />
         ) : null}
         {hasLines ? null : hasGroups ? (
           <div className="empty">
@@ -257,13 +258,13 @@ function PersonalSummary({ state, month, personId, total, solo }: { state: State
     <div className="summary-card summary-split" aria-label="Budget personnel">
       <div className="summary-person">
         <span className="summary-name">Budget</span>
-        <span className="summary-amount">{formatEuro(total)}</span>
+        <CopyAmount value={total} />
         {income > 0 && <span className="summary-share muted">{formatPercent(total / income)} du revenu</span>}
       </div>
       {income > 0 && (
         <div className="summary-person">
           <span className="summary-name">Reste à vivre</span>
-          <span className="summary-amount">{formatEuro(common.remaining[personId] ?? 0)}</span>
+          <CopyAmount value={common.remaining[personId] ?? 0} />
           <span className="summary-share muted">{solo ? 'après ce budget' : 'après sa part du foyer et ce budget'}</span>
         </div>
       )}

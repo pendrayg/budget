@@ -37,3 +37,6 @@ export function createId(): string {
 export function nowIso(): string {
   return new Date().toISOString()
 }
+
+/** « 1234,56 » : le montant tel qu'on le colle dans un virement — sans espace, sans symbole. */
+export const amountForClipboard = (value: number) => (Math.round(value * 100) / 100).toFixed(2).replace('.', ',')
