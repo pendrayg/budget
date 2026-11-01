@@ -117,7 +117,7 @@ export type Amount =
    * sauf jours fériés et vacances scolaires d'une zone s'il le faut (`schoolZone`) : le mois coûte
    * le prix fois le nombre de ces jours dans le mois (cf. calendar.ts).
    */
-  | { kind: 'days'; value: number; days: Weekday[]; skipPublicHolidays?: boolean; schoolZone?: SchoolZone }
+  | { kind: 'days'; value: number; days: Weekday[]; skipPublicHolidays?: boolean; schoolZone?: SchoolZone; duringSchoolHolidays?: boolean }
   /** Plus budgété à partir de ce mois : l'archivage. */
   | { kind: 'none' }
 

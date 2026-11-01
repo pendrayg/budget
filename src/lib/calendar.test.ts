@@ -46,6 +46,15 @@ describe('scheduledDays', () => {
     expect(scheduledDays('2027-05', { days: CANTINE, skipPublicHolidays: true, schoolZone: 'B' })).toBe(14)
   })
 
+  it('ne compte, pendant les vacances, que les jours de vacances de la zone', () => {
+    // Le reste d'octobre 2026, zone B : huit jours de Toussaint.
+    expect(scheduledDays('2026-10', { days: CANTINE, schoolZone: 'B', duringSchoolHolidays: true })).toBe(8)
+    // Août 2027, tout en vacances : seul le 15 août (un dimanche) n'est pas de la liste.
+    expect(scheduledDays('2027-08', { days: CANTINE, schoolZone: 'A', duringSchoolHolidays: true })).toBe(scheduledDays('2027-08', { days: CANTINE }))
+    // Sans zone, « pendant » ne change rien.
+    expect(scheduledDays('2026-10', { days: CANTINE, duringSchoolHolidays: true })).toBe(18)
+  })
+
   it('tombe à zéro en août, école fermée', () => {
     expect(scheduledDays('2027-08', { days: CANTINE, schoolZone: 'A' })).toBe(0)
   })
@@ -56,6 +65,7 @@ describe('scheduleWarning', () => {
     expect(scheduleWarning('2028-10', { days: CANTINE, schoolZone: 'B' })).toMatch(/pas encore publiées/)
     expect(scheduleWarning('2026-10', { days: CANTINE, schoolZone: 'B' })).toBeNull()
     expect(scheduleWarning('2026-10', { days: CANTINE })).toBeNull()
+    expect(scheduleWarning('2028-10', { days: CANTINE, schoolZone: 'B', duringSchoolHolidays: true })).toMatch(/aucun jour/)
   })
 })
 

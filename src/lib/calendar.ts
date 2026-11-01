@@ -23,11 +23,16 @@ export const SCHOOL_ZONES: readonly SchoolZone[] = ['A', 'B', 'C']
 /** Le dernier jour dont les vacances scolaires sont publiées. */
 export const SCHOOL_CALENDAR_UNTIL: string = SCHOOL.until
 
-/** Les jours d'une dépense : lesquels dans la semaine, et ce qu'on en retire — les jours fériés, les vacances d'une zone. */
+/**
+ * Les jours d'une dépense : lesquels dans la semaine, et ce qu'on en retire — les jours fériés,
+ * les vacances d'une zone. Ou, avec `duringSchoolHolidays`, l'inverse pour les vacances : seuls
+ * comptent les jours pendant les vacances de la zone (le centre de loisirs), fériés retirés ou non.
+ */
 export interface DaySchedule {
   days: Weekday[]
   skipPublicHolidays?: boolean
   schoolZone?: SchoolZone
+  duringSchoolHolidays?: boolean
 }
 
 const iso = (date: Date) => date.toISOString().slice(0, 10)
@@ -84,7 +89,7 @@ export function scheduledDays(month: Month, schedule: DaySchedule): number {
     if (!wanted.has(weekday)) continue
     const key = iso(date)
     if (schedule.skipPublicHolidays && holidays.has(key)) continue
-    if (schedule.schoolZone && isSchoolHoliday(key, schedule.schoolZone)) continue
+    if (schedule.schoolZone && isSchoolHoliday(key, schedule.schoolZone) !== Boolean(schedule.duringSchoolHolidays)) continue
     count += 1
   }
   return count
@@ -93,8 +98,10 @@ export function scheduledDays(month: Month, schedule: DaySchedule): number {
 /** Ce qui rend le compte d'un mois incertain : un calendrier scolaire pas encore publié. */
 export function scheduleWarning(month: Month, schedule: DaySchedule): string | null {
   if (!schedule.schoolZone) return null
-  if (`${month}-01` > SCHOOL_CALENDAR_UNTIL) return 'Les vacances scolaires de ce mois ne sont pas encore publiées : elles comptent comme des jours d’école.'
-  return null
+  if (`${month}-01` <= SCHOOL_CALENDAR_UNTIL) return null
+  return schedule.duringSchoolHolidays
+    ? 'Les vacances scolaires de ce mois ne sont pas encore publiées : aucun jour n’y compte.'
+    : 'Les vacances scolaires de ce mois ne sont pas encore publiées : elles comptent comme des jours d’école.'
 }
 
 /** « lundi, mardi, jeudi et vendredi » ; « du lundi au vendredi » ; « tous les jours ». */

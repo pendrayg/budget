@@ -45,10 +45,16 @@ faisait la division dans la cellule.
 
 Une dépense peut aussi se compter **par jour**, certains jours de la semaine : la cantine à
 4,50 € les lundis, mardis, jeudis et vendredis, **sauf jours fériés** et **sauf vacances zone B**.
-Sept boutons à bascule choisissent les jours (du lundi au vendredi par défaut), et quatre autres,
-dessous, ce qu'on en retire : **Fériés** (enfoncé par défaut), **Zone A**, **Zone B**, **Zone C**
-— les vacances scolaires d'une seule zone à la fois, propre à chaque dépense ; un second appui sur
-la sienne la retire. Le budget d'un mois est alors le
+Sept boutons à bascule choisissent les jours (du lundi au vendredi par défaut), puis un sélecteur
+dit ce que font les vacances scolaires :
+- **Hors vacances** : quatre boutons, dessous, disent ce qu'on retire : **Fériés** (enfoncé par
+  défaut), **Zone A**, **Zone B**, **Zone C** — les vacances d'une seule zone à la fois, propre à
+  chaque dépense ; un second appui sur la sienne la retire.
+- **Pendant** : seuls comptent les jours pendant les vacances de la zone choisie (**Zone A**,
+  **B** ou **C**, il en faut une) — le centre de loisirs à 12 € les mercredis et vendredis des
+  vacances —, et **Fériés** dit toujours si les jours fériés en sont retirés.
+
+Le budget d'un mois est alors le
 prix d'un jour multiplié par le nombre de ces jours **dans ce mois** : il varie d'un mois à l'autre
 et tombe à zéro en août, et le formulaire dit ce que donne le mois en cours (« En octobre 2026 :
 10 jours, soit 45,00 € »). Une dépense à épargner « par jour » se juge, sur l'année glissante,
@@ -60,7 +66,7 @@ est embarqué dans l'application (`src/lib/school-holidays.json`, généré par
 `scripts/school-holidays.mjs` depuis le paquet
 [`vacances-scolaires-france`](https://pypi.org/project/vacances-scolaires-france/), licence MIT) et
 connu jusqu'à fin août 2028 ; au-delà, le formulaire prévient que les vacances comptent comme des
-jours d'école. Le prolonger, c'est relancer le script sur une version plus récente du paquet
+jours d'école (et qu'une dépense « pendant » n'y compte aucun jour). Le prolonger, c'est relancer le script sur une version plus récente du paquet
 (`src/lib/calendar.ts`).
 
 ### L'historique des changements

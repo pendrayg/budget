@@ -197,7 +197,7 @@ function amount(value: unknown): Amount | null {
     const days = [...new Set(Array.isArray(value.days) ? value.days : [])].filter((day): day is Weekday => Number.isInteger(day) && (day as number) >= 1 && (day as number) <= 7).sort((a, b) => a - b)
     if (days.length === 0) return null
     const zone = value.schoolZone === 'A' || value.schoolZone === 'B' || value.schoolZone === 'C' ? value.schoolZone : undefined
-    return { kind: 'days', value: value.value, days, ...(value.skipPublicHolidays === true ? { skipPublicHolidays: true } : {}), ...(zone ? { schoolZone: zone } : {}) }
+    return { kind: 'days', value: value.value, days, ...(value.skipPublicHolidays === true ? { skipPublicHolidays: true } : {}), ...(zone ? { schoolZone: zone } : {}), ...(zone && value.duringSchoolHolidays === true ? { duringSchoolHolidays: true } : {}) }
   }
   // Une ancienne version « 4 mois » devient mensuelle, ramenée au mois : l'historique garde ses montants.
   if (fourMonths(value.kind)) return { kind: 'monthly', value: value.value / 4 }

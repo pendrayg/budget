@@ -24,6 +24,11 @@ function scopeOptions(state: State): FlatSelectorOption<string>[] {
   return [{ id: COMMON, label: 'Foyer' }, ...state.people.map((person) => ({ id: person.id, label: person.name || 'Sans nom' }))]
 }
 
+const SCHOOL_MODES: FlatSelectorOption<'outside' | 'during'>[] = [
+  { id: 'outside', label: 'Hors vacances' },
+  { id: 'during', label: 'Pendant' },
+]
+
 const KIND_OPTIONS: FlatSelectorOption<AmountKind>[] = [
   { id: 'monthly', label: PERIOD_SHORT.monthly, ariaLabel: 'Montant mensuel' },
   { id: 'quarterly', label: PERIOD_SHORT.quarterly, ariaLabel: 'Montant trimestriel' },
@@ -52,8 +57,10 @@ interface Draft {
   /** Pour un prix par jour : les jours de la semaine, et ce qu'on en retire. */
   days: Weekday[]
   skipPublicHolidays: boolean
-  /** La zone dont les vacances scolaires sont retirées, ou `null` : on ne les retire pas. */
+  /** La zone dont les vacances scolaires comptent, ou `null` : elles ne changent rien. */
   schoolZone: SchoolZone | null
+  /** Vrai : seuls les jours pendant ces vacances comptent ; faux : ils sont retirés. */
+  duringSchoolHolidays: boolean
   groupId: string
   note: string
   from: Month
@@ -73,6 +80,7 @@ function draftFrom(state: State, categoryId: string | null, month: Month, groupI
     days: amount.kind === 'days' ? amount.days : [1, 2, 3, 4, 5],
     skipPublicHolidays: amount.kind === 'days' ? (amount.skipPublicHolidays ?? false) : true,
     schoolZone: amount.kind === 'days' ? (amount.schoolZone ?? null) : null,
+    duringSchoolHolidays: amount.kind === 'days' && amount.duringSchoolHolidays === true,
     groupId: version?.groupId ?? groupId ?? state.groups[0]?.id ?? '',
     note: version?.note ?? '',
     from: month,
@@ -90,6 +98,7 @@ function toAmount(draft: Draft): Amount {
       days: [...draft.days].sort((a, b) => a - b),
       ...(draft.skipPublicHolidays ? { skipPublicHolidays: true } : {}),
       ...(draft.schoolZone ? { schoolZone: draft.schoolZone } : {}),
+      ...(draft.schoolZone && draft.duringSchoolHolidays ? { duringSchoolHolidays: true } : {}),
     }
   }
   return { kind: draft.kind, value: draft.value ?? 0 }
@@ -127,7 +136,7 @@ export default function CategoryForm({
   const [choosingIcon, setChoosingIcon] = useState(false)
 
   const isNew = categoryId === null
-  const isValid = (d: Draft) => d.name.trim() !== '' && state.groups.some((g) => g.id === d.groupId) && (d.kind === 'items' ? d.items.some((item) => item.amount !== null) : d.value !== null && (d.kind !== 'days' || d.days.length > 0))
+  const isValid = (d: Draft) => d.name.trim() !== '' && state.groups.some((g) => g.id === d.groupId) && (d.kind === 'items' ? d.items.some((item) => item.amount !== null) : d.value !== null && (d.kind !== 'days' || (d.days.length > 0 && (!d.duringSchoolHolidays || d.schoolZone !== null))))
   const valid = isValid(draft)
   const versions = categoryId ? versionsOf(state, categoryId) : []
   // Le budget de la dépense : le commun, ou celui d'une personne. À plusieurs, elle peut passer de
@@ -332,13 +341,19 @@ export default function CategoryForm({
 
 /**
  * Un prix par JOUR (cf. lib/calendar.ts) : le prix d'un jour, les jours de la semaine où la dépense
- * revient — des boutons à bascule, un par jour —, et ce qu'on en retire, en boutons à bascule aussi :
- * les jours fériés, et les vacances scolaires d'une zone (Fériés, Zone A, Zone B, Zone C).
+ * revient — des boutons à bascule, un par jour —, puis les vacances scolaires : hors vacances, ce
+ * qu'on retire en boutons à bascule aussi (Fériés, Zone A, Zone B, Zone C) ; pendant les vacances
+ * seulement, la zone d'abord (Zone A, B ou C), puis les jours fériés qu'on retire ou non.
  * Dessous, ce que ça donne pour le mois : le nombre de jours et le montant, qui varient d'un mois
  * à l'autre.
  */
 function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft; month: Month; onChange: (draft: Draft) => void }) {
-  const schedule = { days: draft.days, skipPublicHolidays: draft.skipPublicHolidays, ...(draft.schoolZone ? { schoolZone: draft.schoolZone } : {}) }
+  const schedule = {
+    days: draft.days,
+    skipPublicHolidays: draft.skipPublicHolidays,
+    ...(draft.schoolZone ? { schoolZone: draft.schoolZone, duringSchoolHolidays: draft.duringSchoolHolidays } : {}),
+  }
+  const during = draft.duringSchoolHolidays
   const count = scheduledDays(month, schedule)
   const total = monthlyAmount({ kind: 'days', value: draft.value ?? 0, ...schedule }, month)
   const warning = scheduleWarning(month, schedule)
@@ -356,8 +371,28 @@ function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft;
           )
         })}
       </div>
-      {/* Ce qu'on retire, en boutons à bascule comme les jours : les jours fériés, et les vacances
-          d'une zone — une seule à la fois, un second appui sur la sienne la retire. */}
+      {/* Hors vacances, ou pendant seulement : le centre de loisirs n'ouvre que pendant les vacances. */}
+      <FlatSelector label="Vacances scolaires" options={SCHOOL_MODES} value={during ? 'during' : 'outside'} onChange={(mode) => onChange({ ...draft, duringSchoolHolidays: mode === 'during' })} />
+      {during && (
+        <>
+          <span className="field-label" id={`${uid}-zone`}>
+            Vacances de la
+          </span>
+          {/* Une zone, il en faut une : un second appui ne la retire pas. */}
+          <div className="except-row" role="group" aria-labelledby={`${uid}-zone`}>
+            {SCHOOL_ZONES.map((zone) => {
+              const on = draft.schoolZone === zone
+              return (
+                <Button key={zone} size="sm" active={on} aria-pressed={on} aria-label={`Pendant les vacances zone ${zone}`} onClick={() => onChange({ ...draft, schoolZone: zone })}>
+                  Zone {zone}
+                </Button>
+              )
+            })}
+          </div>
+        </>
+      )}
+      {/* Ce qu'on retire, en boutons à bascule comme les jours : les jours fériés, et hors vacances
+          les vacances d'une zone — une seule à la fois, un second appui sur la sienne la retire. */}
       <span className="field-label" id={`${uid}-except`}>
         Sauf
       </span>
@@ -371,19 +406,22 @@ function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft;
         >
           Fériés
         </Button>
-        {SCHOOL_ZONES.map((zone) => {
-          const on = draft.schoolZone === zone
-          return (
-            <Button key={zone} size="sm" active={on} aria-pressed={on} aria-label={`Sauf vacances zone ${zone}`} onClick={() => onChange({ ...draft, schoolZone: on ? null : zone })}>
-              Zone {zone}
-            </Button>
-          )
-        })}
+        {!during &&
+          SCHOOL_ZONES.map((zone) => {
+            const on = draft.schoolZone === zone
+            return (
+              <Button key={zone} size="sm" active={on} aria-pressed={on} aria-label={`Sauf vacances zone ${zone}`} onClick={() => onChange({ ...draft, schoolZone: on ? null : zone })}>
+                Zone {zone}
+              </Button>
+            )
+          })}
       </div>
       <p className="field-hint muted">
         {draft.days.length === 0
           ? 'Choisissez au moins un jour.'
-          : `En ${monthLabel(month).toLowerCase()} : ${count} jour${count > 1 ? 's' : ''}, soit ${formatEuro(total)}.`}
+          : during && !draft.schoolZone
+            ? 'Choisissez la zone.'
+            : `En ${monthLabel(month).toLowerCase()} : ${count} jour${count > 1 ? 's' : ''}, soit ${formatEuro(total)}.`}
         {warning && ` ${warning}`}
       </p>
     </>

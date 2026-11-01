@@ -55,5 +55,6 @@ describe('prix par jour', () => {
 
   it('se décrit en clair', () => {
     expect(describeAmount(cantine, (value) => `${value} €`)).toBe('4.5 € par jour, lundi, mardi, jeudi et vendredi, sauf jours fériés et vacances zone B')
+    expect(describeAmount({ ...cantine, duringSchoolHolidays: true }, (value) => `${value} €`)).toBe('4.5 € par jour, lundi, mardi, jeudi et vendredi, pendant les vacances zone B, sauf jours fériés')
   })
 })

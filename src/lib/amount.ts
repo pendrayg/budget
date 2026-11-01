@@ -65,8 +65,9 @@ export function describeAmount(amount: Amount, formatEuro: (value: number) => st
   if (amount.kind === 'items') return `${amount.items.length} ${amount.items.length > 1 ? 'items' : 'item'}`
   if (amount.kind === 'monthly') return ''
   if (amount.kind === 'days') {
-    const except = [amount.skipPublicHolidays && 'jours fériés', amount.schoolZone && `vacances zone ${amount.schoolZone}`].filter(Boolean)
-    return `${formatEuro(amount.value)} par jour, ${describeDays(amount.days)}${except.length > 0 ? `, sauf ${except.join(' et ')}` : ''}`
+    const during = amount.schoolZone && amount.duringSchoolHolidays ? `, pendant les vacances zone ${amount.schoolZone}` : ''
+    const except = [amount.skipPublicHolidays && 'jours fériés', !during && amount.schoolZone && `vacances zone ${amount.schoolZone}`].filter(Boolean)
+    return `${formatEuro(amount.value)} par jour, ${describeDays(amount.days)}${during}${except.length > 0 ? `, sauf ${except.join(' et ')}` : ''}`
   }
   return `${formatEuro(amount.value)} ${PERIOD_LABELS[amount.kind]}`
 }

@@ -137,6 +137,22 @@ describe('prix par jour', () => {
     const clean = sanitizeState({ ...seed, budgets: [{ ...first, amount: { kind: 'days', value: 4.5, days: [1], schoolZone: 'C' } }, ...seed.budgets.slice(1)] })
     expect(clean.budgets.find((v) => v.categoryId === first.categoryId && v.from === first.from)?.amount).toEqual({ kind: 'days', value: 4.5, days: [1], schoolZone: 'C' })
   })
+
+  it('garde « pendant les vacances » avec sa zone, pas sans', () => {
+    const seed = seedState()
+    const [first, second] = seed.budgets
+    const clean = sanitizeState({
+      ...seed,
+      budgets: [
+        { ...first, amount: { kind: 'days', value: 9, days: [3], schoolZone: 'A', duringSchoolHolidays: true } },
+        { ...second, amount: { kind: 'days', value: 9, days: [3], duringSchoolHolidays: true } },
+        ...seed.budgets.slice(2),
+      ],
+    })
+    const at = (v: typeof first) => clean.budgets.find((b) => b.categoryId === v.categoryId && b.from === v.from)?.amount
+    expect(at(first)).toEqual({ kind: 'days', value: 9, days: [3], schoolZone: 'A', duringSchoolHolidays: true })
+    expect(at(second)).toEqual({ kind: 'days', value: 9, days: [3] })
+  })
 })
 
 describe('couleur des personnes', () => {
