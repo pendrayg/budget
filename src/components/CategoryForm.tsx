@@ -25,7 +25,7 @@ function scopeOptions(state: State): FlatSelectorOption<string>[] {
 }
 
 const SCHOOL_MODES: FlatSelectorOption<'outside' | 'during'>[] = [
-  { id: 'outside', label: 'Hors vacances' },
+  { id: 'outside', label: 'Hors' },
   { id: 'during', label: 'Pendant' },
 ]
 

@@ -47,7 +47,7 @@ Une dépense peut aussi se compter **par jour**, certains jours de la semaine : 
 4,50 € les lundis, mardis, jeudis et vendredis, **sauf jours fériés** et **sauf vacances zone B**.
 Sept boutons à bascule choisissent les jours (du lundi au vendredi par défaut), puis un sélecteur
 dit ce que font les vacances scolaires :
-- **Hors vacances** : quatre boutons, dessous, disent ce qu'on retire : **Fériés** (enfoncé par
+- **Hors** (vacances) : quatre boutons, dessous, disent ce qu'on retire : **Fériés** (enfoncé par
   défaut), **Zone A**, **Zone B**, **Zone C** — les vacances d'une seule zone à la fois, propre à
   chaque dépense ; un second appui sur la sienne la retire.
 - **Pendant** : seuls comptent les jours pendant les vacances de la zone choisie (un sélecteur
