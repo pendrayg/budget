@@ -1,4 +1,4 @@
-import { Button, DeleteButton, FlatSelector, Input, Select, type FlatSelectorOption } from '../ds'
+import { Button, DeleteButton, DisclosureButton, FlatSelector, Input, Select, type FlatSelectorOption } from '../ds'
 import { useId, useState } from 'react'
 import { monthlyAmount, PERIOD_LABELS, PERIOD_SHORT } from '../lib/amount'
 import { scheduledDays, scheduleWarning, SCHOOL_ZONES, WEEKDAY_NAMES, WEEKDAY_SHORT, WEEKDAYS } from '../lib/calendar'
@@ -28,6 +28,15 @@ const SCHOOL_MODES: FlatSelectorOption<'outside' | 'during'>[] = [
   { id: 'outside', label: 'Hors vacances' },
   { id: 'during', label: 'Pendant' },
 ]
+
+const ZONE_OPTIONS: FlatSelectorOption<SchoolZone>[] = SCHOOL_ZONES.map((zone) => ({ id: zone, label: `Zone ${zone}` }))
+
+/** La zone du foyer : celle de ses autres dépenses « par jour » (la plus fréquente), sinon A. */
+function homeZone(state: State): SchoolZone {
+  const counts = new Map<SchoolZone, number>()
+  for (const version of state.budgets) if (version.amount.kind === 'days' && version.amount.schoolZone) counts.set(version.amount.schoolZone, (counts.get(version.amount.schoolZone) ?? 0) + 1)
+  return [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'A'
+}
 
 const KIND_OPTIONS: FlatSelectorOption<AmountKind>[] = [
   { id: 'monthly', label: PERIOD_SHORT.monthly, ariaLabel: 'Montant mensuel' },
@@ -262,17 +271,17 @@ export default function CategoryForm({
             </li>
           </ul>
         ) : draft.kind === 'days' ? (
-          <DaysField uid={uid} draft={draft} month={month} onChange={change} />
+          <DaysField uid={uid} draft={draft} month={month} homeZone={homeZone(state)} onChange={change} />
         ) : (
           <NumberField id={`${uid}-value`} value={draft.value} placeholder="0,00" suffix={PERIOD_LABELS[draft.kind]} onChange={(value) => change({ ...draft, value })} />
         )}
       </div>
 
       {/* Le budget, à plusieurs : passer au commun ou à une autre personne la range dans une
-          catégorie de ce budget-là, à partir du mois en cours. */}
+          catégorie de ce budget-là, à partir du mois en cours. Replié par défaut, l'en-tête dit le
+          budget courant : on n'en change pas d'un appui égaré. */}
       {budgetOptions.length > 1 && (
-        <div className="field">
-          <span className="field-label">Budget</span>
+        <DisclosureButton className="budget-move line-button" icon="bank" title="Budget" hint={budgetOptions.find((option) => option.id === (scope ?? COMMON))?.label}>
           <FlatSelector
             label="Budget"
             options={budgetOptions}
@@ -280,7 +289,7 @@ export default function CategoryForm({
             value={scope ?? COMMON}
             onChange={(id) => moveTo(toScope(id))}
           />
-        </div>
+        </DisclosureButton>
       )}
 
       {/* La catégorie dit comment on partage et si on épargne. En changer pose une version :
@@ -343,11 +352,12 @@ export default function CategoryForm({
  * Un prix par JOUR (cf. lib/calendar.ts) : le prix d'un jour, les jours de la semaine où la dépense
  * revient — des boutons à bascule, un par jour —, puis les vacances scolaires : hors vacances, ce
  * qu'on retire en boutons à bascule aussi (Fériés, Zone A, Zone B, Zone C) ; pendant les vacances
- * seulement, la zone d'abord (Zone A, B ou C), puis les jours fériés qu'on retire ou non.
+ * seulement, la zone en sélecteur plat (celle du foyer par défaut), puis les jours fériés qu'on
+ * retire ou non.
  * Dessous, ce que ça donne pour le mois : le nombre de jours et le montant, qui varient d'un mois
  * à l'autre.
  */
-function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft; month: Month; onChange: (draft: Draft) => void }) {
+function DaysField({ uid, draft, month, homeZone, onChange }: { uid: string; draft: Draft; month: Month; homeZone: SchoolZone; onChange: (draft: Draft) => void }) {
   const schedule = {
     days: draft.days,
     skipPublicHolidays: draft.skipPublicHolidays,
@@ -372,25 +382,16 @@ function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft;
         })}
       </div>
       {/* Hors vacances, ou pendant seulement : le centre de loisirs n'ouvre que pendant les vacances. */}
-      <FlatSelector label="Vacances scolaires" options={SCHOOL_MODES} value={during ? 'during' : 'outside'} onChange={(mode) => onChange({ ...draft, duringSchoolHolidays: mode === 'during' })} />
-      {during && (
-        <>
-          <span className="field-label" id={`${uid}-zone`}>
-            Vacances de la
-          </span>
-          {/* Une zone, il en faut une : un second appui ne la retire pas. */}
-          <div className="except-row" role="group" aria-labelledby={`${uid}-zone`}>
-            {SCHOOL_ZONES.map((zone) => {
-              const on = draft.schoolZone === zone
-              return (
-                <Button key={zone} size="sm" active={on} aria-pressed={on} aria-label={`Pendant les vacances zone ${zone}`} onClick={() => onChange({ ...draft, schoolZone: zone })}>
-                  Zone {zone}
-                </Button>
-              )
-            })}
-          </div>
-        </>
-      )}
+      <FlatSelector
+        label="Vacances scolaires"
+        options={SCHOOL_MODES}
+        value={during ? 'during' : 'outside'}
+       onChange={(mode) =>
+          onChange({ ...draft, duringSchoolHolidays: mode === 'during', ...(mode === 'during' && !draft.schoolZone ? { schoolZone: homeZone } : {}) })
+        }
+      />
+      {/* La zone, en sélecteur plat : pendant les vacances, il en faut une. */}
+      {during && <FlatSelector label="Zone de vacances" options={ZONE_OPTIONS} value={draft.schoolZone ?? homeZone} onChange={(zone) => onChange({ ...draft, schoolZone: zone })} />}
       {/* Ce qu'on retire, en boutons à bascule comme les jours : les jours fériés, et hors vacances
           les vacances d'une zone — une seule à la fois, un second appui sur la sienne la retire. */}
       <span className="field-label" id={`${uid}-except`}>
@@ -419,9 +420,7 @@ function DaysField({ uid, draft, month, onChange }: { uid: string; draft: Draft;
       <p className="field-hint muted">
         {draft.days.length === 0
           ? 'Choisissez au moins un jour.'
-          : during && !draft.schoolZone
-            ? 'Choisissez la zone.'
-            : `En ${monthLabel(month).toLowerCase()} : ${count} jour${count > 1 ? 's' : ''}, soit ${formatEuro(total)}.`}
+          : `En ${monthLabel(month).toLowerCase()} : ${count} jour${count > 1 ? 's' : ''}, soit ${formatEuro(total)}.`}
         {warning && ` ${warning}`}
       </p>
     </>

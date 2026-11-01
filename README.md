@@ -50,8 +50,8 @@ dit ce que font les vacances scolaires :
 - **Hors vacances** : quatre boutons, dessous, disent ce qu'on retire : **Fériés** (enfoncé par
   défaut), **Zone A**, **Zone B**, **Zone C** — les vacances d'une seule zone à la fois, propre à
   chaque dépense ; un second appui sur la sienne la retire.
-- **Pendant** : seuls comptent les jours pendant les vacances de la zone choisie (**Zone A**,
-  **B** ou **C**, il en faut une) — le centre de loisirs à 12 € les mercredis et vendredis des
+- **Pendant** : seuls comptent les jours pendant les vacances de la zone choisie (un sélecteur
+  plat **Zone A**, **Zone B**, **Zone C**, sur la zone des autres dépenses du foyer par défaut) — le centre de loisirs à 12 € les mercredis et vendredis des
   vacances —, et **Fériés** dit toujours si les jours fériés en sont retirés.
 
 Le budget d'un mois est alors le
@@ -225,8 +225,9 @@ retirent du revenu la part du foyer ET le budget personnel (avant le premier bud
 c'est lui qui vaut, comme pour le foyer).
 
 À plusieurs, une **dépense passe d'un budget à l'autre** (du foyer à une personne, d'une personne
-à une autre, ou au foyer) par le sélecteur « Budget » de son formulaire, à partir du mois en
-cours : les mois d'avant restent dans l'ancien budget, avec leurs opérations rangées. Elle va dans
+à une autre, ou au foyer) par le sélecteur « Budget » de son formulaire — dans une section
+repliée, dont l'en-tête dit le budget courant, pour ne pas en changer d'un appui égaré —, à partir
+du mois en cours : les mois d'avant restent dans l'ancien budget, avec leurs opérations rangées. Elle va dans
 une catégorie du même type (à épargner ou non) du budget choisi, ou dans une catégorie qui naît
 pour elle (`moveCategory`). Pas la dépense d'un projet, qui reste dans le budget du projet.
 
