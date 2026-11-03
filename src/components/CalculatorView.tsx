@@ -37,7 +37,6 @@ export default function CalculatorView({ state, month }: { state: State; month: 
       <div className="section-head">
         <div>
           <h2>Calculatrice</h2>
-          <p>La part de chacun dans une somme, selon la clé choisie.</p>
         </div>
       </div>
 

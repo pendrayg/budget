@@ -145,11 +145,7 @@ export default function GroupForm({
           {isNew ? (
             <>
               <FlatSelector label="Répartition" options={SPLIT_OPTIONS} value={kind} onChange={setKind} />
-              {kind === 'ratio' ? (
-                <RatioFields id={`${uid}-share`} people={state.people} percents={percents} onChange={setPercents} />
-              ) : (
-                <p className="field-hint muted">Au prorata des revenus de chacun, mois après mois.</p>
-            )}
+              {kind === 'ratio' && <RatioFields id={`${uid}-share`} people={state.people} percents={percents} onChange={setPercents} />}
           </>
         ) : fixedKey ? (
           <RatioFields
@@ -165,7 +161,7 @@ export default function GroupForm({
             }}
           />
         ) : (
-          <p className="field-hint muted">Au prorata des revenus de chacun, mois après mois.</p>
+          <p>Prorata</p>
         )}
       </div>
       )}

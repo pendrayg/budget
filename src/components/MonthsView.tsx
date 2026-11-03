@@ -48,7 +48,6 @@ function IncomeRecap({ people, totals }: { people: Person[]; totals: number[] })
           <span className="numeric">{formatEuro(totals.reduce((sum, total) => sum + total, 0))}</span>
         </li>
       </ul>
-      <p className="field-hint muted">Les revenus de chacun se saisissent sur son compte : choisissez-le dans le sous-menu du bas.</p>
     </div>
   )
 }
@@ -173,10 +172,6 @@ export default function MonthsView({
         {history.length === 0 ? (
           <div className="empty">
             <h2>Aucun mois saisi</h2>
-            <p>
-              Chaque mois, le revenu de chacun en quelques lignes : salaire, allocations, autres. Et en début de mois, le relevé{' '}
-              {solo ? 'de votre compte' : owner ? `du compte de ${owner.name}` : 'du compte commun'}, dont les opérations se rangent dans les dépenses du budget.
-            </p>
           </div>
         ) : (
           <div className="line-buttons">

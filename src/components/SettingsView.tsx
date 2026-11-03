@@ -80,7 +80,6 @@ export default function SettingsView({
       <div className="section-head">
         <div>
           <h2>Réglages</h2>
-          <p>Les personnes, le prorata, l’apparence et les données. La répartition se règle dans chaque catégorie du budget.</p>
         </div>
       </div>
 
@@ -99,20 +98,13 @@ export default function SettingsView({
                 <ColorChoice label={`Couleur de ${person.name}`} value={colorOf(state.people, index)} onChange={(color) => recolor(person.id, color)} />
               </div>
             ))}
-            {state.people.length < MAX_PEOPLE ? (
+            {state.people.length < MAX_PEOPLE && (
               <div className="toolbar-end">
                 <Button size="sm" icon="plus" onClick={() => update((s) => addPerson(s, `Personne ${s.people.length + 1}`, nowIso()))}>
                   Ajouter une personne
                 </Button>
               </div>
-            ) : (
-              <p className="field-hint muted">Quatre personnes au plus.</p>
             )}
-            <p className="field-hint muted">
-              {isSolo(state)
-                ? 'Seul, pas de foyer à partager : le budget est le vôtre. Ajoutez quelqu’un pour partager.'
-                : 'Chacun a son budget et son compte à lui ; le budget du foyer se répartit entre tous. Retirer quelqu’un rapatrie ses catégories et ses opérations.'}
-            </p>
           </div>
         </DisclosureButton>
 
@@ -127,7 +119,6 @@ export default function SettingsView({
                 if (value !== null && value >= 1) update((s) => ({ ...s, settings: { ...s.settings, prorataWindowMonths: Math.min(60, Math.round(value)) } }))
               }}
             />
-            <p className="field-hint muted">Un an glissant par défaut : le budget d’un mois se répartit selon les revenus des douze mois qui le précèdent — l’argent reçu paie l’argent dépensé. Seuls les mois où tous les revenus sont saisis entrent dans la moyenne.</p>
           </div>
         </DisclosureButton>
 
@@ -135,16 +126,13 @@ export default function SettingsView({
           {/* Réglage de cet appareil : il ne part ni au serveur ni dans la sauvegarde. */}
           <div className="form">
             <AppearanceChoice />
-            <p className="field-hint muted">Le design system de l’application, sur cet appareil. Néomorphisme par défaut ; en changer passe par un saut en hyperespace.</p>
           </div>
         </DisclosureButton>
 
         <DisclosureButton title="Données" hint={local ? 'Sauvegarde' : 'Synchronisation et sauvegarde'} icon="cloud">
           <div className="form">
             <p className="storage-state">{statusText[status]}</p>
-            {local ? (
-              <p className="field-hint muted">Téléchargez une sauvegarde pour les garder ailleurs ou les passer sur un autre appareil.</p>
-            ) : (
+            {local ? null : (
               <div className="toolbar-end">
                 <Button size="sm" icon="refresh" onClick={onSync}>
                   Synchroniser

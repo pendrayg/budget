@@ -54,13 +54,12 @@ export default function ProjectsView({ state, scope, update }: { state: State; s
         <div className="section-head">
           <div>
             <h2>{owner ? `Projets de ${owner.name}` : 'Projets'}</h2>
-            <p>{projects.length > 0 ? `${projects.length} ${projects.length > 1 ? 'projets' : 'projet'}, ${formatEuro(projects.reduce((sum, p) => sum + projectTotal(p), 0))} en tout.` : 'Les achats ponctuels, ligne par ligne.'}</p>
+            {projects.length > 0 && <p>{`${projects.length} ${projects.length > 1 ? 'projets' : 'projet'}, ${formatEuro(projects.reduce((sum, p) => sum + projectTotal(p), 0))} en tout.`}</p>}
           </div>
         </div>
         {projects.length === 0 ? (
           <div className="empty">
             <h2>Aucun projet</h2>
-            <p>Un NAS et ses disques, trois caméras, le câblage de la maison : chaque projet a ses lignes et son total.</p>
           </div>
         ) : (
           <div className="line-buttons">

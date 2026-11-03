@@ -117,7 +117,6 @@ export default function MonthSpending({ state, month, scope, update, onPlace }: 
       {summary.unsorted.length > 0 && (
         <div className="spending-block">
           <h3>À ranger ({summary.unsorted.length})</h3>
-          <p className="field-hint muted">Ranger une opération apprend son marchand : les suivantes s’y rangeront seules.</p>
           <ul className="tx-list">{summary.unsorted.map(row)}</ul>
         </div>
       )}
@@ -169,14 +168,10 @@ export default function MonthSpending({ state, month, scope, update, onPlace }: 
             <span>Épargne</span>
             <Delta spent={summary.savings.transferred} budget={summary.savings.toSave} judged={false} />
           </h3>
-          <p className="field-hint muted">
-            Le versement du mois vers le compte épargne, face à ce qu’il faut mettre de côté. Les dépenses annuelles se jugent sur douze mois : le mois où elles tombent ne
-            dépasse pas pour autant.
-          </p>
           {summary.savings.transfers.length > 0 ? (
             <ul className="tx-list">{summary.savings.transfers.map(row)}</ul>
           ) : (
-            <p className="field-hint muted">Aucun versement vers l’épargne ce mois-ci : rangez le virement en « Versement épargne ».</p>
+            <p className="field-hint muted">Aucun versement ce mois-ci.</p>
           )}
           {summary.savings.sections.some((section) => section.lines.some(spentIn)) && (
             <div className="line-buttons savings-groups">

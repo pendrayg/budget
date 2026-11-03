@@ -69,16 +69,10 @@ export default function BudgetView({
         {hasLines ? null : hasGroups ? (
           <div className="empty">
             <h2>Aucune dépense</h2>
-            <p>Dépliez une catégorie pour y ajouter une dépense.</p>
           </div>
         ) : (
           <div className="empty">
             <h2>Aucune catégorie</h2>
-            <p>
-              {owner && !solo
-                ? `Les dépenses de ${owner.name}, payées de son compte. Ajoutez-y une catégorie.`
-                : 'Ajoutez une catégorie, ou restaurez une sauvegarde depuis les réglages.'}
-            </p>
             <Button tone="primary" icon="plus" onClick={() => create({ kind: 'group', owner: scope })}>
               Ajouter une catégorie
             </Button>
