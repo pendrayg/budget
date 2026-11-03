@@ -171,7 +171,10 @@ chaque **catégorie en bouton section** — seulement celles où il y a eu des o
 en deçà, en rouge au-delà, « = » pile dessus) et son nombre de dépenses en dépassement ; dépliée, ses dépenses, chacune un bouton section qui déplie ses opérations. Une
 catégorie ouverte à la fois. Les imprévus, les catégories à épargner (jugées sur douze mois) et ce
 qui n'est **pas une dépense** (versements sur le compte commun, virements internes ; un versement reçu
-par virement l'est d'office) suivent le même modèle.
+par virement l'est d'office) suivent le même modèle. Une opération rangée garde, à droite de son montant,
+un bouton-icône qui rouvre le choix : l'icône de sa dépense (un dossier si elle n'en a pas, un
+éclair pour un imprévu, une tirelire pour l'épargne, un sens interdit pour ce qui n'est pas une
+dépense), le nom restant dans le libellé du bouton.
 
 Ranger une opération dans une dépense **apprend son marchand** — le libellé sans la date
 d'achat, la carte ni les numéros (« SUPERMARCHE DU PORT », « OPERATEUR MOBILE ») ; un virement garde sa

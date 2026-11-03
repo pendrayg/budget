@@ -1168,8 +1168,10 @@ body,
 
 .tx-row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: baseline;
+  /* Date, libellé, montant, puis le bouton-icône qui ouvre le choix de rangement — dossier « + »
+     à ranger, l'icône de la dépense une fois rangée. */
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
   gap: 4px 10px;
   font-size: 14px;
 }
@@ -1177,16 +1179,6 @@ body,
 .tx-label {
   min-width: 0;
   overflow-wrap: anywhere;
-}
-
-.tx-row .tx-place {
-  grid-column: 1 / -1;
-}
-
-/* Une opération à ranger : sur sa ligne, après le montant, le bouton-icône qui ouvre le choix. */
-.tx-row-unsorted {
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-  align-items: center;
 }
 
 /* L'icône d'une dépense dans le choix de rangement : une colonne fixe, pour que les noms
@@ -1215,8 +1207,7 @@ body,
   gap: 12px;
 }
 
-.placement-choice.ds-text,
-.tx-row .tx-place.ds-text {
+.placement-choice.ds-text {
   width: 100%;
   justify-content: flex-start;
   gap: 12px;

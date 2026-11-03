@@ -1,4 +1,4 @@
-import { Button, DeleteButton, DisclosureButton } from '../ds'
+import { DeleteButton, DisclosureButton } from '../ds'
 import { useOpenLine } from '../hooks/useOpenLine'
 import { formatEuro, formatEuroDelta } from '../lib/format'
 import { monthLabel } from '../lib/month'
@@ -15,28 +15,24 @@ const PLACE_ICON: CategoryIcon = { name: 'fa-folder_plus', code: 'eec7' }
 
 const day = (date: string) => `${date.slice(8, 10)}/${date.slice(5, 7)}`
 
+/** Ce qui dit où une opération est rangée, quand la dépense n'a pas d'icône à elle. */
+const FOLDER_ICON: CategoryIcon = { name: 'fa-folder', code: 'f07b' }
+const UNPLANNED_ICON: CategoryIcon = { name: 'fa-bolt', code: 'f0e7' }
+const SAVING_ICON: CategoryIcon = { name: 'fa-piggy_bank', code: 'eda3' }
+const IGNORED_ICON: CategoryIcon = { name: 'fa-ban', code: 'f05e' }
+
 /**
- * Une opération : sa date, son libellé, son montant, et où elle est rangée — un appui en change.
- * À ranger, elle n'a encore nulle part où être : un bouton-icône, à droite du montant, ouvre le
- * choix, sans occuper une ligne entière.
+ * Une opération : sa date, son libellé, son montant, et à droite un bouton-icône qui ouvre le
+ * choix de rangement. À ranger, c'est un dossier « + » ; rangée, l'icône de sa dépense (un dossier
+ * si elle n'en a pas, un éclair pour un imprévu, une tirelire pour l'épargne, un sens interdit
+ * pour ce qui n'est pas une dépense) — le nom, lui, est dans le libellé du bouton.
  */
 function TransactionRow({ transaction, state, onPlace }: { transaction: Transaction; state: State; onPlace: (transaction: Transaction) => void }) {
   const expense = transaction.categoryId ? state.categories.find((c) => c.id === transaction.categoryId) : undefined
   const where =
     expense?.name ?? (transaction.unplanned ? 'Imprévu hors catégorie' : transaction.saving ? 'Versement épargne' : transaction.ignored ? 'Pas une dépense' : undefined)
-  if (!where) {
-    return (
-      <li className="tx-row tx-row-unsorted">
-        <span className="tx-date muted">{day(transaction.date)}</span>
-        <span className="tx-label">
-          {displayLabel(transaction.label)}
-          {transaction.detail && <small className="muted"> · {transaction.detail}</small>}
-        </span>
-        <span className="numeric">{formatEuro(transaction.amount)}</span>
-        <GlyphIconButton icon={PLACE_ICON} label={`Ranger ${displayLabel(transaction.label)}, ${formatEuro(transaction.amount)}`} onClick={() => onPlace(transaction)} />
-      </li>
-    )
-  }
+  const icon = expense ? (expense.icon ?? FOLDER_ICON) : transaction.unplanned ? UNPLANNED_ICON : transaction.saving ? SAVING_ICON : transaction.ignored ? IGNORED_ICON : PLACE_ICON
+  const label = `Ranger ${displayLabel(transaction.label)}, ${formatEuro(transaction.amount)}${where ? ` : ${where.toLowerCase()}` : ''}`
   return (
     <li className="tx-row">
       <span className="tx-date muted">{day(transaction.date)}</span>
@@ -45,10 +41,7 @@ function TransactionRow({ transaction, state, onPlace }: { transaction: Transact
         {transaction.detail && <small className="muted"> · {transaction.detail}</small>}
       </span>
       <span className="numeric">{formatEuro(transaction.amount)}</span>
-      <Button className="tx-place" aria-label={`Ranger ${displayLabel(transaction.label)}, ${formatEuro(transaction.amount)} : ${where.toLowerCase()}`} onClick={() => onPlace(transaction)}>
-        {expense?.icon && <CategoryGlyph icon={expense.icon} className="placement-icon" />}
-        <span>{where}</span>
-      </Button>
+      <GlyphIconButton icon={icon} label={label} title={where} onClick={() => onPlace(transaction)} />
     </li>
   )
 }
