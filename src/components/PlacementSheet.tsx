@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { formatEuro } from '../lib/format'
 import { categoriesOf } from '../lib/scope'
 import { matchesSearch } from '../lib/search'
-import { displayLabel, type Placement } from '../lib/spending'
+import { displayLabel, placeableAt, type Placement } from '../lib/spending'
 import type { CategoryIcon, State, Transaction } from '../lib/types'
 import CategoryGlyph from './CategoryGlyph'
 import Sheet from './Sheet'
@@ -56,7 +56,9 @@ function PlacementChoices({ state, transaction, onChoose }: { state: State; tran
   const [query, setQuery] = useState('')
   const choices: Choice[] = [
     // Les dépenses du budget de son compte : le commun, ou celui de sa personne.
+    // Sans celles arrêtées le mois de l'opération — un projet supprimé (celle où elle est rangée reste).
     ...categoriesOf(state, transaction.owner ?? null)
+      .filter((expense) => expense.id === transaction.categoryId || placeableAt(state, expense.id, transaction.date))
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
       .map((expense) => ({
         key: expense.id,

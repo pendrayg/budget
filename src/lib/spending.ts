@@ -66,17 +66,27 @@ function ruleKeys(transaction: Pick<Transaction, 'label' | 'detail' | 'amount' |
 const merchantOf = (transaction: Pick<Transaction, 'label' | 'detail' | 'amount' | 'owner'>) => ruleKeys(transaction).at(-1) as string
 
 /**
- * Où une opération se range d'après ce qu'on a appris. Le marchand AU MÊME MONTANT d'abord (hors
+ * Une dépense où ranger une opération de ce jour-là : pas une dépense arrêtée ce mois-là (« plus
+ * budgété »), comme celle d'un projet supprimé. Avant sa première version, elle l'accepte : une
+ * dépense créée ce mois-ci range aussi le relevé du mois dernier.
+ */
+export function placeableAt(state: State, categoryId: string, date: string): boolean {
+  return budgetAt(state, categoryId, date.slice(0, 7))?.amount.kind !== 'none'
+}
+
+/**
+ * Où une opération se range d'après ce qu'on a appris. Une règle vers une dépense qui n'est plus
+ * budgétée ce mois-là ne range rien. Le marchand AU MÊME MONTANT d'abord (hors
  * carte, cf. `ruleKeys`) : deux prélèvements d'un même assureur (la maison, la voiture) se
  * distinguent par leur montant ; puis le marchand seul, pour un montant nouveau. Un versement reçu par virement est écarté d'office :
  * c'est l'un de nous qui alimente le compte.
  */
-function placementOf(transaction: Pick<Transaction, 'label' | 'detail' | 'amount' | 'owner'>, rules: Map<string, MatchRule>): Placement {
+function placementOf(state: State, transaction: Pick<Transaction, 'date' | 'label' | 'detail' | 'amount' | 'owner'>, rules: Map<string, MatchRule>): Placement {
   for (const key of ruleKeys(transaction)) {
     const rule = rules.get(key)
     if (rule?.ignored) return { ignored: true }
     if (rule?.saving) return { saving: true }
-    if (rule?.categoryId) return { categoryId: rule.categoryId }
+    if (rule?.categoryId) return placeableAt(state, rule.categoryId, transaction.date) ? { categoryId: rule.categoryId } : null
   }
   if (transaction.amount < 0 && /^VIR\b/i.test(transaction.label)) return { ignored: true }
   return null
@@ -143,7 +153,7 @@ export function importStatement(state: State, lines: StatementLine[], now: strin
       ...(scope ? { owner: scope } : {}),
       updatedAt: now,
     }
-    added.push(place(transaction, placementOf(transaction, rules), now))
+    added.push(place(transaction, placementOf(state, transaction, rules), now))
   }
   return {
     state: { ...state, transactions: [...state.transactions, ...added] },
@@ -179,7 +189,7 @@ export function placeTransaction(state: State, transactionId: string, placement:
     transactions: state.transactions.map((t) => {
       if (t.id === transactionId) return place(t, placement, now, true)
       if (isSorted(t)) return follows(t) ? place(t, placement, now) : t
-      const next = placementOf(t, byKey)
+      const next = placementOf(state, t, byKey)
       return next ? place(t, next, now) : t
     }),
   }

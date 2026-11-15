@@ -3,7 +3,7 @@ import { budgetAt } from './budget'
 import { seedState } from './fixtures'
 import { activateProject, deleteProject, isProjectSaving, projectCategoryIds, projectSaved, savingStart, stopProject, syncProjectBudget } from './projects'
 import { addGroup } from './budget'
-import { importStatement, placeTransaction, spendingSummary } from './spending'
+import { importStatement, placeableAt, placeTransaction, spendingSummary } from './spending'
 import { sanitizeState } from './state'
 import { monthSummary } from './summary'
 import type { State } from './types'
@@ -79,6 +79,17 @@ describe('projets épargnés', () => {
     const deleted = deleteProject(active, 'nas', '2026-12', T)
     expect(deleted.projects.some((p) => p.id === 'nas')).toBe(false)
     expect(budgetAt(deleted, 'c-nas', '2026-12')?.amount).toEqual({ kind: 'none' })
+  })
+
+  it('supprimé, sa dépense ne range plus rien à partir de ce mois, même par une règle apprise', () => {
+    let state = activateProject(withProject('2027-03'), 'nas', SAVE, '2026-10', 'c-nas', T)
+    state = importStatement(state, [{ date: '2026-11-05', label: 'CARTE 04/11/26 BOUTIQUE NAS CB*1234', amount: 120 }], T).state
+    state = placeTransaction(state, state.transactions.at(-1)!.id, { categoryId: 'c-nas' }, T)
+    state = deleteProject(state, 'nas', '2026-12', T)
+    expect(placeableAt(state, 'c-nas', '2026-11-05')).toBe(true)
+    expect(placeableAt(state, 'c-nas', '2026-12-03')).toBe(false)
+    state = importStatement(state, [{ date: '2026-12-03', label: 'CARTE 02/12/26 BOUTIQUE NAS CB*1234', amount: 80 }], T).state
+    expect(state.transactions.at(-1)!.categoryId).toBeUndefined()
   })
 
   it('ne compte pas en dépassement l’achat payé après la cible', () => {

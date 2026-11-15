@@ -262,7 +262,9 @@ plus tard : rien ne s'épargne avant elle, la mensualité se répartit de là à
 du projet le dit (« Dès janvier 2027 ») ; repoussée sur un projet déjà épargné, elle suspend son
 épargne jusqu'à elle. Une date de début passée ne change rien, et une date de début après la cible
 empêche de l'épargner. On peut arrêter puis reprendre ; supprimer
-un projet épargné arrête sa dépense, dont l'histoire reste au budget. Sa ligne montre sa
+un projet épargné arrête sa dépense, dont l'histoire reste au budget : à partir de ce mois, elle
+n'est plus proposée pour ranger une opération, et une règle apprise n'y range plus rien (comme
+toute dépense « plus budgétée »). Sa ligne montre sa
 **complétion** : l'épargne réellement versée — chaque mois importé, sa mensualité au prorata du
 « Versement épargne » de ce mois face au « à épargner » (plafonné à 100 %) ; un mois non importé
 ne compte pas. Payé après sa cible, l'achat se juge sur sa dernière mensualité, pas en dépassement
