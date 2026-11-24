@@ -1,0 +1,273 @@
+{
+ "days": [
+  {
+   "text": "10:20",
+   "top": 141,
+   "bottom": 215
+  },
+  {
+   "text": "< 22216 €",
+   "top": 441,
+   "bottom": 543
+  },
+  {
+   "text": "Hier",
+   "top": 707,
+   "bottom": 759
+  },
+  {
+   "text": "ÔO Boulangerie Artisanale De Pain A",
+   "top": 913,
+   "bottom": 1094
+  },
+  {
+   "text": "Levain Paris — Poilâne",
+   "top": 1030,
+   "bottom": 1091
+  },
+  {
+   "text": "re | Amazon",
+   "top": 1261,
+   "bottom": 1395
+  },
+  {
+   "text": "Vir Correction Commun",
+   "top": 1647,
+   "bottom": 1706
+  },
+  {
+   "text": "@ Vir Correction Epargne",
+   "top": 1932,
+   "bottom": 2102
+  },
+  {
+   "text": "w Commun",
+   "top": 2027,
+   "bottom": 2106
+  },
+  {
+   "text": "© BURGER KING BEYCHAC-ET-CA",
+   "top": 2264,
+   "bottom": 2449
+  },
+  {
+   "text": "FR",
+   "top": 2408,
+   "bottom": 2465
+  },
+  {
+   "text": "Autorisation paiement en cours CB’.",
+   "top": 2518,
+   "bottom": 2582
+  },
+  {
+   "text": "Jeudi 19 novembre 2026",
+   "top": 2768,
+   "bottom": 2821
+  },
+  {
+   "text": "«a, _ Achat The Corner Sony",
+   "top": 2979,
+   "bottom": 3078
+  },
+  {
+   "text": "cp Playstation",
+   "top": 3050,
+   "bottom": 3169
+  },
+  {
+   "text": "inteR Intermarché",
+   "top": 3368,
+   "bottom": 3450
+  },
+  {
+   "text": "Mardi 17 novembre 2026",
+   "top": 3685,
+   "bottom": 3737
+  },
+  {
+   "text": "re | Amazon",
+   "top": 3879,
+   "bottom": 4012
+  },
+  {
+   "text": "ED Grand Frais",
+   "top": 4207,
+   "bottom": 4378
+  },
+  {
+   "text": "Lundi 16 novembre 2026",
+   "top": 4569,
+   "bottom": 4621
+  },
+  {
+   "text": "â > & =",
+   "top": 4774,
+   "bottom": 4882
+  },
+  {
+   "text": "Comptes Envoyer Cartes Alime",
+   "top": 4919,
+   "bottom": 4985
+  }
+ ],
+ "labels": [
+  {
+   "text": "0:20",
+   "top": 141,
+   "bottom": 215
+  },
+  {
+   "text": "22216€",
+   "top": 455,
+   "bottom": 543
+  },
+  {
+   "text": "Boulangerie Artisanale De Pain Ai",
+   "top": 918,
+   "bottom": 993
+  },
+  {
+   "text": "Levain Paris — Poilâne",
+   "top": 1030,
+   "bottom": 1091
+  },
+  {
+   "text": "Amazon",
+   "top": 1320,
+   "bottom": 1379
+  },
+  {
+   "text": "Vir Correction Commun",
+   "top": 1647,
+   "bottom": 1706
+  },
+  {
+   "text": "Vir Correction Epargne",
+   "top": 1932,
+   "bottom": 2008
+  },
+  {
+   "text": "Commun",
+   "top": 2047,
+   "bottom": 2106
+  },
+  {
+   "text": "BURGER KING BEYCHAC-ET-CA",
+   "top": 2293,
+   "bottom": 2351
+  },
+  {
+   "text": "FR",
+   "top": 2408,
+   "bottom": 2465
+  },
+  {
+   "text": "Autorisation paiement en cours CB’.",
+   "top": 2518,
+   "bottom": 2582
+  },
+  {
+   "text": "novembre 2026",
+   "top": 2768,
+   "bottom": 2821
+  },
+  {
+   "text": "Achat The Corner Sony",
+   "top": 2979,
+   "bottom": 3055
+  },
+  {
+   "text": "Playstation",
+   "top": 3094,
+   "bottom": 3169
+  },
+  {
+   "text": "Intermarché",
+   "top": 3379,
+   "bottom": 3441
+  },
+  {
+   "text": "novembre 2026",
+   "top": 3685,
+   "bottom": 3737
+  },
+  {
+   "text": "Amazon",
+   "top": 3938,
+   "bottom": 3997
+  },
+  {
+   "text": "Grand Frais",
+   "top": 4265,
+   "bottom": 4324
+  },
+  {
+   "text": "novembre 2026",
+   "top": 4569,
+   "bottom": 4620
+  },
+  {
+   "text": "—> = =",
+   "top": 4770,
+   "bottom": 4888
+  },
+  {
+   "text": "Envoyer Cartes Alime",
+   "top": 4924,
+   "bottom": 4980
+  }
+ ],
+ "amounts": [
+  {
+   "text": "7",
+   "top": 137,
+   "bottom": 217
+  },
+  {
+   "text": "-7,00 €",
+   "top": 935,
+   "bottom": 1045
+  },
+  {
+   "text": "-16,97€",
+   "top": 1319,
+   "bottom": 1389
+  },
+  {
+   "text": "-169,47€",
+   "top": 1647,
+   "bottom": 1716
+  },
+  {
+   "text": "+289,50€",
+   "top": 1991,
+   "bottom": 2060
+  },
+  {
+   "text": "-20,45€",
+   "top": 2291,
+   "bottom": 2359
+  },
+  {
+   "text": "-74,40€",
+   "top": 3038,
+   "bottom": 3107
+  },
+  {
+   "text": "-190,76€",
+   "top": 3381,
+   "bottom": 3450
+  },
+  {
+   "text": "-1,99€",
+   "top": 3938,
+   "bottom": 4007
+  },
+  {
+   "text": "-14,31€",
+   "top": 4265,
+   "bottom": 4334
+  }
+ ]
+}

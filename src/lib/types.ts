@@ -162,6 +162,8 @@ export interface Transaction {
   owner?: string
   /** Rangée à la main, pas par une règle apprise : corriger le marchand ailleurs ne la déplace pas. */
   manual?: boolean
+  /** Lue sur une capture d'écran, en attendant le relevé : celui-ci la remplace (cf. `importStatement`). */
+  provisional?: boolean
   updatedAt: string
 }
 

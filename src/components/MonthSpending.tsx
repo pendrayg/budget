@@ -39,6 +39,7 @@ function TransactionRow({ transaction, state, onPlace }: { transaction: Transact
       <span className="tx-label">
         {displayLabel(transaction.label)}
         {transaction.detail && <small className="muted"> · {transaction.detail}</small>}
+        {transaction.provisional && <small className="muted"> · provisoire</small>}
       </span>
       <span className="numeric">{formatEuro(transaction.amount)}</span>
       <GlyphIconButton icon={icon} label={label} title={where} onClick={() => onPlace(transaction)} />

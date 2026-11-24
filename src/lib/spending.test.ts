@@ -279,3 +279,46 @@ describe('dépense à épargner sur 2 ans', () => {
     expect(line.over).toBe(false)
   })
 })
+
+describe('opérations d’une capture d’écran', () => {
+  const capture = [
+    { date: '2026-11-20', label: 'Amazon', amount: 16.97 },
+    { date: '2026-11-19', label: 'Intermarché', amount: 190.76 },
+  ]
+
+  it('s’ajoutent provisoires, une seule fois', () => {
+    const first = importStatement(seedState(), capture, 't', null, true)
+    expect(first.added).toBe(2)
+    expect(first.state.transactions.every((t) => t.provisional)).toBe(true)
+    expect(importStatement(first.state, capture, 't2', null, true).added).toBe(0)
+  })
+
+  it('cèdent la place au relevé, qui garde leur rangement', () => {
+    let state = importStatement(seedState(), capture, 't', null, true).state
+    const amazon = state.transactions.find((t) => t.label === 'Amazon')!
+    const category = state.categories[0].id
+    state = placeTransaction(state, amazon.id, { categoryId: category }, 't')
+    const statement = importStatement(
+      state,
+      [
+        { date: '2026-11-18', label: 'CARTE 18/11/26 AMAZON PAYMENTS CB*1234', amount: 16.97 },
+        { date: '2026-11-19', label: 'CARTE 19/11/26 INTERMARCHE CB*1234', amount: 190.76 },
+        { date: '2026-11-21', label: 'CARTE 21/11/26 BOULANGERIE CB*1234', amount: 7 },
+      ],
+      't3',
+    )
+    expect(statement.confirmed).toBe(2)
+    expect(statement.added).toBe(1)
+    const transactions = statement.state.transactions
+    expect(transactions.some((t) => t.provisional)).toBe(false)
+    expect(transactions.find((t) => t.label.includes('AMAZON'))?.categoryId).toBe(category)
+    expect(transactions.filter((t) => t.date >= '2026-11-18')).toHaveLength(3)
+  })
+
+  it('n’ajoutent pas ce que le relevé a déjà', () => {
+    const state = importStatement(seedState(), [{ date: '2026-11-18', label: 'CARTE 18/11/26 AMAZON PAYMENTS CB*1234', amount: 16.97 }], 't').state
+    const again = importStatement(state, capture, 't2', null, true)
+    expect(again.duplicates).toBe(1)
+    expect(again.added).toBe(1)
+  })
+})

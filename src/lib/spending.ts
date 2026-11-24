@@ -119,6 +119,20 @@ export interface ImportResult {
   duplicates: number
   /** Parmi les ajoutées, celles qui restent à ranger. */
   unsorted: number
+  /** Les opérations d'une capture que le relevé a remplacées (cf. `importStatement`). */
+  confirmed: number
+}
+
+/** Les jours d'écart tolérés entre une opération lue sur une capture et la même au relevé (date de carte, date de débit). */
+const CAPTURE_DAYS = 4
+
+const daysBetween = (a: string, b: string) => Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000
+
+/** Parmi `candidates`, l'opération du même montant la plus proche en date, à `CAPTURE_DAYS` jours au plus. */
+function sameOperation(candidates: Transaction[], line: StatementLine): Transaction | undefined {
+  return candidates
+    .filter((t) => cents(t.amount) === cents(line.amount) && daysBetween(t.date, line.date) <= CAPTURE_DAYS)
+    .sort((a, b) => daysBetween(a.date, line.date) - daysBetween(b.date, line.date))[0]
 }
 
 /**
@@ -128,19 +142,37 @@ export interface ImportResult {
  *
  * Le relevé est celui du compte choisi (`scope`) : le commun, ou celui d'une personne, dont les
  * opérations portent son nom (et son préfixe, dans leur identifiant).
+ *
+ * Une CAPTURE d'écran (`provisional`) s'importe de même, ses opérations marquées provisoires —
+ * sauf celles déjà au relevé (même montant, à quelques jours près). Le relevé, ensuite, REMPLACE
+ * chaque opération provisoire qu'il contient : la sienne prend sa place, et son rangement.
  */
-export function importStatement(state: State, lines: StatementLine[], now: string, scope: Scope = null): ImportResult {
+export function importStatement(state: State, lines: StatementLine[], now: string, scope: Scope = null, provisional = false): ImportResult {
   const existing = new Set(state.transactions.map((t) => t.id))
   const rules = new Map(state.rules.map((rule) => [rule.key, rule]))
   const seen = new Map<string, number>()
   const added: Transaction[] = []
+  const account = state.transactions.filter((t) => (t.owner ?? null) === scope)
+  // Ce à quoi une ligne peut correspondre, chaque opération une seule fois : au relevé, les
+  // provisoires ; sur une capture, celles du relevé.
+  const pool = account.filter((t) => (t.provisional === true) !== provisional)
+  const replaced = new Set<string>()
   let duplicates = 0
   for (const line of lines) {
     const base = `${line.date}|${cents(line.amount)}|${line.label}`
     const rank = seen.get(base) ?? 0
     seen.set(base, rank + 1)
-    const id = `${scopePrefix(scope)}${base}|${rank}`
+    const id = `${scopePrefix(scope)}${provisional ? 'capture|' : ''}${base}|${rank}`
     if (existing.has(id)) {
+      duplicates++
+      continue
+    }
+    const match = sameOperation(
+      pool.filter((t) => !replaced.has(t.id)),
+      line,
+    )
+    if (match && provisional) {
+      replaced.add(match.id)
       duplicates++
       continue
     }
@@ -151,15 +183,26 @@ export function importStatement(state: State, lines: StatementLine[], now: strin
       ...(line.detail ? { detail: line.detail } : {}),
       amount: line.amount,
       ...(scope ? { owner: scope } : {}),
+      ...(provisional ? { provisional: true } : {}),
       updatedAt: now,
+    }
+    if (match) {
+      // L'opération du relevé prend la place de la provisoire, et son rangement s'il y en a un.
+      replaced.add(match.id)
+      const kept = isSorted(match)
+      const { id: _id, date: _date, label: _label, detail: _detail, amount: _amount, owner: _owner, provisional: _provisional, updatedAt: _updated, ...placement } = match
+      added.push(kept ? { ...transaction, ...placement } : place(transaction, placementOf(state, transaction, rules), now))
+      continue
     }
     added.push(place(transaction, placementOf(state, transaction, rules), now))
   }
+  const confirmed = provisional ? 0 : replaced.size
   return {
-    state: { ...state, transactions: [...state.transactions, ...added] },
-    added: added.length,
+    state: { ...state, transactions: [...state.transactions.filter((t) => provisional || !replaced.has(t.id)), ...added] },
+    added: added.length - confirmed,
     duplicates,
     unsorted: added.filter((t) => !isSorted(t)).length,
+    confirmed,
   }
 }
 

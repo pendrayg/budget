@@ -370,6 +370,7 @@ function transactions(value: unknown, categoryIds: Set<string>, personIds: strin
     else if (item.unplanned === true) transaction.unplanned = true
     else if (typeof item.categoryId === 'string' && categoryIds.has(item.categoryId)) transaction.categoryId = item.categoryId
     if (item.manual === true && (transaction.ignored || transaction.saving || transaction.unplanned || transaction.categoryId)) transaction.manual = true
+    if (item.provisional === true) transaction.provisional = true
     result.push(transaction)
   }
   return result

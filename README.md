@@ -161,6 +161,18 @@ Ce qu'on a **vraiment dépensé**, face au budget, dans l'écran Mois. En début
 relevé PDF du compte commun (BoursoBank) : il est lu **dans le téléphone** (pdf.js, chargé au
 premier import seulement), et seules ses opérations sont gardées — date, libellé, montant ;
 jamais le PDF, ni le RIB. Les montants se lisent au débit ou au crédit d'après leur colonne.
+
+En cours de mois, « Importer une capture » prend une ou plusieurs **captures d'écran** de la liste
+des opérations de l'app BoursoBank, lues elles aussi **dans le téléphone** (Tesseract.js : son
+moteur WebAssembly, ~4 Mo, et le français, ~0,7 Mo, servis par l'app — pas de CDN — et chargés à
+la première capture seulement). L'image passe en gris, agrandie et contrastée, et se lit en trois
+bandes : les jours (« Hier », « Jeudi 19 novembre 2026 »), les libellés sans les logos, les
+montants en chiffres seulement (`src/lib/capture.ts`, `src/lib/ocr.ts`). Un paiement « en
+cours » est écarté. Une feuille montre ce qui a été lu — on y retire une ligne mal lue — avant
+d'importer. Ces opérations sont **provisoires** (« · provisoire » sous leur libellé), rangées
+comme les autres ; le relevé du mois, à son import, **remplace** chacune par la sienne (même
+montant, à quatre jours près) en gardant son rangement. Une capture n'ajoute pas ce que le relevé
+a déjà.
 En tête de l'écran Mois, le graphique dit, mois par mois, le dépensé dans son budget, et en rouge
 ce qui le dépasse (cf. plus haut). Dans
 un mois déplié, sous ses revenus, ses dépenses montrent d'abord les opérations **à ranger** — chacune avec, à droite de son montant, un bouton-icône (un dossier « + », `fa-folder_plus`) qui ouvre la liste des

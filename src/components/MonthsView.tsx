@@ -13,6 +13,8 @@ import type { Month, Person, State } from '../lib/types'
 import IncomeForm from './IncomeForm'
 import MonthSpending, { OverLabel } from './MonthSpending'
 import PlacementSheet from './PlacementSheet'
+import CaptureSheet from './CaptureSheet'
+import { parseCapture, type CaptureLine } from '../lib/capture'
 import SpendingChart, { type FillPoint } from './SpendingChart'
 
 /**
@@ -116,7 +118,10 @@ export default function MonthsView({
       : []
 
   const fileInput = useRef<HTMLInputElement>(null)
+  const captureInput = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
+  // Ce que les captures ont donné, à revoir avant de l'importer.
+  const [captured, setCaptured] = useState<{ scope: Scope; lines: CaptureLine[]; pending: number } | null>(null)
   // Le message d'un import vaut pour son compte : il ne se montre plus quand on en change.
   const [said, setMessage] = useState<{ scope: Scope; tone: 'ok' | 'warn'; text: string } | null>(null)
   const message = said?.scope === scope ? said : null
@@ -142,6 +147,7 @@ export default function MonthsView({
       const imported = [...new Set(statement.map((l) => l.date.slice(0, 7)))].sort()
       const parts = [`${preview.added} opération${preview.added > 1 ? 's' : ''} ajoutée${preview.added > 1 ? 's' : ''} (${imported.map(monthLabel).join(', ')})`]
       if (preview.added > 0) parts.push(`${preview.unsorted} à ranger`)
+      if (preview.confirmed > 0) parts.push(`${preview.confirmed} provisoire${preview.confirmed > 1 ? 's' : ''} confirmée${preview.confirmed > 1 ? 's' : ''}`)
       if (preview.duplicates > 0) parts.push(`${preview.duplicates} déjà importée${preview.duplicates > 1 ? 's' : ''}`)
       setMessage({ scope, tone: 'ok', text: `${owner && !solo ? `Compte de ${owner.name} : ` : ''}${parts.join(', ')}.` })
       // Le dernier mois du relevé s'ouvre : c'est là qu'il y a à ranger.
@@ -152,6 +158,47 @@ export default function MonthsView({
       setBusy(false)
       if (fileInput.current) fileInput.current.value = ''
     }
+  }
+
+  /** Lit une ou plusieurs captures d'écran de l'app de la banque, sur le téléphone, et montre ce qu'elles donnent. */
+  async function readCaptures(files: File[]) {
+    setBusy(true)
+    setMessage(null)
+    try {
+      const { readCapture } = await import('../lib/ocr')
+      const today = nowIso().slice(0, 10)
+      const found: CaptureLine[] = []
+      let pending = 0
+      for (const file of files) {
+        const result = parseCapture(await readCapture(file), today)
+        // Deux captures qui se chevauchent : une opération lue deux fois ne compte qu'une fois.
+        for (const line of result.lines) if (!found.some((l) => l.date === line.date && l.amount === line.amount && l.label === line.label)) found.push(line)
+        pending += result.pending
+      }
+      setCaptured({ scope, lines: found, pending })
+    } catch {
+      setMessage({ scope, tone: 'warn', text: 'La capture n’a pas pu être lue.' })
+    } finally {
+      setBusy(false)
+      if (captureInput.current) captureInput.current.value = ''
+    }
+  }
+
+  function importCapture(read: CaptureLine[]) {
+    if (!captured) return
+    const target = captured.scope
+    const now = nowIso()
+    const statement = read.map(({ dateGuessed: _guessed, ...line }) => line)
+    const preview = importStatement(state, statement, now, target, true)
+    update((s) => importStatement(s, statement, now, target, true).state)
+    setCaptured(null)
+    const parts = [`${preview.added} opération${preview.added > 1 ? 's' : ''} provisoire${preview.added > 1 ? 's' : ''} ajoutée${preview.added > 1 ? 's' : ''}`]
+    if (preview.added > 0) parts.push(`${preview.unsorted} à ranger`)
+    if (preview.duplicates > 0) parts.push(`${preview.duplicates} déjà là`)
+    const targetOwner = target ? state.people.find((person) => person.id === target) : undefined
+    setMessage({ scope: target, tone: 'ok', text: `${targetOwner && !solo ? `Compte de ${targetOwner.name} : ` : ''}${parts.join(', ')}.` })
+    const months = [...new Set(statement.map((line) => line.date.slice(0, 7)))].sort()
+    if (months.length > 0) lines.toggle(months[months.length - 1])(true)
   }
 
   return (
@@ -249,9 +296,25 @@ export default function MonthsView({
           }}
         />
         <Button tone="primary" icon="plus" disabled={busy} onClick={() => fileInput.current?.click()}>
-          {busy ? 'Lecture du relevé…' : 'Importer un relevé'}
+          {busy ? 'Lecture…' : 'Importer un relevé'}
+        </Button>
+        <input
+          ref={captureInput}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(event) => {
+            const files = [...(event.target.files ?? [])]
+            if (files.length > 0) void readCaptures(files)
+          }}
+        />
+        <Button tone="primary" icon="plus" disabled={busy} onClick={() => captureInput.current?.click()}>
+          Importer une capture
         </Button>
       </section>
+
+      <CaptureSheet lines={captured?.lines ?? null} pending={captured?.pending ?? 0} onImport={importCapture} onClose={() => setCaptured(null)} />
 
       <PlacementSheet
         state={state}
