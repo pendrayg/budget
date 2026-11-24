@@ -2,7 +2,7 @@ import { budgetAt, versionMonthly, versionsOf } from './budget'
 import { judgedMonths } from './amount'
 import { addMonths } from './month'
 import type { StatementLine } from './statement'
-import { scopePrefix, type Scope } from './scope'
+import { categoryScope, scopePrefix, type Scope } from './scope'
 import { firstBudgetMonth, sortedGroups } from './summary'
 import type { BudgetGroup, Category, MatchRule, Month, State, Transaction } from './types'
 
@@ -248,6 +248,12 @@ export function spendingMonths(state: State, scope: Scope = null): Month[] {
   return [...new Set(state.transactions.filter((t) => (t.owner ?? null) === scope).map((t) => t.date.slice(0, 7)))].sort().reverse()
 }
 
+/** Les mois à montrer pour un budget : ceux de son compte, et ceux où une opération d'un autre compte est rangée dans l'une de ses dépenses. */
+export function budgetSpendingMonths(state: State, scope: Scope = null): Month[] {
+  const placedHere = state.transactions.filter((t) => t.categoryId !== undefined && (t.owner ?? null) !== scope && categoryScope(state, t.categoryId) === scope)
+  return [...new Set([...spendingMonths(state, scope), ...placedHere.map((t) => t.date.slice(0, 7))])].sort().reverse()
+}
+
 export interface SpendingLine {
   category: Category
   /** Le mensuel budgété ce mois-là ; 0 si la dépense n'y est pas budgétée. */
@@ -295,6 +301,8 @@ export interface SpendingSummary {
   /** À ranger, puis écartées : ni l'une ni l'autre ne compte dans le dépensé. */
   unsorted: Transaction[]
   ignored: Transaction[]
+  /** Du compte, rangées dans une dépense d'un autre budget (le foyer, une personne) : elles comptent là-bas. */
+  elsewhere: Transaction[]
 }
 
 const byDate = (a: Transaction, b: Transaction) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label)
@@ -315,8 +323,11 @@ const OVER = 0.005
  * dépassement pour autant.
  */
 export function spendingSummary(state: State, month: Month, scope: Scope = null): SpendingSummary {
-  const inMonth = (t: Transaction) => t.date.startsWith(month) && (t.owner ?? null) === scope
-  const transactions = state.transactions.filter(inMonth).sort(byDate)
+  // Les opérations du COMPTE (à ranger, épargne, imprévus, pas des dépenses) ; et, pour chaque
+  // dépense de ce budget, celles rangées dedans, de quelque compte qu'elles viennent : un relevé
+  // perso porte aussi des dépenses du foyer, et l'inverse.
+  const transactions = state.transactions.filter((t) => t.date.startsWith(month) && (t.owner ?? null) === scope).sort(byDate)
+  const placedThisMonth = state.transactions.filter((t) => t.date.startsWith(month) && t.categoryId !== undefined).sort(byDate)
   const firstBudget = firstBudgetMonth(state, scope)
   const budgetMonth = firstBudget && month < firstBudget ? firstBudget : month
   const within = (months: number) => {
@@ -327,7 +338,7 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
   const all: SpendingSection[] = sortedGroups(state, scope).map((group) => {
     const lines: SpendingLine[] = []
     for (const category of state.categories) {
-      const own = transactions.filter((t) => t.categoryId === category.id)
+      const own = placedThisMonth.filter((t) => t.categoryId === category.id)
       // Une dépense née après ce mois, où l'on a pourtant rangé des opérations, s'y juge sur son
       // premier budget — comme un mois d'avant le premier budget se juge sur celui-ci.
       const version = budgetAt(state, category.id, budgetMonth) ?? (own.length > 0 ? versionsOf(state, category.id)[0] : undefined)
@@ -353,9 +364,11 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
     lines.sort((a, b) => a.category.name.localeCompare(b.category.name, 'fr'))
     return { group, lines, budget: sum(lines.map((l) => l.budget)), spent: sum(lines.map((l) => l.spent)) }
   })
-  // Rangée dans une dépense supprimée depuis, ou d'un autre budget CE MOIS-LÀ (une dépense passée
-  // d'un budget à l'autre garde ses mois d'avant dans l'ancien) : elle redevient à ranger.
-  const known = new Set(all.flatMap((section) => section.lines.map((line) => line.category.id)))
+  // Rangée dans une dépense supprimée depuis : elle redevient à ranger. Rangée dans celle d'un
+  // autre budget, elle compte là-bas.
+  const versioned = new Set(state.budgets.map((version) => version.categoryId))
+  const known = new Set(state.categories.filter((category) => versioned.has(category.id)).map((category) => category.id))
+  const here = new Set(all.flatMap((section) => section.lines.map((line) => line.category.id)))
   const placed = (t: Transaction) => t.ignored === true || t.saving === true || t.unplanned === true || (t.categoryId !== undefined && known.has(t.categoryId))
   const sections = all.filter((section) => !section.group.save)
   const saveSections = all.filter((section) => section.group.save)
@@ -375,6 +388,7 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
     unplannedTotal,
     unsorted: transactions.filter((t) => !placed(t)),
     ignored: transactions.filter((t) => t.ignored === true),
+    elsewhere: transactions.filter((t) => t.categoryId !== undefined && known.has(t.categoryId) && !here.has(t.categoryId)),
   }
 }
 

@@ -6,7 +6,7 @@ import { monthLabel, monthRange, shortMonthLabel } from '../lib/month'
 import { isSolo } from '../lib/people'
 import { incomeOf, incomeTotal } from '../lib/prorata'
 import type { Scope } from '../lib/scope'
-import { importStatement, placeTransaction, spendingMonths, spendingSummary, type Placement } from '../lib/spending'
+import { budgetSpendingMonths, importStatement, placeTransaction, spendingSummary, type Placement } from '../lib/spending'
 import { parseStatement } from '../lib/statement'
 import { dueAt, incomeHistory, monthSummary, personalTotal, type MonthSummary } from '../lib/summary'
 import type { Month, Person, State } from '../lib/types'
@@ -87,7 +87,7 @@ export default function MonthsView({
   // Les mois saisis jusqu'au mois en cours, et ceux qui ont un relevé, du plus récent au plus ancien.
   const entered = state.incomes.map((income) => income.month).sort()
   const incomeMonths = entered.length === 0 ? [] : monthRange(entered[0], entered[entered.length - 1] > month ? entered[entered.length - 1] : month)
-  const spent = spendingMonths(state, scope)
+  const spent = budgetSpendingMonths(state, scope)
   const history = [...new Set([...incomeMonths, ...spent])].sort().reverse()
   const spending = new Map(spent.map((m) => [m, spendingSummary(state, m, scope)]))
 

@@ -251,9 +251,14 @@ une catégorie du même type (à épargner ou non) du budget choisi, ou dans une
 pour elle (`moveCategory`). Pas la dépense d'un projet, qui reste dans le budget du projet.
 
 Aux dépenses, le relevé s'**importe dans le compte choisi** : ses opérations sont à cette
-personne, sans avoir à le dire pour chacune, et se rangent dans les dépenses de son budget.
-Chaque compte apprend ses propres marchands, et un même relevé importé dans deux comptes y fait
-deux jeux d'opérations distincts.
+personne, sans avoir à le dire pour chacune. Un relevé (ou une capture) porte souvent des
+dépenses du foyer ET des dépenses perso : le choix de rangement propose d'abord les dépenses du
+budget du compte, puis celles des autres budgets, marquées du leur (« Foyer », « Yoann »). Une
+opération compte dans le budget de la dépense où elle est rangée, de quelque compte qu'elle
+vienne ; sur son compte, elle se retrouve sous « Dans un autre budget ». Les mois d'un budget sont
+ceux de son relevé et ceux où une opération d'un autre compte est rangée chez lui. Chaque compte
+apprend ses propres marchands (une règle peut ranger au foyer), et un même relevé importé dans
+deux comptes y fait deux jeux d'opérations distincts.
 
 ### Les projets
 

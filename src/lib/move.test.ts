@@ -32,11 +32,13 @@ describe('déplacer une dépense d’un budget à l’autre', () => {
     expect(has(monthSummary(state, '2026-10', 'p2'), 'c09')).toBe(false)
   })
 
-  it('garde rangées les opérations des mois d’avant, et rend à ranger celles du commun d’après', () => {
+  it('garde rangées les opérations, et compte celles d’après chez sa personne, de quelque compte qu’elles viennent', () => {
     const state = moved()
     expect(spendingSummary(state, '2026-10').unsorted).toHaveLength(0)
-    // Après le changement, la dépense n'est plus au commun : son opération du compte commun est à ranger.
-    expect(spendingSummary(state, '2026-11').unsorted.map((t) => t.date)).toEqual(['2026-11-04'])
+    // Après le changement, l'opération du compte commun reste rangée : elle compte au budget de Bruno.
+    expect(spendingSummary(state, '2026-11').unsorted).toHaveLength(0)
+    const line = spendingSummary(state, '2026-11', 'p2').sections.flatMap((s) => s.lines).find((l) => l.category.id === 'c09')
+    expect(line?.spent).toBe(41)
   })
 })
 

@@ -1,7 +1,7 @@
 import { Button, SearchField } from '../ds'
 import { useState } from 'react'
 import { formatEuro } from '../lib/format'
-import { categoriesOf } from '../lib/scope'
+import { categoriesOf, type Scope } from '../lib/scope'
 import { matchesSearch } from '../lib/search'
 import { displayLabel, placeableAt, type Placement } from '../lib/spending'
 import type { CategoryIcon, State, Transaction } from '../lib/types'
@@ -11,6 +11,8 @@ import Sheet from './Sheet'
 interface Choice {
   key: string
   name: string
+  /** Le budget de la dépense, quand ce n'est pas celui du compte de l'opération. */
+  budget?: string
   icon?: CategoryIcon
   placement: Placement
   active: boolean
@@ -54,19 +56,26 @@ export default function PlacementSheet({
 
 function PlacementChoices({ state, transaction, onChoose }: { state: State; transaction: Transaction; onChoose: (placement: Placement) => void }) {
   const [query, setQuery] = useState('')
+  // Les dépenses du budget de son compte d'abord, puis celles des autres budgets : un relevé perso
+  // porte aussi des dépenses du foyer, et le relevé du foyer, parfois, celle d'une personne.
+  const account: Scope = transaction.owner ?? null
+  const scopes: Scope[] = [account, ...[null, ...state.people.map((person) => person.id)].filter((scope) => scope !== account)]
+  const budgetName = (scope: Scope) => (scope === null ? 'Foyer' : (state.people.find((person) => person.id === scope)?.name ?? ''))
   const choices: Choice[] = [
-    // Les dépenses du budget de son compte : le commun, ou celui de sa personne.
     // Sans celles arrêtées le mois de l'opération — un projet supprimé (celle où elle est rangée reste).
-    ...categoriesOf(state, transaction.owner ?? null)
-      .filter((expense) => expense.id === transaction.categoryId || placeableAt(state, expense.id, transaction.date))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-      .map((expense) => ({
-        key: expense.id,
-        name: expense.name,
-        icon: expense.icon,
-        placement: { categoryId: expense.id },
-        active: transaction.categoryId === expense.id,
-      })),
+    ...scopes.flatMap((scope) =>
+      categoriesOf(state, scope)
+        .filter((expense) => expense.id === transaction.categoryId || placeableAt(state, expense.id, transaction.date))
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+        .map((expense) => ({
+          key: expense.id,
+          name: expense.name,
+          ...(scope !== account ? { budget: budgetName(scope) } : {}),
+          icon: expense.icon,
+          placement: { categoryId: expense.id },
+          active: transaction.categoryId === expense.id,
+        })),
+    ),
     { key: 'unplanned', name: 'Imprévu hors catégorie', placement: { unplanned: true }, active: transaction.unplanned === true },
     { key: 'saving', name: 'Versement épargne', placement: { saving: true }, active: transaction.saving === true },
     { key: 'ignored', name: 'Pas une dépense', placement: { ignored: true }, active: transaction.ignored === true },
@@ -77,7 +86,7 @@ function PlacementChoices({ state, transaction, onChoose }: { state: State; tran
       active: !transaction.ignored && !transaction.saving && !transaction.unplanned && !transaction.categoryId,
     },
   ]
-  const results = choices.filter((choice) => matchesSearch(choice.name, query))
+  const results = choices.filter((choice) => matchesSearch(choice.budget ? `${choice.name} ${choice.budget}` : choice.name, query))
   return (
     <div className="form">
       <p className="placement-of">
@@ -106,7 +115,8 @@ function PlacementChoices({ state, transaction, onChoose }: { state: State; tran
             <li key={choice.key}>
               <Button className="placement-choice" active={choice.active} onClick={() => onChoose(choice.placement)}>
                 {choice.icon ? <CategoryGlyph icon={choice.icon} className="placement-icon" /> : <span className="placement-icon" aria-hidden="true" />}
-                {choice.name}
+                <span className="placement-name">{choice.name}</span>
+                {choice.budget && <span className="placement-budget muted">{choice.budget}</span>}
               </Button>
             </li>
           ))}

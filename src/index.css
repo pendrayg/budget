@@ -1207,6 +1207,13 @@ body,
   gap: 12px;
 }
 
+/* Le budget d'une dépense d'un autre budget que celui du compte (« Foyer », « Yoann »), à droite. */
+.placement-budget {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 400;
+}
+
 .placement-choice.ds-text {
   width: 100%;
   justify-content: flex-start;

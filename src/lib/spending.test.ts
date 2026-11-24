@@ -322,3 +322,19 @@ describe('opérations d’une capture d’écran', () => {
     expect(again.added).toBe(1)
   })
 })
+
+describe('un relevé perso qui porte une dépense du foyer', () => {
+  it('compte l’opération au foyer, et plus à ranger sur le compte perso', () => {
+    const person = seedState().people[0].id
+    let state = importStatement(seedState(), [{ date: '2026-11-04', label: 'CARTE 04/11/26 SUPERMARCHE CB*1234', amount: 41 }], 't', person).state
+    const courses = state.categories.find((c) => c.name === 'Courses')!.id
+    state = placeTransaction(state, state.transactions[0].id, { categoryId: courses }, 't2')
+    expect(spendingSummary(state, '2026-11', person).unsorted).toHaveLength(0)
+    expect(spendingSummary(state, '2026-11', person).elsewhere.map((t) => t.categoryId)).toEqual([courses])
+    const line = spendingSummary(state, '2026-11').sections.flatMap((s) => s.lines).find((l) => l.category.id === courses)
+    expect(line?.transactions.map((t) => t.owner)).toEqual([person])
+    // Le marchand appris sur ce compte y range les suivantes, au foyer.
+    state = importStatement(state, [{ date: '2026-11-12', label: 'CARTE 12/11/26 SUPERMARCHE CB*1234', amount: 23 }], 't3', person).state
+    expect(state.transactions.at(-1)!.categoryId).toBe(courses)
+  })
+})

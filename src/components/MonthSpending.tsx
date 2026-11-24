@@ -232,6 +232,23 @@ export default function MonthSpending({ state, month, scope, update, onPlace }: 
           </DisclosureButton>
         </div>
       )}
+      {summary.elsewhere.length > 0 && (
+        <div className="line-buttons">
+          <DisclosureButton
+            className="line-button"
+            open={groups.isOpen('ailleurs')}
+            onToggle={groups.toggle('ailleurs')}
+            title={
+              <span className="line-head">
+                <span className="line-name">Dans un autre budget ({summary.elsewhere.length})</span>
+                <span className="numeric">{formatEuro(summary.elsewhere.reduce((s, t) => s + t.amount, 0))}</span>
+              </span>
+            }
+          >
+            <ul className="tx-list">{summary.elsewhere.map(row)}</ul>
+          </DisclosureButton>
+        </div>
+      )}
       <div className="form-actions">
         <DeleteButton withLabel label="Supprimer les opérations du mois" confirmLabel={`Confirmer : supprimer les opérations de ${monthLabel(month)}`} onDelete={() => update((s) => removeMonth(s, month, scope))} />
       </div>
