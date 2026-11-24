@@ -179,10 +179,12 @@ export default function MonthSpending({ state, month, scope, update, onPlace }: 
               {summary.savings.sections
                 .filter((section) => section.lines.some(spentIn))
                 .map((section) => {
-                  // La catégorie se juge comme ses dépenses : sur douze mois, vingt-quatre pour un budget sur 2 ans.
+                  // La catégorie se juge comme ses dépenses : chacune sur sa période (3, 6, 12, 24 mois),
+                  // ou sur sa durée pour une dépense au mois (un projet).
                   const yearSpent = section.lines.reduce((s, l) => s + (l.year?.spent ?? 0), 0)
                   const yearBudget = section.lines.reduce((s, l) => s + (l.year?.budget ?? 0), 0)
-                  const spans = [...new Set(section.lines.map((l) => l.year?.months ?? 12))].sort((a, b) => a - b)
+                  const spans = [...new Set(section.lines.filter(spentIn).map((l) => l.year?.months ?? 12))].sort((a, b) => a - b)
+                  const over = spans.length > 3 ? 'Chacune sur sa période' : `Sur ${spans.length > 1 ? `${spans.slice(0, -1).join(', ')} et ${spans.at(-1)}` : spans[0]} mois`
                   return (
                     <DisclosureButton
                       key={section.group.id}
@@ -191,7 +193,7 @@ export default function MonthSpending({ state, month, scope, update, onPlace }: 
                       onToggle={groups.toggle(section.group.id)}
                       hint={
                         <>
-                          Sur {spans.join(' et ')} mois
+                          {over}
                           {overIn(section.lines) > 0 && (
                             <>
                               {' · '}

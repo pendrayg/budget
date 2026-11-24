@@ -4,7 +4,7 @@ import { addMonths } from './month'
 import type { StatementLine } from './statement'
 import { categoryScope, scopePrefix, type Scope } from './scope'
 import { firstBudgetMonth, sortedGroups } from './summary'
-import type { BudgetGroup, Category, MatchRule, Month, State, Transaction } from './types'
+import type { BudgetGroup, BudgetVersion, Category, MatchRule, Month, State, Transaction } from './types'
 
 /**
  * L'état des lieux : ce qu'on a VRAIMENT dépensé, mois par mois, d'après les relevés du compte
@@ -310,6 +310,45 @@ const sum = (values: number[]) => values.reduce((total, value) => total + value,
 const OVER = 0.005
 
 /**
+ * Une dépense PÉRIODIQUE à épargner (trimestrielle, annuelle, en items…) se juge sur sa période,
+ * jusqu'au mois : le payé dans la fenêtre face à son budget de chacun de ces mois — celui du mois
+ * jugé, appliqué à toute la fenêtre : une dépense annuelle née ce mois-ci et payée aussitôt ne
+ * dépasse pas.
+ */
+function judgedOverPeriod(state: State, categoryId: string, judged: BudgetVersion, months: number, month: Month, budgetMonth: Month) {
+  const start = addMonths(month, -(months - 1))
+  const spent = sum(state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) >= start && t.date.slice(0, 7) <= month).map((t) => t.amount))
+  // Mois par mois : un prix par jour ne coûte pas autant en août qu'en mars.
+  const budget = Array.from({ length: months }, (_, back) => versionMonthly(judged, addMonths(budgetMonth, -back))).reduce((a, b) => a + b, 0)
+  return { months, spent, budget }
+}
+
+/**
+ * Une dépense à épargner AU MOIS — l'épargne d'un projet, une régularisation d'impôts — se juge sur
+ * sa durée : de sa première mensualité à la dernière (la cible d'un projet), ou jusqu'au mois si
+ * elle n'a pas de fin. Le payé de toute cette durée face à ses mensualités, chacune à son mois : un
+ * projet payé en plusieurs fois, ou d'un coup à la fin, se juge sur son total.
+ */
+function judgedOverLife(state: State, categoryId: string, month: Month) {
+  const versions = versionsOf(state, categoryId)
+  const first = versions.find((version) => version.amount.kind !== 'none')
+  if (!first) return { months: 1, spent: 0, budget: 0 }
+  // La fin : la veille d'un arrêt (« plus budgété ») après le mois, sinon le mois lui-même.
+  const stop = versions.find((version) => version.from > first.from && version.amount.kind === 'none' && !versions.some((later) => later.from > version.from && later.amount.kind !== 'none'))
+  const end = stop ? addMonths(stop.from, -1) : month
+  const last = end > month ? end : month
+  let budget = 0
+  let months = 0
+  for (let at = first.from; at <= end; at = addMonths(at, 1)) {
+    const version = budgetAt(state, categoryId, at)
+    budget += version ? versionMonthly(version, at) : 0
+    months += 1
+  }
+  const spent = sum(state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) >= first.from && t.date.slice(0, 7) <= last).map((t) => t.amount))
+  return { months, spent, budget }
+}
+
+/**
  * L'état des lieux d'un mois, rangé comme le budget : par catégorie, puis par dépense, le dépensé
  * face au budgété. Une dépense apparaît si elle est budgétée ce mois-là ou si on y a dépensé ;
  * elle est dans la catégorie de sa version du mois (ou de sa dernière, si elle n'est plus budgétée).
@@ -330,10 +369,6 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
   const placedThisMonth = state.transactions.filter((t) => t.date.startsWith(month) && t.categoryId !== undefined).sort(byDate)
   const firstBudget = firstBudgetMonth(state, scope)
   const budgetMonth = firstBudget && month < firstBudget ? firstBudget : month
-  const within = (months: number) => {
-    const start = addMonths(month, -(months - 1))
-    return (t: Transaction) => t.date.slice(0, 7) >= start && t.date.slice(0, 7) <= month
-  }
 
   const all: SpendingSection[] = sortedGroups(state, scope).map((group) => {
     const lines: SpendingLine[] = []
@@ -351,12 +386,12 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
         // Une dépense à épargner arrêtée (un projet après sa cible) se paie souvent APRÈS sa
         // dernière mensualité : on la juge sur cette dernière, pas sur 0 €.
         const judged = budget > 0 ? version : versionsOf(state, category.id).filter((v) => v.from <= budgetMonth && v.amount.kind !== 'none').at(-1)
-        const months = judged ? judgedMonths(judged.amount) : 12
-        const inWindow = within(months)
-        const yearSpent = sum(state.transactions.filter((t) => t.categoryId === category.id && inWindow(t)).map((t) => t.amount))
-        // Mois par mois : un prix par jour ne coûte pas autant en août qu'en mars.
-        const yearBudget = judged ? Array.from({ length: months }, (_, back) => versionMonthly(judged, addMonths(budgetMonth, -back))).reduce((a, b) => a + b, 0) : 0
-        lines.push({ category, budget, spent, transactions: own, year: { spent: yearSpent, budget: yearBudget, months }, over: yearSpent > yearBudget + OVER })
+        const period = judged ? judgedMonths(judged.amount) : 12
+        const life = period === null
+        const { months, spent: yearSpent, budget: yearBudget } = life ? judgedOverLife(state, category.id, budgetMonth) : judgedOverPeriod(state, category.id, judged!, period, month, budgetMonth)
+        // Sur sa durée, chaque mensualité arrondie au centime peut manquer d'un centime au total.
+        const slack = OVER + (life ? 0.01 * months : 0)
+        lines.push({ category, budget, spent, transactions: own, year: { spent: yearSpent, budget: yearBudget, months }, over: yearSpent > yearBudget + slack })
       } else {
         lines.push({ category, budget, spent, transactions: own, over: spent > budget + OVER })
       }

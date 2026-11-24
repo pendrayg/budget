@@ -37,14 +37,19 @@ export const PERIOD_SHORT: Record<Period, string> = {
 }
 
 /**
- * Sur combien de mois juger ce qu'on a payé pour une dépense à épargner : l'année glissante, ou
- * deux ans pour un budget sur 2 ans (en tout ou pour l'un de ses items) — payé une fois tous les
- * deux ans, il dépasserait sinon douze fois son mensuel l'année où il tombe.
+ * Sur combien de mois juger ce qu'on a payé pour une dépense à épargner : sa période — trois mois
+ * pour un trimestriel, six pour un semestriel, douze pour un annuel, vingt-quatre pour un budget
+ * sur 2 ans ; pour des items, la plus longue des leurs. Payé une fois par période, il dépasserait
+ * sinon son mensuel le mois où il tombe. `null` pour un montant au mois (ou par jour) : il se juge
+ * sur sa durée (cf. `spendingSummary`), comme l'épargne d'un projet.
  */
-export function judgedMonths(amount: Amount): number {
-  if (amount.kind === 'biennial') return 24
-  if (amount.kind === 'items' && amount.items.some((item) => item.period === 'biennial')) return 24
-  return 12
+export function judgedMonths(amount: Amount): number | null {
+  if (amount.kind === 'items') {
+    const longest = Math.max(...amount.items.map((item) => PERIOD_DIVISOR[item.period ?? 'monthly']))
+    return longest > 1 ? longest : null
+  }
+  if (amount.kind === 'monthly' || amount.kind === 'days' || amount.kind === 'none') return null
+  return PERIOD_DIVISOR[amount.kind]
 }
 
 /**

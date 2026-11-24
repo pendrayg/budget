@@ -27,7 +27,7 @@ describe('budget semestriel', () => {
   it('se ramène au mois sur six mois, en tout ou pour un item, et se juge sur l’année', () => {
     expect(monthlyAmount({ kind: 'semiannual', value: 600 }, '2026-10')).toBe(100)
     expect(monthlyAmount({ kind: 'items', items: [{ label: 'Entretien chaudière', amount: 90, period: 'semiannual' }] }, '2026-10')).toBe(15)
-    expect(judgedMonths({ kind: 'semiannual', value: 600 })).toBe(12)
+    expect(judgedMonths({ kind: 'semiannual', value: 600 })).toBe(6)
   })
 })
 
@@ -41,6 +41,13 @@ describe('budget sur 2 ans', () => {
     expect(judgedMonths({ kind: 'biennial', value: 480 })).toBe(24)
     expect(judgedMonths({ kind: 'items', items: [{ label: 'CT', amount: 96, period: 'biennial' }] })).toBe(24)
     expect(judgedMonths({ kind: 'annual', value: 120 })).toBe(12)
+  })
+
+  it('se juge sur la plus longue période de ses items, sur sa durée au mois', () => {
+    expect(judgedMonths({ kind: 'quarterly', value: 90 })).toBe(3)
+    expect(judgedMonths({ kind: 'items', items: [{ label: 'Coupe', amount: 22, period: 'quarterly' }, { label: 'Couleur', amount: 140, period: 'semiannual' }] })).toBe(6)
+    expect(judgedMonths({ kind: 'items', items: [{ label: 'Abonnement', amount: 10 }] })).toBeNull()
+    expect(judgedMonths({ kind: 'monthly', value: 231.6 })).toBeNull()
   })
 })
 

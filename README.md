@@ -57,8 +57,8 @@ dit ce que font les vacances scolaires :
 Le budget d'un mois est alors le
 prix d'un jour multiplié par le nombre de ces jours **dans ce mois** : il varie d'un mois à l'autre
 et tombe à zéro en août, et le formulaire dit ce que donne le mois en cours (« En octobre 2026 :
-10 jours, soit 45,00 € »). Une dépense à épargner « par jour » se juge, sur l'année glissante,
-mois par mois.
+10 jours, soit 45,00 € »). Une dépense à épargner « par jour » se juge, comme une au mois, sur sa
+durée, mois par mois.
 
 Les jours fériés sont les onze de la France métropolitaine, calculés (Pâques comprise). Les
 vacances scolaires sont celles de l'Éducation nationale, pont de l'Ascension compris. Le calendrier
@@ -181,7 +181,7 @@ une **recherche** active dès l'ouverture, clavier levé (accents ignorés ; Ent
 première) —, puis
 chaque **catégorie en bouton section** — seulement celles où il y a eu des opérations ce mois-ci, et dedans seulement ces dépenses-là : repliée, une ligne, son écart au budget (en vert
 en deçà, en rouge au-delà, « = » pile dessus) et son nombre de dépenses en dépassement ; dépliée, ses dépenses, chacune un bouton section qui déplie ses opérations. Une
-catégorie ouverte à la fois. Les imprévus, les catégories à épargner (jugées sur douze mois) et ce
+catégorie ouverte à la fois. Les imprévus, les catégories à épargner (jugées sur leur période) et ce
 qui n'est **pas une dépense** (versements sur le compte commun, virements internes ; un versement reçu
 par virement l'est d'office) suivent le même modèle. Une opération rangée garde, à droite de son montant,
 un bouton-icône qui rouvre le choix : l'icône de sa dépense (un dossier si elle n'en a pas, un
@@ -206,9 +206,14 @@ ce premier budget. Un mois importé par erreur se supprime au bas de son dépli.
 faut **mettre de côté chaque mois** (et la part de chacun), à virer sur le compte épargne. Dans un mois, le bloc
 **Épargne** compare le virement du mois vers l'épargne — rangé en « Versement épargne », appris
 comme le reste — à cette somme. Le paiement annuel, lui, sort du compte commun le mois où il tombe :
-il ne compte **pas** dans le dépensé du mois (l'épargne le couvre), et se juge sur l'**année
-glissante** — les paiements des douze derniers mois face à douze fois son mensuel (vingt-quatre
-pour un budget sur 2 ans) ; seul un dépassement sur cette période passe en rouge. L'en-tête d'un mois compare donc le courant dépensé plus
+il ne compte **pas** dans le dépensé du mois (l'épargne le couvre), et se juge sur **sa période**
+— trois mois pour un trimestriel, six pour un semestriel, douze pour un annuel, vingt-quatre pour
+un budget sur 2 ans, la plus longue de ses items pour des items : les paiements de ces derniers
+mois face à autant de fois son mensuel. Une dépense à épargner **au mois** (l'épargne d'un projet,
+une régularisation d'impôts) se juge sur **sa durée** : de sa première mensualité à la dernière
+(la cible d'un projet), ou jusqu'au mois si elle n'a pas de fin, chaque mois sur son propre budget —
+payée en plusieurs fois ou d'un coup à la fin, elle se juge sur son total. Seul un dépassement
+sur cette période passe en rouge. L'en-tête d'un mois compare donc le courant dépensé plus
 le versé sur l'épargne au courant budgété plus le « à mettre de côté ».
 
 Une dépense qui n'entre dans aucune dépense du budget se range en **« Imprévu hors catégorie »** :
