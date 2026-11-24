@@ -16,7 +16,8 @@ import type { Amount, BudgetGroup, BudgetVersion, CategoryIcon, Month, Project, 
  * s'épargne) ; elle se recalcule à chaque modification du projet, à partir du mois en cours,
  * et s'arrête après la cible. La complétion est l'épargne RÉALISÉE : chaque mois importé, la
  * mensualité du projet au prorata du versement vers l'épargne de ce mois-là (versé / à épargner,
- * plafonné à 100 %) ; un mois pas encore importé ne compte pas.
+ * plafonné à 100 %) ; un mois pas encore importé ne compte pas. Ce qui est déjà payé (les
+ * opérations rangées sur le projet) compte aussi, s'il dépasse cette épargne.
  */
 
 /** L'icône de TOUS les projets, devant celle qu'on leur choisit : une brique, quelque chose se construit. */
@@ -38,11 +39,24 @@ export function projectMonthly(total: number, saved: number, from: Month, target
   return cents(Math.max(0, total - saved) / Math.max(1, monthsBetween(from, target)))
 }
 
-/** L'épargne réalisée pour un projet, des mois importés jusqu'à `upTo` compris. */
+/**
+ * Ce qui est fait pour un projet, des mois importés jusqu'à `upTo` compris : l'épargne réalisée
+ * (sa mensualité au prorata du versement vers l'épargne), ou ce qui est déjà PAYÉ — les opérations
+ * rangées sur lui —, le plus grand des deux. Un achat payé avec l'argent mis de côté ne compte pas
+ * deux fois ; un projet qui se paie en plusieurs fois (une régularisation d'impôts) avance de
+ * chaque prélèvement.
+ */
 export function projectSaved(state: State, project: Project, upTo: Month): number {
   const categoryId = project.budget?.categoryId
-  const first = categoryId ? versionsOf(state, categoryId)[0] : undefined
-  if (!categoryId || !first) return 0
+  if (!categoryId) return 0
+  const paid = state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) <= upTo).reduce((sum, t) => sum + t.amount, 0)
+  return cents(Math.max(savedFromTransfers(state, categoryId, upTo), paid))
+}
+
+/** L'épargne réalisée : chaque mois importé, la mensualité au prorata du versement vers l'épargne. */
+function savedFromTransfers(state: State, categoryId: string, upTo: Month): number {
+  const first = versionsOf(state, categoryId)[0]
+  if (!first) return 0
   const scope = categoryScope(state, categoryId)
   const imported = new Set(spendingMonths(state, scope))
   let saved = 0
@@ -54,7 +68,7 @@ export function projectSaved(state: State, project: Project, upTo: Month): numbe
     const { transferred, toSave } = spendingSummary(state, month, scope).savings
     if (toSave > 0) saved += monthly * Math.min(1, Math.max(0, transferred) / toSave)
   }
-  return cents(saved)
+  return saved
 }
 
 /** Le mois où l'épargne d'un projet part, vue de `month` : ce mois-ci, ou sa date de début si elle est plus tard. */

@@ -267,7 +267,9 @@ n'est plus proposée pour ranger une opération, et une règle apprise n'y range
 toute dépense « plus budgétée »). Sa ligne montre sa
 **complétion** : l'épargne réellement versée — chaque mois importé, sa mensualité au prorata du
 « Versement épargne » de ce mois face au « à épargner » (plafonné à 100 %) ; un mois non importé
-ne compte pas. Payé après sa cible, l'achat se juge sur sa dernière mensualité, pas en dépassement
+ne compte pas. Ce qui est déjà **payé** — les opérations rangées sur le projet — compte aussi, s'il
+dépasse cette épargne : un projet qui se paie en plusieurs fois (une régularisation d'impôts)
+avance de chaque prélèvement, et un achat payé avec l'argent mis de côté ne compte pas deux fois. Payé après sa cible, l'achat se juge sur sa dernière mensualité, pas en dépassement
 (`src/lib/projects.ts`).
 
 ## Interface

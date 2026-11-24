@@ -57,6 +57,16 @@ describe('projets épargnés', () => {
     expect(projectSaved(transfer(active, '2026-10', 2), project(active), '2026-11')).toBeCloseTo(65.17, 2)
   })
 
+  it('avance aussi de ce qui est déjà payé, sans compter deux fois l’achat payé avec l’épargne', () => {
+    let state = transfer(activateProject(withProject(), 'nas', SAVE, '2026-10', 'c-nas', T), '2026-10', 1)
+    // Un prélèvement de 289 € rangé sur le projet : il compte, plus que les 65,17 € épargnés.
+    state = importStatement(state, [{ date: '2026-10-25', label: 'PRLV SEPA DGFIP SOLDE IMPOT', amount: 289 }], T).state
+    state = placeTransaction(state, state.transactions.at(-1)!.id, { categoryId: 'c-nas' }, T)
+    expect(projectSaved(state, project(state), '2026-10')).toBe(289)
+    // Avant ce mois, rien n'est payé.
+    expect(projectSaved(state, project(state), '2026-09')).toBe(0)
+  })
+
   it('recalcule la mensualité sur le reste quand le projet change', () => {
     let state = transfer(activateProject(withProject(), 'nas', SAVE, '2026-10', 'c-nas', T), '2026-10', 1)
     state = { ...state, projects: state.projects.map((p) => (p.id === 'nas' ? { ...p, items: [{ id: 'a', label: 'NAS', amount: 600 }] } : p)) }
