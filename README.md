@@ -175,18 +175,18 @@ montant, à quatre jours près) en gardant son rangement. Une capture n'ajoute p
 a déjà.
 En tête de l'écran Mois, le graphique dit, mois par mois, le dépensé dans son budget, et en rouge
 ce qui le dépasse (cf. plus haut). Dans
-un mois déplié, sous ses revenus, ses dépenses montrent d'abord les opérations **à ranger** — chacune avec, à droite de son montant, un bouton-icône (un dossier « + », `fa-folder_plus`) qui ouvre la liste des
-dépenses, chacune avec son icône (le sélecteur natif de l'iPhone ne montre que du texte), sous
-une **recherche** active dès l'ouverture, clavier levé (accents ignorés ; Entrée prend la
-première) —, puis
-chaque **catégorie en bouton section** — seulement celles où il y a eu des opérations ce mois-ci, et dedans seulement ces dépenses-là : repliée, une ligne, son écart au budget (en vert
-en deçà, en rouge au-delà, « = » pile dessus) et son nombre de dépenses en dépassement ; dépliée, ses dépenses, chacune un bouton section qui déplie ses opérations. Une
-catégorie ouverte à la fois. Les imprévus, les catégories à épargner (jugées sur leur période) et ce
-qui n'est **pas une dépense** (versements sur le compte commun, virements internes ; un versement reçu
-par virement l'est d'office) suivent le même modèle. Une opération rangée garde, à droite de son montant,
-un bouton-icône qui rouvre le choix : l'icône de sa dépense (un dossier si elle n'en a pas, un
-éclair pour un imprévu, une tirelire pour l'épargne, un sens interdit pour ce qui n'est pas une
-dépense), le nom restant dans le libellé du bouton.
+un mois déplié, sous ses revenus, ses dépenses sont une **simple liste des opérations**, la plus
+récente en haut — celles du compte, et celles d'autres comptes rangées dans une dépense de ce
+budget —, sans regroupement par catégorie. Une opération **à ranger** est en **rouge** ; un
+**imprévu** a son montant en rouge, en **vert** si c'est un crédit (un crédit s'écrit « +30,00 € »).
+À droite de chaque montant, un bouton-icône ouvre le choix de rangement : un dossier « + »
+(`fa-folder_plus`) à ranger ; rangée, l'icône de sa dépense (un dossier si elle n'en a pas, un
+éclair pour un imprévu, une tirelire pour l'épargne, un sens interdit pour ce qui n'est **pas une
+dépense** — versements sur le compte commun, virements internes ; un versement reçu par virement
+l'est d'office), le nom restant dans le libellé du bouton. Le choix est la liste des dépenses,
+chacune avec son icône (le sélecteur natif de l'iPhone ne montre que du texte), sous une
+**recherche** active dès l'ouverture, clavier levé (accents ignorés ; Entrée prend la première).
+Le budget face au dépensé, lui, se lit dans le graphique et l'en-tête du mois.
 
 Ranger une opération dans une dépense **apprend son marchand** — le libellé sans la date
 d'achat, la carte ni les numéros (« SUPERMARCHE DU PORT », « OPERATEUR MOBILE ») ; un virement garde sa

@@ -1108,31 +1108,6 @@ body,
   gap: 22px;
 }
 
-.spending-block h3 {
-  margin: 0 0 10px;
-  font-size: 15px;
-}
-
-.spending-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-/* Dans le bloc Épargne : les catégories à épargner, sous le versement du mois. */
-.savings-groups {
-  margin-top: 18px;
-}
-
-.spend-versus {
-  font-weight: 600;
-}
-
-.spend-versus .muted {
-  font-weight: 400;
-}
-
 /* L'écart au budget : en rouge au-delà, en vert en deçà. Le DS n'a pas de vert : une teinte
    lisible sur chaque fond, plus claire sur le fond sombre. */
 :root {
@@ -1155,6 +1130,12 @@ body,
 
 .spend-under {
   color: var(--spend-under);
+}
+
+/* Une opération à ranger : toute la ligne en rouge. */
+.tx-unsorted .tx-label,
+.tx-unsorted .numeric {
+  color: var(--color-danger);
 }
 
 .tx-list {
