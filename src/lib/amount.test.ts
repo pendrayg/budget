@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeAmount, judgedMonths, monthlyAmount } from './amount'
+import { describeAmount, judgedMonths, monthlyAmount, periodAllowance } from './amount'
 
 describe('monthlyAmount', () => {
   it('ramène chaque périodicité au mois', () => {
@@ -24,10 +24,10 @@ describe('monthlyAmount', () => {
 })
 
 describe('budget semestriel', () => {
-  it('se ramène au mois sur six mois, en tout ou pour un item, et se juge sur l’année', () => {
+  it('se ramène au mois sur six mois, en tout ou pour un item, et se juge par semestre', () => {
     expect(monthlyAmount({ kind: 'semiannual', value: 600 }, '2026-10')).toBe(100)
     expect(monthlyAmount({ kind: 'items', items: [{ label: 'Entretien chaudière', amount: 90, period: 'semiannual' }] }, '2026-10')).toBe(15)
-    expect(judgedMonths({ kind: 'semiannual', value: 600 })).toBe(12)
+    expect(judgedMonths({ kind: 'semiannual', value: 600 })).toBe(6)
   })
 })
 
@@ -43,9 +43,9 @@ describe('budget sur 2 ans', () => {
     expect(judgedMonths({ kind: 'annual', value: 120 })).toBe(12)
   })
 
-  it('se juge sur l’année glissante, ou sur sa durée au mois', () => {
-    expect(judgedMonths({ kind: 'quarterly', value: 90 })).toBe(12)
-    expect(judgedMonths({ kind: 'items', items: [{ label: 'Coupe', amount: 22, period: 'quarterly' }, { label: 'Couleur', amount: 140, period: 'semiannual' }] })).toBe(12)
+  it('se juge par sa période, la plus longue de ses items, ou sur sa durée au mois', () => {
+    expect(judgedMonths({ kind: 'quarterly', value: 90 })).toBe(3)
+    expect(judgedMonths({ kind: 'items', items: [{ label: 'Coupe', amount: 22, period: 'quarterly' }, { label: 'Couleur', amount: 140, period: 'semiannual' }] })).toBe(6)
     expect(judgedMonths({ kind: 'items', items: [{ label: 'Abonnement', amount: 10 }] })).toBeNull()
     expect(judgedMonths({ kind: 'monthly', value: 231.6 })).toBeNull()
   })
@@ -63,5 +63,14 @@ describe('prix par jour', () => {
   it('se décrit en clair', () => {
     expect(describeAmount(cantine, (value) => `${value} €`)).toBe('4.5 € par jour, lundi, mardi, jeudi et vendredi, sauf jours fériés et vacances zone B')
     expect(describeAmount({ ...cantine, duringSchoolHolidays: true }, (value) => `${value} €`)).toBe('4.5 € par jour, lundi, mardi, jeudi et vendredi, pendant les vacances zone B, sauf jours fériés')
+  })
+})
+
+describe('enveloppe d’une dépense à épargner', () => {
+  it('reçoit le montant de chaque item au début de chacune de ses périodes', () => {
+    const coiffeur = { kind: 'items' as const, items: [{ label: 'Coupe', amount: 22, period: 'quarterly' as const }, { label: 'Couleur', amount: 140, period: 'semiannual' as const }] }
+    expect([0, 1, 2, 3, 4, 5, 6].map((index) => periodAllowance(coiffeur, index, '2026-10'))).toEqual([162, 0, 0, 22, 0, 0, 162])
+    expect(periodAllowance({ kind: 'annual', value: 1200 }, 12, '2026-10')).toBe(1200)
+    expect(periodAllowance({ kind: 'monthly', value: 50 }, 3, '2026-10')).toBe(50)
   })
 })

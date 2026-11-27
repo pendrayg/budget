@@ -1,6 +1,6 @@
 import { budgetAt, versionMonthly, versionsOf } from './budget'
-import { judgedMonths } from './amount'
-import { addMonths } from './month'
+import { judgedMonths, periodAllowance } from './amount'
+import { addMonths, monthsBetween } from './month'
 import type { StatementLine } from './statement'
 import { categoryScope, scopePrefix, type Scope } from './scope'
 import { firstBudgetMonth, sortedGroups } from './summary'
@@ -310,17 +310,43 @@ const sum = (values: number[]) => values.reduce((total, value) => total + value,
 const OVER = 0.005
 
 /**
- * Une dépense PÉRIODIQUE à épargner (trimestrielle, annuelle, en items…) se juge sur sa période,
- * jusqu'au mois : le payé dans la fenêtre face à son budget de chacun de ces mois — celui du mois
- * jugé, appliqué à toute la fenêtre : une dépense annuelle née ce mois-ci et payée aussitôt ne
- * dépasse pas.
+ * Une dépense PÉRIODIQUE à épargner (trimestrielle, annuelle, en items…) se juge en ENVELOPPE :
+ * chacune de ses périodes y apporte son montant, chaque paiement en retire ; elle dépasse quand
+ * l'enveloppe passe sous zéro. Un trajet semestriel de 120 € : 140 € puis 120 € le semestre
+ * suivant dépassent de 20 € — le dépassement reste —, un troisième trajet dans l'année dépasse.
+ * L'enveloppe part de la première version de la dépense, ou du premier relevé du compte s'il est
+ * plus tard : avant, on ne sait pas ce qui a été payé. Un paiement rangé là d'avant la première
+ * version la fait partir de lui, sur ce premier budget.
  */
-function judgedOverPeriod(state: State, categoryId: string, judged: BudgetVersion, months: number, month: Month, budgetMonth: Month) {
-  const start = addMonths(month, -(months - 1))
-  const spent = sum(state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) >= start && t.date.slice(0, 7) <= month).map((t) => t.amount))
-  // Mois par mois : un prix par jour ne coûte pas autant en août qu'en mars.
-  const budget = Array.from({ length: months }, (_, back) => versionMonthly(judged, addMonths(budgetMonth, -back))).reduce((a, b) => a + b, 0)
-  return { months, spent, budget }
+function judgedAsEnvelope(state: State, categoryId: string, month: Month, scope: Scope) {
+  const first = versionsOf(state, categoryId).find((version) => version.amount.kind !== 'none')
+  if (!first) return { months: 1, spent: 0, budget: 0 }
+  const paid = state.transactions.filter((t) => t.categoryId === categoryId)
+  const firstPaid = paid.map((t) => t.date.slice(0, 7)).sort()[0]
+  const firstStatement = spendingMonths(state, scope).at(-1)
+  const start = firstPaid && firstPaid < first.from ? firstPaid : firstStatement && firstStatement > first.from ? firstStatement : first.from
+  // Les périodes partent du début de l'enveloppe, ou du mois où la dépense a changé de rythme
+  // (de 50 € par mois à des items trimestriels) : un simple changement de montant ne les relance pas.
+  const versions = versionsOf(state, categoryId)
+  const rhythm = (index: number) => judgedMonths(versions[index].amount)
+  const anchorOf = (version: BudgetVersion) => {
+    let index = versions.indexOf(version)
+    while (index > 0 && rhythm(index - 1) === rhythm(index)) index -= 1
+    // Le rythme de la première version part du début de l'enveloppe, même s'il la précède (un
+    // paiement d'avant elle) ou la suit (le premier relevé).
+    return index === 0 || versions[index].from < start ? start : versions[index].from
+  }
+  let budget = 0
+  let months = 0
+  for (let at = start; at <= month; at = addMonths(at, 1)) {
+    const version = budgetAt(state, categoryId, at) ?? (at < first.from ? first : undefined)
+    // Avant sa première version (un paiement d'avant), la dépense compte depuis le début de l'enveloppe.
+    const anchor = version ? anchorOf(version) : start
+    if (version) budget += periodAllowance(version.amount, monthsBetween(anchor > at ? start : anchor, at) - 1, at)
+    months += 1
+  }
+  const spent = sum(paid.filter((t) => t.date.slice(0, 7) >= start && t.date.slice(0, 7) <= month).map((t) => t.amount))
+  return { months: Math.max(1, months), spent, budget }
 }
 
 /**
@@ -388,7 +414,7 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
         const judged = budget > 0 ? version : versionsOf(state, category.id).filter((v) => v.from <= budgetMonth && v.amount.kind !== 'none').at(-1)
         const period = judged ? judgedMonths(judged.amount) : 12
         const life = period === null
-        const { months, spent: yearSpent, budget: yearBudget } = life ? judgedOverLife(state, category.id, budgetMonth) : judgedOverPeriod(state, category.id, judged!, period, month, budgetMonth)
+        const { months, spent: yearSpent, budget: yearBudget } = life ? judgedOverLife(state, category.id, budgetMonth) : judgedAsEnvelope(state, category.id, month, scope)
         // Sur sa durée, chaque mensualité arrondie au centime peut manquer d'un centime au total.
         const slack = OVER + (life ? 0.01 * months : 0)
         lines.push({ category, budget, spent, transactions: own, year: { spent: yearSpent, budget: yearBudget, months }, over: yearSpent > yearBudget + slack })

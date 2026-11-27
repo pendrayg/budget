@@ -213,10 +213,14 @@ ce premier budget. Un mois importé par erreur se supprime au bas de son dépli.
 faut **mettre de côté chaque mois** (et la part de chacun), à virer sur le compte épargne. Dans un mois, le bloc
 **Épargne** compare le virement du mois vers l'épargne — rangé en « Versement épargne », appris
 comme le reste — à cette somme. Le paiement annuel, lui, sort du compte commun le mois où il tombe :
-il ne compte **pas** dans le dépensé du mois (l'épargne le couvre), et se juge sur l'**année
-glissante** (vingt-quatre mois pour un budget sur 2 ans, en tout ou pour l'un de ses items) : les
-paiements de ces derniers mois face à autant de fois son mensuel. Un trajet semestriel de 120 € a
-240 € par an : deux trajets à 140 € et 120 € dépassent de 20 €, un troisième dans l'année dépasse. Une dépense à épargner **au mois** (l'épargne d'un projet,
+il ne compte **pas** dans le dépensé du mois (l'épargne le couvre), et se juge en
+**enveloppe, par sa période** : chacune de ses périodes (trois mois, six, douze, vingt-quatre ;
+chaque item à son rythme) y apporte son montant, chaque paiement en retire, et elle dépasse quand
+l'enveloppe passe sous zéro. Un trajet semestriel de 120 € : 140 € puis 120 € le semestre suivant
+dépassent de 20 € — le dépassement reste —, un troisième trajet dans l'année dépasse. L'enveloppe
+part de la première version de la dépense, ou du premier relevé du compte s'il est plus tard (avant,
+on ne sait pas ce qui a été payé) ; ses périodes repartent quand la dépense change de rythme (de
+50 € par mois à des items trimestriels), pas pour un simple changement de montant. Une dépense à épargner **au mois** (l'épargne d'un projet,
 une régularisation d'impôts) se juge sur **sa durée** : de sa première mensualité à la dernière
 (la cible d'un projet), ou jusqu'au mois si elle n'a pas de fin, chaque mois sur son propre budget —
 payée en plusieurs fois ou d'un coup à la fin, elle se juge sur son total. Seul un dépassement

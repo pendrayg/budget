@@ -37,20 +37,30 @@ export const PERIOD_SHORT: Record<Period, string> = {
 }
 
 /**
- * Sur combien de mois juger ce qu'on a payé pour une dépense à épargner périodique : l'année
- * glissante — vingt-quatre mois pour un budget sur 2 ans (en tout ou pour l'un de ses items). Un
- * trajet semestriel de 120 € a 240 € par an : deux trajets à 140 € et 120 € dépassent de 20 €, un
- * troisième dans l'année dépasse. `null` pour un montant au mois (ou par jour) : il se juge sur sa
- * durée (cf. `spendingSummary`), comme l'épargne d'un projet.
+ * Comment juger ce qu'on a payé pour une dépense à épargner : sa période (3, 6, 12, 24 mois ; la
+ * plus longue de ses items) pour une dépense PÉRIODIQUE, jugée en enveloppe (cf. `periodAllowance`
+ * et `spendingSummary`) ; `null` pour un montant au mois (ou par jour), jugé sur sa durée comme
+ * l'épargne d'un projet.
  */
 export function judgedMonths(amount: Amount): number | null {
   if (amount.kind === 'items') {
-    const periods = amount.items.map((item) => PERIOD_DIVISOR[item.period ?? 'monthly'])
-    if (periods.every((months) => months === 1)) return null
-    return periods.some((months) => months > 12) ? 24 : 12
+    const longest = Math.max(...amount.items.map((item) => PERIOD_DIVISOR[item.period ?? 'monthly']))
+    return longest > 1 ? longest : null
   }
   if (amount.kind === 'monthly' || amount.kind === 'days' || amount.kind === 'none') return null
-  return amount.kind === 'biennial' ? 24 : 12
+  return PERIOD_DIVISOR[amount.kind]
+}
+
+/**
+ * Ce qu'une dépense à épargner apporte à son enveloppe le `index`-ième mois depuis qu'on la suit
+ * (0 le premier) : son montant au début de chacune de ses périodes — tous les six mois pour un
+ * semestriel, chaque item à son rythme —, son prix du mois pour un montant au mois ou par jour.
+ */
+export function periodAllowance(amount: Amount, index: number, month: Month): number {
+  if (amount.kind === 'none') return 0
+  if (amount.kind === 'days') return monthlyAmount(amount, month)
+  if (amount.kind === 'items') return amount.items.reduce((sum, item) => sum + (index % PERIOD_DIVISOR[item.period ?? 'monthly'] === 0 ? item.amount : 0), 0)
+  return index % PERIOD_DIVISOR[amount.kind] === 0 ? amount.value : 0
 }
 
 /**

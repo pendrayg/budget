@@ -276,7 +276,7 @@ describe('dépense à épargner sur 2 ans', () => {
     state = importStatement(state, [{ date: '2026-10-15', label: 'PRLV SEPA DGFIP IMPOT FONCIER', amount: 960 }], 't').state
     state = placeTransaction(state, state.transactions[0].id, { categoryId: taxe }, 't2')
     const line = spendingSummary(state, '2026-10').savings.sections.flatMap((s) => s.lines).find((l) => l.category.id === taxe)!
-    expect(line.year).toEqual({ spent: 960, budget: 960, months: 24 })
+    expect(line.year).toEqual({ spent: 960, budget: 960, months: 1 })
     expect(line.over).toBe(false)
   })
 })
@@ -341,7 +341,7 @@ describe('un relevé perso qui porte une dépense du foyer', () => {
 })
 
 describe('une dépense à épargner périodique', () => {
-  // Un trajet en Bretagne, 120 € par semestre : 240 € par an.
+  // Un trajet en Bretagne, 120 € par semestre, suivi depuis janvier 2026.
   function bretagne() {
     const group = seedState().groups.find((g) => g.save)!
     return addCategory(seedState(), { id: 'bzh', name: 'Bretagne', updatedAt: 't' }, { categoryId: 'bzh', from: '2026-01', groupId: group.id, splitKeyId: group.splitKeyId, amount: { kind: 'semiannual', value: 120 }, save: true, updatedAt: 't' })
@@ -352,15 +352,16 @@ describe('une dépense à épargner périodique', () => {
   }
   const line = (state: ReturnType<typeof bretagne>, month: string) => spendingSummary(state, month).savings.sections.flatMap((s) => s.lines).find((l) => l.category.id === 'bzh')!
 
-  it('se juge sur l’année : deux trajets à 140 € et 120 € dépassent de 20 €', () => {
-    const state = trip(trip(bretagne(), '2026-03-10', 140), '2026-09-10', 120)
-    expect(line(state, '2026-09').year).toMatchObject({ months: 12, spent: 260, budget: 240 })
-    expect(line(state, '2026-09').over).toBe(true)
+  it('se juge en enveloppe : 140 € puis 120 € le semestre suivant dépassent de 20 €, et le dépassement reste', () => {
+    const state = trip(trip(bretagne(), '2026-01-10', 140), '2026-07-10', 120)
+    expect(line(state, '2026-01').year).toMatchObject({ spent: 140, budget: 120 })
+    expect(line(state, '2026-07').year).toMatchObject({ spent: 260, budget: 240 })
+    expect(line(state, '2026-07').over).toBe(true)
   })
 
-  it('un troisième trajet dans l’année dépasse', () => {
-    const state = trip(trip(trip(bretagne(), '2026-02-10', 120), '2026-06-10', 120), '2026-10-10', 120)
-    expect(line(state, '2026-10').over).toBe(true)
-    expect(line(trip(trip(bretagne(), '2026-02-10', 120), '2026-06-10', 120), '2026-06').over).toBe(false)
+  it('un trajet par semestre ne dépasse pas ; un troisième dans l’année, si', () => {
+    const twice = trip(trip(bretagne(), '2026-02-10', 120), '2026-08-10', 120)
+    expect(line(twice, '2026-08').over).toBe(false)
+    expect(line(trip(twice, '2026-11-10', 120), '2026-11').over).toBe(true)
   })
 })
