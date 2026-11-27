@@ -102,6 +102,18 @@ describe('projets épargnés', () => {
     expect(state.transactions.at(-1)!.categoryId).toBeUndefined()
   })
 
+  it('se juge sur son total : l’écart est ce qu’il reste à payer', () => {
+    let state = activateProject(withProject('2027-03'), 'nas', SAVE, '2026-10', 'c-nas', T)
+    for (const date of ['2026-10-20', '2026-11-20']) {
+      state = importStatement(state, [{ date, label: `CARTE BOUTIQUE NAS ${date}`, amount: 100 }], T).state
+      state = placeTransaction(state, state.transactions.at(-1)!.id, { categoryId: 'c-nas' }, T)
+    }
+    const line = spendingSummary(state, '2026-11').savings.sections.flatMap((s) => s.lines).find((l) => l.category.id === 'c-nas')!
+    // 391 € au total, 200 € payés : il reste 191 €.
+    expect(line.year).toMatchObject({ spent: 200, budget: 391 })
+    expect(line.over).toBe(false)
+  })
+
   it('ne compte pas en dépassement l’achat payé après la cible', () => {
     let state = activateProject(withProject('2026-12'), 'nas', SAVE, '2026-10', 'c-nas', T)
     state = importStatement(state, [{ date: '2027-01-15', label: 'CARTE 14/01/27 BOUTIQUE NAS CB*1234', amount: 391 }], T).state

@@ -4,7 +4,7 @@ import { addMonths, monthsBetween } from './month'
 import type { StatementLine } from './statement'
 import { categoryScope, scopePrefix, type Scope } from './scope'
 import { firstBudgetMonth, sortedGroups } from './summary'
-import type { BudgetGroup, BudgetVersion, Category, MatchRule, Month, State, Transaction } from './types'
+import type { BudgetGroup, BudgetVersion, Category, MatchRule, Month, Project, State, Transaction } from './types'
 
 /**
  * L'état des lieux : ce qu'on a VRAIMENT dépensé, mois par mois, d'après les relevés du compte
@@ -350,6 +350,18 @@ function judgedAsEnvelope(state: State, categoryId: string, month: Month, scope:
 }
 
 /**
+ * La dépense d'un PROJET se juge sur le projet : tout ce qui a été payé jusqu'au mois face à son
+ * total. L'écart est ce qu'il reste à payer (en vert), ou ce qui le dépasse (en rouge) — et non la
+ * somme de ses mensualités, qui ne tombe pas sur le total dès qu'elles ont été recalculées.
+ */
+function judgedAgainstProject(state: State, categoryId: string, project: Project, month: Month) {
+  const first = versionsOf(state, categoryId)[0]?.from ?? month
+  const spent = sum(state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) <= month).map((t) => t.amount))
+  const budget = sum(project.items.map((item) => item.amount))
+  return { months: Math.max(1, monthsBetween(first, month)), spent, budget }
+}
+
+/**
  * Une dépense à épargner AU MOIS — l'épargne d'un projet, une régularisation d'impôts — se juge sur
  * sa durée : de sa première mensualité à la dernière (la cible d'un projet), ou jusqu'au mois si
  * elle n'a pas de fin. Le payé de toute cette durée face à ses mensualités, chacune à son mois : un
@@ -414,7 +426,12 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
         const judged = budget > 0 ? version : versionsOf(state, category.id).filter((v) => v.from <= budgetMonth && v.amount.kind !== 'none').at(-1)
         const period = judged ? judgedMonths(judged.amount) : 12
         const life = period === null
-        const { months, spent: yearSpent, budget: yearBudget } = life ? judgedOverLife(state, category.id, budgetMonth) : judgedAsEnvelope(state, category.id, month, scope)
+        const project = state.projects.find((p) => p.budget?.categoryId === category.id)
+        const { months, spent: yearSpent, budget: yearBudget } = project
+          ? judgedAgainstProject(state, category.id, project, month)
+          : life
+            ? judgedOverLife(state, category.id, budgetMonth)
+            : judgedAsEnvelope(state, category.id, month, scope)
         // Sur sa durée, chaque mensualité arrondie au centime peut manquer d'un centime au total.
         const slack = OVER + (life ? 0.01 * months : 0)
         lines.push({ category, budget, spent, transactions: own, year: { spent: yearSpent, budget: yearBudget, months }, over: yearSpent > yearBudget + slack })

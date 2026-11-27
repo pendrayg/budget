@@ -219,10 +219,12 @@ l'enveloppe passe sous zéro. Un trajet semestriel de 120 € : 140 € puis 120
 dépassent de 20 € — le dépassement reste —, un troisième trajet dans l'année dépasse. L'enveloppe
 part de la première version de la dépense, ou du premier relevé du compte s'il est plus tard (avant,
 on ne sait pas ce qui a été payé) ; ses périodes repartent quand la dépense change de rythme (de
-50 € par mois à des items trimestriels), pas pour un simple changement de montant. Une dépense à épargner **au mois** (l'épargne d'un projet,
-une régularisation d'impôts) se juge sur **sa durée** : de sa première mensualité à la dernière
-(la cible d'un projet), ou jusqu'au mois si elle n'a pas de fin, chaque mois sur son propre budget —
-payée en plusieurs fois ou d'un coup à la fin, elle se juge sur son total. Seul un dépassement
+50 € par mois à des items trimestriels), pas pour un simple changement de montant. La dépense d'un **projet** se juge sur
+**le total du projet** : tout ce qui a été payé jusqu'au mois face à ce total, l'écart étant ce qu'il
+reste à payer (une régularisation d'impôts à 1 158 €, 867 € prélevés : −291 €) — payé en plusieurs
+fois ou d'un coup à la fin. Une autre dépense à épargner **au mois** se juge sur **sa durée** : de sa
+première mensualité à la dernière, ou jusqu'au mois si elle n'a pas de fin, chaque mois sur son
+propre budget. Seul un dépassement
 sur cette période passe en rouge. L'en-tête d'un mois compare donc le courant dépensé plus
 le versé sur l'épargne au courant budgété plus le « à mettre de côté ».
 
