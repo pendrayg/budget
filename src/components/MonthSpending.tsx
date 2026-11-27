@@ -99,12 +99,15 @@ const lineDelta = (line: SpendingLine) => (line.year ? line.year.spent - line.ye
 
 /**
  * Le récap du mois, en tête de ses opérations : le total face au budget, puis chaque catégorie qui
- * a eu des opérations ce mois-ci — son écart au budget (sur leur période pour les catégories à
- * épargner) et, dessous en rouge, les dépenses qui dépassent —, puis les imprévus.
+ * a eu des opérations ce mois-ci — son écart au budget du mois et, dessous en rouge, les dépenses
+ * qui dépassent —, puis les imprévus. Une catégorie à épargner se juge au mois sur le VERSEMENT vers
+ * l'épargne face à ce qu'il faut y mettre de côté (sa part du versement, s'il y en a plusieurs) ;
+ * ses dépenses, elles, dépassent ou non sur leur période.
  */
 function SpendingRecap({ summary }: { summary: SpendingSummary }) {
   const used = (lines: SpendingLine[]) => lines.some((line) => line.transactions.length > 0)
-  const sections = [...summary.sections, ...summary.savings.sections].filter((section) => used(section.lines))
+  const { transferred, toSave } = summary.savings
+  const sections = [...summary.sections, ...summary.savings.sections].filter((section) => used(section.lines) || (section.group.save && transferred !== 0))
   return (
     <dl className="figures spend-recap">
       <div className="figure-row spend-recap-total">
@@ -114,8 +117,8 @@ function SpendingRecap({ summary }: { summary: SpendingSummary }) {
         </dd>
       </div>
       {sections.map((section) => {
-        const spent = section.group.save ? section.lines.reduce((s, l) => s + (l.year?.spent ?? 0), 0) : section.spent
-        const budget = section.group.save ? section.lines.reduce((s, l) => s + (l.year?.budget ?? 0), 0) : section.budget
+        const spent = section.group.save ? (toSave > 0 ? (transferred * section.budget) / toSave : 0) : section.spent
+        const budget = section.budget
         const over = section.lines.filter((line) => line.over && line.transactions.length > 0)
         return (
           <div className="figure-row" key={section.group.id}>
