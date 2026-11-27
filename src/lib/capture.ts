@@ -69,12 +69,25 @@ export function parseDay(text: string, today: string): string | null {
   return Number.isNaN(Date.parse(`${date}T00:00:00Z`)) || new Date(`${date}T00:00:00Z`).getUTCDate() !== day ? null : date
 }
 
-/** « -7,00 € », « +289,50 € », « 1 234,56 € » : le montant au sens d'un relevé — positif un débit, négatif un crédit. Sans signe lu, un débit. */
+/**
+ * « -7,00 € », « +289,50 € », « 1 234,56 € » : le montant au sens d'un relevé — positif un débit,
+ * négatif un crédit. Sans signe lu, un débit. L'OCR perd parfois le « € », ou la virgule : un
+ * montant affiché a toujours ses deux décimales, une suite d'au moins trois chiffres se lit donc
+ * en centimes (« 18138 » : 181,38 €).
+ */
 export function parseAmount(text: string): number | null {
-  const match = /([+-]?)\s*(\d{1,3}(?:[\s.  ]?\d{3})*),(\d{2})\s*€/.exec(text.replace(/[‐‑–—−]/g, '-'))
-  if (!match) return null
-  const value = Number(`${match[2].replace(/[\s.  ]/g, '')}.${match[3]}`)
-  return match[1] === '+' ? -value : value
+  const clean = text.replace(/[‐‑–—−]/g, '-')
+  const match = /([+-]?)\s*(\d{1,3}(?:[\s.\u202f\u00a0]?\d{3})*),(\d{2})(?!\d)/.exec(clean)
+  if (match) {
+    const value = Number(`${match[2].replace(/[\s.\u202f\u00a0]/g, '')}.${match[3]}`)
+    return match[1] === '+' ? -value : value
+  }
+  const digits = /^\s*([+-]?)\s*(\d[\d\s\u202f\u00a0]{2,})\s*€?\s*$/.exec(clean)
+  if (!digits) return null
+  const cents = digits[2].replace(/[\s\u202f\u00a0]/g, '')
+  if (cents.length < 3) return null
+  const value = Number(cents) / 100
+  return digits[1] === '+' ? -value : value
 }
 
 const PENDING = /autorisation|en cours/i
@@ -114,8 +127,19 @@ export function parseCapture(read: CaptureRead, today: string): CaptureResult {
     const above = index > 0 ? (anchors[index - 1].at + anchor.at) / 2 : anchor.at - reach
     const below = index < anchors.length - 1 ? (anchor.at + anchors[index + 1].at) / 2 : anchor.at + reach
     const own = read.labels.filter((line) => middle(line) >= above && middle(line) < below).sort((a, b) => a.top - b.top)
-    // Chaque ligne sans ce que l'OCR laisse traîner à sa fin (un « : » pour un « u » coupé, le chevron).
-    const words = own.map((line) => line.text.replace(/[\s:;,.'’“”»>|_-]+$/, '').trim()).filter((text) => text !== '')
+    // Le début d'un gros montant (« +2 » de « +2 535,26 € ») tombe dans la bande des libellés, au
+    // bout d'une ligne : il revient au montant, son signe avec.
+    let amount = anchor.amount
+    const texts = own.map((line) => {
+      const head = /\s([+-]?)(\d{1,3})?\s*$/.exec(line.text)
+      if (!head || (head[1] === '' && !head[2])) return line.text
+      if (head[2] && Math.abs(amount) < 1000) amount = Math.sign(amount || 1) * (Number(head[2]) * 1000 + Math.abs(amount))
+      if (head[1] === '+') amount = -Math.abs(amount)
+      return line.text.slice(0, head.index)
+    })
+    // Chaque ligne sans ce que l'OCR laisse traîner à sa fin : un « : » pour un « u » coupé, le
+    // chevron, les icônes de la barre du bas (des mots sans lettre ni chiffre).
+    const words = texts.map((text) => text.replace(/(?:\s+[^\p{L}\p{N}\s]+)+\s*$/u, '').replace(/[\s:;,.'’“”»>|_—–-]+$/, '').trim()).filter((text) => text !== '')
     if (words.some((text) => PENDING.test(text))) {
       pending += 1
       return
@@ -123,7 +147,26 @@ export function parseCapture(read: CaptureRead, today: string): CaptureResult {
     const label = words.join(' ').replace(/\s+/g, ' ')
     const date = day ?? (firstDay?.kind === 'day' ? firstDay.date : today)
     if (label === '') return
-    lines.push({ date, label, amount: anchor.amount, ...(day ? {} : { dateGuessed: true as const }) })
+    lines.push({ date, label, amount, ...(day ? {} : { dateGuessed: true as const }) })
   })
   return { lines, pending }
+}
+
+const dayGap = (a: string, b: string) => Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000
+
+/**
+ * Les opérations de plusieurs captures qui se chevauchent : une opération lue deux fois n'en fait
+ * qu'une. La même — même libellé, même montant —, le même jour, ou à quelques jours d'une date
+ * devinée (en haut d'une capture, sous un jour hors champ) : on garde la date lue.
+ */
+export function mergeCaptures(captures: CaptureLine[][]): CaptureLine[] {
+  const merged: CaptureLine[] = []
+  for (const line of captures.flat()) {
+    const same = merged.findIndex(
+      (other) => other.label === line.label && other.amount === line.amount && (other.date === line.date || ((other.dateGuessed || line.dateGuessed) && dayGap(other.date, line.date) <= 4)),
+    )
+    if (same < 0) merged.push(line)
+    else if (merged[same].dateGuessed && !line.dateGuessed) merged[same] = line
+  }
+  return merged
 }

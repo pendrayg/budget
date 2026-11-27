@@ -168,7 +168,10 @@ moteur WebAssembly, ~4 Mo, et le français, ~0,7 Mo, servis par l'app — pas de
 la première capture seulement). L'image passe en gris, agrandie et contrastée, et se lit en trois
 bandes : les jours (« Hier », « Jeudi 19 novembre 2026 »), les libellés sans les logos, les
 montants en chiffres seulement (`src/lib/capture.ts`, `src/lib/ocr.ts`). Un paiement « en
-cours » est écarté. Une feuille montre ce qui a été lu — on y retire une ligne mal lue — avant
+cours » est écarté. L'OCR perd parfois le « € » ou la virgule d'un montant : un montant affiché
+ayant toujours deux décimales, une suite de chiffres se lit en centimes ; le début d'un gros
+montant (« +2 » de « +2 535,26 € »), tombé dans la bande des libellés, lui revient. Plusieurs
+captures qui se chevauchent ne comptent qu'une fois une opération lue deux fois. Une feuille montre ce qui a été lu — on y retire une ligne mal lue — avant
 d'importer. Ces opérations sont **provisoires** (« · provisoire » sous leur libellé), rangées
 comme les autres ; le relevé du mois, à son import, **remplace** chacune par la sienne (même
 montant, à quatre jours près) en gardant son rangement. Une capture n'ajoute pas ce que le relevé

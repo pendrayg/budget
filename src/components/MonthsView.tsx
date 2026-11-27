@@ -14,7 +14,7 @@ import IncomeForm from './IncomeForm'
 import MonthSpending, { OverLabel } from './MonthSpending'
 import PlacementSheet from './PlacementSheet'
 import CaptureSheet from './CaptureSheet'
-import { parseCapture, type CaptureLine } from '../lib/capture'
+import { mergeCaptures, parseCapture, type CaptureLine } from '../lib/capture'
 import SpendingChart, { type FillPoint } from './SpendingChart'
 
 /**
@@ -167,15 +167,15 @@ export default function MonthsView({
     try {
       const { readCapture } = await import('../lib/ocr')
       const today = nowIso().slice(0, 10)
-      const found: CaptureLine[] = []
+      const read: CaptureLine[][] = []
       let pending = 0
       for (const file of files) {
         const result = parseCapture(await readCapture(file), today)
-        // Deux captures qui se chevauchent : une opération lue deux fois ne compte qu'une fois.
-        for (const line of result.lines) if (!found.some((l) => l.date === line.date && l.amount === line.amount && l.label === line.label)) found.push(line)
+        read.push(result.lines)
         pending += result.pending
       }
-      setCaptured({ scope, lines: found, pending })
+      // Deux captures qui se chevauchent : une opération lue deux fois ne compte qu'une fois.
+      setCaptured({ scope, lines: mergeCaptures(read), pending })
     } catch {
       setMessage({ scope, tone: 'warn', text: 'La capture n’a pas pu être lue.' })
     } finally {
