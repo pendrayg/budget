@@ -1132,6 +1132,28 @@ body,
   color: var(--spend-under);
 }
 
+/* Le récap du mois : le total d'abord, puis chaque catégorie, ses dépassements dessous. */
+.spend-recap-total dt {
+  color: inherit;
+  font-weight: 600;
+}
+
+.spend-recap dt {
+  min-width: 0;
+}
+
+.spend-recap-over {
+  display: block;
+  font-size: 13px;
+}
+
+/* Une opération sur UNE ligne : le libellé trop long se coupe d'une ellipse. */
+.spending-month .tx-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 /* Une opération à ranger : toute la ligne en rouge. */
 .tx-unsorted .tx-label,
 .tx-unsorted .numeric {

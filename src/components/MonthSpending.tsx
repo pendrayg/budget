@@ -1,7 +1,7 @@
 import { DeleteButton } from '../ds'
-import { formatEuro } from '../lib/format'
+import { formatEuro, formatEuroDelta } from '../lib/format'
 import { monthLabel } from '../lib/month'
-import { displayLabel, removeMonth, spendingSummary } from '../lib/spending'
+import { displayLabel, removeMonth, spendingSummary, type SpendingLine, type SpendingSummary } from '../lib/spending'
 import type { CategoryIcon, Month, State, Transaction } from '../lib/types'
 import GlyphIconButton from './GlyphIconButton'
 import { categoriesOf, type Scope } from '../lib/scope'
@@ -48,19 +48,21 @@ function TransactionRow({ transaction, state, unsorted, onPlace }: { transaction
 }
 
 /**
- * Les opérations d'un mois, dans son bouton section (cf. MonthsView) : une simple liste, la plus
+ * Les opérations d'un mois, dans son bouton section (cf. MonthsView) : le récap au budget, puis une simple liste, la plus
  * récente en haut — celles du compte, et celles d'autres comptes rangées dans une dépense de ce
  * budget. Chacune se range d'un appui sur son bouton-icône. Une opération à ranger est en rouge ;
  * un imprévu a son montant en rouge, en vert si c'est un crédit.
  */
 export default function MonthSpending({ state, month, scope, update, onPlace }: { state: State; month: Month; scope: Scope; update: Update; onPlace: (transaction: Transaction) => void }) {
-  const unsorted = new Set(spendingSummary(state, month, scope).unsorted.map((t) => t.id))
+  const summary = spendingSummary(state, month, scope)
+  const unsorted = new Set(summary.unsorted.map((t) => t.id))
   const here = new Set(categoriesOf(state, scope).map((category) => category.id))
   const transactions = state.transactions
     .filter((t) => t.date.startsWith(month) && ((t.owner ?? null) === scope || (t.categoryId !== undefined && here.has(t.categoryId))))
     .sort((a, b) => b.date.localeCompare(a.date) || a.label.localeCompare(b.label))
   return (
     <div className="spending-month">
+      <SpendingRecap summary={summary} />
       <ul className="tx-list">
         {transactions.map((t) => (
           <TransactionRow key={t.id} transaction={t} state={state} unsorted={unsorted.has(t.id)} onPlace={onPlace} />
@@ -70,6 +72,74 @@ export default function MonthSpending({ state, month, scope, update, onPlace }: 
         <DeleteButton withLabel label="Supprimer les opérations du mois" confirmLabel={`Confirmer : supprimer les opérations de ${monthLabel(month)}`} onDelete={() => update((s) => removeMonth(s, month, scope))} />
       </div>
     </div>
+  )
+}
+
+/**
+ * L'écart au budget plutôt que les deux montants : « −120,00 € » en vert en deçà, « +190,36 € » en
+ * rouge au-delà, « = » pile dessus.
+ */
+function Delta({ spent, budget, over = spent > budget + 0.005 }: { spent: number; budget: number; over?: boolean }) {
+  const delta = spent - budget
+  const tone = over ? ' spend-over' : delta < -0.005 ? ' spend-under' : ''
+  return (
+    <span className={`numeric${tone}`}>
+      {/* Pile sur le budget : un « = » plutôt qu'un « 0,00 € » qu'on lirait comme rien dépensé. */}
+      {Math.abs(delta) < 0.005 ? '=' : formatEuroDelta(delta)}
+      <span className="ds-visually-hidden">
+        {' '}
+        par rapport au budget : {formatEuro(spent)} sur {formatEuro(budget)}
+      </span>
+    </span>
+  )
+}
+
+/** L'écart d'une dépense : au mois, ou sur sa période pour une dépense à épargner. */
+const lineDelta = (line: SpendingLine) => (line.year ? line.year.spent - line.year.budget : line.spent - line.budget)
+
+/**
+ * Le récap du mois, en tête de ses opérations : le total face au budget, puis chaque catégorie qui
+ * a eu des opérations ce mois-ci — son écart au budget (sur leur période pour les catégories à
+ * épargner) et, dessous en rouge, les dépenses qui dépassent —, puis les imprévus.
+ */
+function SpendingRecap({ summary }: { summary: SpendingSummary }) {
+  const used = (lines: SpendingLine[]) => lines.some((line) => line.transactions.length > 0)
+  const sections = [...summary.sections, ...summary.savings.sections].filter((section) => used(section.lines))
+  return (
+    <dl className="figures spend-recap">
+      <div className="figure-row spend-recap-total">
+        <dt>Total</dt>
+        <dd>
+          <Delta spent={summary.spent} budget={summary.budget} />
+        </dd>
+      </div>
+      {sections.map((section) => {
+        const spent = section.group.save ? section.lines.reduce((s, l) => s + (l.year?.spent ?? 0), 0) : section.spent
+        const budget = section.group.save ? section.lines.reduce((s, l) => s + (l.year?.budget ?? 0), 0) : section.budget
+        const over = section.lines.filter((line) => line.over && line.transactions.length > 0)
+        return (
+          <div className="figure-row" key={section.group.id}>
+            <dt>
+              {section.group.name}
+              {over.length > 0 && (
+                <small className="spend-recap-over spend-over">
+                  {over.map((line) => `${line.category.name} ${formatEuroDelta(lineDelta(line))}`).join(' · ')}
+                </small>
+              )}
+            </dt>
+            <dd>
+              <Delta spent={spent} budget={budget} />
+            </dd>
+          </div>
+        )
+      })}
+      {summary.unplanned.length > 0 && (
+        <div className="figure-row">
+          <dt>Imprévus</dt>
+          <dd className="numeric">{formatEuro(summary.unplannedTotal)}</dd>
+        </div>
+      )}
+    </dl>
   )
 }
 

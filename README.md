@@ -178,8 +178,12 @@ montant, à quatre jours près) en gardant son rangement. Une capture n'ajoute p
 a déjà.
 En tête de l'écran Mois, le graphique dit, mois par mois, le dépensé dans son budget, et en rouge
 ce qui le dépasse (cf. plus haut). Dans
-un mois déplié, sous ses revenus, ses dépenses sont une **simple liste des opérations**, la plus
-récente en haut — celles du compte, et celles d'autres comptes rangées dans une dépense de ce
+un mois déplié, sous ses revenus, ses dépenses s'ouvrent sur un **récap** : le total du mois face
+au budget (en vert en deçà, en rouge au-delà, « = » pile dessus), puis chaque **catégorie qui a eu
+des opérations ce mois-ci**, son écart au budget (sur leur période pour les catégories à épargner)
+et, dessous en rouge, les dépenses qui dépassent avec leur dépassement (« Courses +340,76 € »),
+puis les imprévus. Viennent ensuite les opérations, en **simple liste**, une par ligne (un libellé
+trop long se coupe d'une ellipse), la plus récente en haut — celles du compte, et celles d'autres comptes rangées dans une dépense de ce
 budget —, sans regroupement par catégorie. Une opération **à ranger** est en **rouge** ; un
 **imprévu** a son montant en rouge, en **vert** si c'est un crédit (un crédit s'écrit « +30,00 € »).
 À droite de chaque montant, un bouton-icône ouvre le choix de rangement : un dossier « + »
@@ -189,7 +193,6 @@ dépense** — versements sur le compte commun, virements internes ; un versemen
 l'est d'office), le nom restant dans le libellé du bouton. Le choix est la liste des dépenses,
 chacune avec son icône (le sélecteur natif de l'iPhone ne montre que du texte), sous une
 **recherche** active dès l'ouverture, clavier levé (accents ignorés ; Entrée prend la première).
-Le budget face au dépensé, lui, se lit dans le graphique et l'en-tête du mois.
 
 Ranger une opération dans une dépense **apprend son marchand** — le libellé sans la date
 d'achat, la carte ni les numéros (« SUPERMARCHE DU PORT », « OPERATEUR MOBILE ») ; un virement garde sa
