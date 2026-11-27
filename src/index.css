@@ -1132,7 +1132,7 @@ body,
   color: var(--spend-under);
 }
 
-/* Le récap du mois : le total d'abord, puis chaque catégorie, ses dépassements dessous. */
+/* Le récap du mois : le total d'abord, puis chaque dépense du mois. */
 .spend-recap-total dt {
   color: inherit;
   font-weight: 600;
@@ -1140,11 +1140,6 @@ body,
 
 .spend-recap dt {
   min-width: 0;
-}
-
-.spend-recap-over {
-  display: block;
-  font-size: 13px;
 }
 
 /* Une opération sur UNE ligne : le libellé trop long se coupe d'une ellipse. */
