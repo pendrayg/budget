@@ -180,7 +180,8 @@ En tête de l'écran Mois, le graphique dit, mois par mois, le dépensé dans so
 ce qui le dépasse (cf. plus haut). Dans
 un mois déplié, sous ses revenus, ses dépenses s'ouvrent sur un **récap** : le total du mois face
 au budget (en vert en deçà, en rouge au-delà, « = » pile dessus), puis chaque **catégorie qui a eu
-des opérations ce mois-ci**, son écart au budget (sur leur période pour les catégories à épargner)
+des opérations ce mois-ci**, son écart au budget (pour une catégorie à épargner, celui de ses seules dépenses payées ce
+mois-ci, chacune sur sa période)
 et, dessous en rouge, les dépenses qui dépassent avec leur dépassement (« Courses +340,76 € »),
 puis les imprévus. Viennent ensuite les opérations, en **simple liste**, une par ligne (un libellé
 trop long se coupe d'une ellipse), la plus récente en haut — celles du compte, et celles d'autres comptes rangées dans une dépense de ce
@@ -212,10 +213,10 @@ ce premier budget. Un mois importé par erreur se supprime au bas de son dépli.
 faut **mettre de côté chaque mois** (et la part de chacun), à virer sur le compte épargne. Dans un mois, le bloc
 **Épargne** compare le virement du mois vers l'épargne — rangé en « Versement épargne », appris
 comme le reste — à cette somme. Le paiement annuel, lui, sort du compte commun le mois où il tombe :
-il ne compte **pas** dans le dépensé du mois (l'épargne le couvre), et se juge sur **sa période**
-— trois mois pour un trimestriel, six pour un semestriel, douze pour un annuel, vingt-quatre pour
-un budget sur 2 ans, la plus longue de ses items pour des items : les paiements de ces derniers
-mois face à autant de fois son mensuel. Une dépense à épargner **au mois** (l'épargne d'un projet,
+il ne compte **pas** dans le dépensé du mois (l'épargne le couvre), et se juge sur l'**année
+glissante** (vingt-quatre mois pour un budget sur 2 ans, en tout ou pour l'un de ses items) : les
+paiements de ces derniers mois face à autant de fois son mensuel. Un trajet semestriel de 120 € a
+240 € par an : deux trajets à 140 € et 120 € dépassent de 20 €, un troisième dans l'année dépasse. Une dépense à épargner **au mois** (l'épargne d'un projet,
 une régularisation d'impôts) se juge sur **sa durée** : de sa première mensualité à la dernière
 (la cible d'un projet), ou jusqu'au mois si elle n'a pas de fin, chaque mois sur son propre budget —
 payée en plusieurs fois ou d'un coup à la fin, elle se juge sur son total. Seul un dépassement

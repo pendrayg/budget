@@ -37,19 +37,20 @@ export const PERIOD_SHORT: Record<Period, string> = {
 }
 
 /**
- * Sur combien de mois juger ce qu'on a payé pour une dépense à épargner : sa période — trois mois
- * pour un trimestriel, six pour un semestriel, douze pour un annuel, vingt-quatre pour un budget
- * sur 2 ans ; pour des items, la plus longue des leurs. Payé une fois par période, il dépasserait
- * sinon son mensuel le mois où il tombe. `null` pour un montant au mois (ou par jour) : il se juge
- * sur sa durée (cf. `spendingSummary`), comme l'épargne d'un projet.
+ * Sur combien de mois juger ce qu'on a payé pour une dépense à épargner périodique : l'année
+ * glissante — vingt-quatre mois pour un budget sur 2 ans (en tout ou pour l'un de ses items). Un
+ * trajet semestriel de 120 € a 240 € par an : deux trajets à 140 € et 120 € dépassent de 20 €, un
+ * troisième dans l'année dépasse. `null` pour un montant au mois (ou par jour) : il se juge sur sa
+ * durée (cf. `spendingSummary`), comme l'épargne d'un projet.
  */
 export function judgedMonths(amount: Amount): number | null {
   if (amount.kind === 'items') {
-    const longest = Math.max(...amount.items.map((item) => PERIOD_DIVISOR[item.period ?? 'monthly']))
-    return longest > 1 ? longest : null
+    const periods = amount.items.map((item) => PERIOD_DIVISOR[item.period ?? 'monthly'])
+    if (periods.every((months) => months === 1)) return null
+    return periods.some((months) => months > 12) ? 24 : 12
   }
   if (amount.kind === 'monthly' || amount.kind === 'days' || amount.kind === 'none') return null
-  return PERIOD_DIVISOR[amount.kind]
+  return amount.kind === 'biennial' ? 24 : 12
 }
 
 /**

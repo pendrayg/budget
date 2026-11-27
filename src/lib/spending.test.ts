@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { addCategory } from './budget'
 import { seedState } from './fixtures'
 import { displayLabel, importStatement, merchantKey, placeTransaction, removeMonth, spendingMonths, spendingSummary } from './spending'
 import type { StatementLine } from './statement'
@@ -336,5 +337,30 @@ describe('un relevé perso qui porte une dépense du foyer', () => {
     // Le marchand appris sur ce compte y range les suivantes, au foyer.
     state = importStatement(state, [{ date: '2026-11-12', label: 'CARTE 12/11/26 SUPERMARCHE CB*1234', amount: 23 }], 't3', person).state
     expect(state.transactions.at(-1)!.categoryId).toBe(courses)
+  })
+})
+
+describe('une dépense à épargner périodique', () => {
+  // Un trajet en Bretagne, 120 € par semestre : 240 € par an.
+  function bretagne() {
+    const group = seedState().groups.find((g) => g.save)!
+    return addCategory(seedState(), { id: 'bzh', name: 'Bretagne', updatedAt: 't' }, { categoryId: 'bzh', from: '2026-01', groupId: group.id, splitKeyId: group.splitKeyId, amount: { kind: 'semiannual', value: 120 }, save: true, updatedAt: 't' })
+  }
+  const trip = (state: ReturnType<typeof bretagne>, date: string, amount: number) => {
+    const next = importStatement(state, [{ date, label: `CARTE TRAIN ${date}`, amount }], 't').state
+    return placeTransaction(next, next.transactions.at(-1)!.id, { categoryId: 'bzh' }, 't')
+  }
+  const line = (state: ReturnType<typeof bretagne>, month: string) => spendingSummary(state, month).savings.sections.flatMap((s) => s.lines).find((l) => l.category.id === 'bzh')!
+
+  it('se juge sur l’année : deux trajets à 140 € et 120 € dépassent de 20 €', () => {
+    const state = trip(trip(bretagne(), '2026-03-10', 140), '2026-09-10', 120)
+    expect(line(state, '2026-09').year).toMatchObject({ months: 12, spent: 260, budget: 240 })
+    expect(line(state, '2026-09').over).toBe(true)
+  })
+
+  it('un troisième trajet dans l’année dépasse', () => {
+    const state = trip(trip(trip(bretagne(), '2026-02-10', 120), '2026-06-10', 120), '2026-10-10', 120)
+    expect(line(state, '2026-10').over).toBe(true)
+    expect(line(trip(trip(bretagne(), '2026-02-10', 120), '2026-06-10', 120), '2026-06').over).toBe(false)
   })
 })
