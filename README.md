@@ -220,9 +220,11 @@ dépassent de 20 € — le dépassement reste —, un troisième trajet dans l'
 part de la première version de la dépense, ou du premier relevé du compte s'il est plus tard (avant,
 on ne sait pas ce qui a été payé) ; ses périodes repartent quand la dépense change de rythme (de
 50 € par mois à des items trimestriels), pas pour un simple changement de montant. La dépense d'un **projet** se juge sur
-**le total du projet** : tout ce qui a été payé jusqu'au mois face à ce total, l'écart étant ce qu'il
-reste à payer (une régularisation d'impôts à 1 158 €, 867 € prélevés : −291 €) — payé en plusieurs
-fois ou d'un coup à la fin. Une autre dépense à épargner **au mois** se juge sur **sa durée** : de sa
+le projet, **mois par mois** : de sa date de début (sinon sa première mensualité) à sa cible, son
+total se répartit à parts égales, et ce qui a été payé jusqu'au mois se compare à ce qui devait
+l'être (une régularisation de 1 158 € de septembre à décembre attend 289,50 € par mois : 867 €
+prélevés fin novembre pour 868,50 € attendus, −1,50 €). Un achat payé d'un coup à la cible tombe
+pile ; payé avant, il dépasse jusqu'à ce que les mois le rattrapent ; sans cible, le total d'un coup. Une autre dépense à épargner **au mois** se juge sur **sa durée** : de sa
 première mensualité à la dernière, ou jusqu'au mois si elle n'a pas de fin, chaque mois sur son
 propre budget. Seul un dépassement
 sur cette période passe en rouge. L'en-tête d'un mois compare donc le courant dépensé plus

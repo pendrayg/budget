@@ -350,15 +350,21 @@ function judgedAsEnvelope(state: State, categoryId: string, month: Month, scope:
 }
 
 /**
- * La dépense d'un PROJET se juge sur le projet : tout ce qui a été payé jusqu'au mois face à son
- * total. L'écart est ce qu'il reste à payer (en vert), ou ce qui le dépasse (en rouge) — et non la
- * somme de ses mensualités, qui ne tombe pas sur le total dès qu'elles ont été recalculées.
+ * La dépense d'un PROJET se juge sur le projet, mois par mois : de sa date de début (sinon sa
+ * première mensualité) à sa cible, son total se répartit à parts égales ; ce qui a été payé jusqu'au
+ * mois face à ce qui devait l'être. Une régularisation de 1 158 € de septembre à décembre attend
+ * 289,50 € par mois : 867 € payés fin novembre pour 868,50 € attendus, −1,50 €. Un achat payé d'un
+ * coup à la cible tombe pile ; payé avant, il dépasse jusqu'à ce que les mois le rattrapent. Sans
+ * cible, le total d'un coup.
  */
 function judgedAgainstProject(state: State, categoryId: string, project: Project, month: Month) {
-  const first = versionsOf(state, categoryId)[0]?.from ?? month
+  const start = project.start ?? versionsOf(state, categoryId)[0]?.from ?? month
+  const total = sum(project.items.map((item) => item.amount))
   const spent = sum(state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) <= month).map((t) => t.amount))
-  const budget = sum(project.items.map((item) => item.amount))
-  return { months: Math.max(1, monthsBetween(first, month)), spent, budget }
+  if (!project.target || project.target < start) return { months: Math.max(1, monthsBetween(start, month)), spent, budget: total }
+  const duration = monthsBetween(start, project.target)
+  const elapsed = Math.min(duration, Math.max(0, monthsBetween(start, month)))
+  return { months: Math.max(1, elapsed), spent, budget: (total * elapsed) / duration }
 }
 
 /**
