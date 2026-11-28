@@ -1212,27 +1212,16 @@ body,
   font-weight: 400;
 }
 
-/* Répartir une opération : ses parts, chacune son nom et son montant, au-dessus de la liste. */
-.placement-split.ds-text {
-  width: 100%;
-}
-
+/* Les dépenses cochées et « Ranger », collés au bas de la feuille de rangement. */
 .split-parts {
   position: sticky;
   bottom: 0;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   padding-block: 12px;
   background: var(--color-bg);
-}
-
-.split-part {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 9rem;
-  align-items: center;
-  gap: 10px;
 }
 
 .placement-choice.ds-text {

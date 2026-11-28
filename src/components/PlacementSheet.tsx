@@ -7,7 +7,6 @@ import { budgetAt, versionMonthly } from '../lib/budget'
 import { displayLabel, inCategory, placeableAt, scaleSplits, shares, type Placement } from '../lib/spending'
 import type { CategoryIcon, State, Transaction } from '../lib/types'
 import CategoryGlyph from './CategoryGlyph'
-import NumberField from './NumberField'
 import Sheet from './Sheet'
 
 interface Choice {
@@ -58,73 +57,63 @@ export default function PlacementSheet({
 
 function PlacementChoices({ state, transaction, onChoose }: { state: State; transaction: Transaction; onChoose: (placement: Placement) => void }) {
   const [query, setQuery] = useState('')
-  // Répartir : un prélèvement pour plusieurs dépenses (la cantine et le périscolaire, trois contrats
-  // d'un même assureur). Chaque dépense touchée y entre ; les parts se proposent au prorata de leur
-  // budget du mois, et se corrigent.
-  const [split, setSplit] = useState(transaction.splits !== undefined)
-  const [parts, setParts] = useState<{ categoryId: string; amount: number | null }[]>(transaction.splits ?? [])
+  // Les dépenses se COCHENT : une ou plusieurs (un prélèvement pour la cantine et le périscolaire,
+  // pour trois contrats d'un même assureur), puis « Ranger ». Plusieurs, l'opération se partage au
+  // prorata de leur budget du mois — à parts égales si l'une n'en a pas —, sans montant à saisir.
+  const [picked, setPicked] = useState<string[]>(shares(transaction).map((part) => part.categoryId))
   const month = transaction.date.slice(0, 7)
   const budgetOf = (categoryId: string) => {
     const version = budgetAt(state, categoryId, month)
     return version ? Math.abs(versionMonthly(version, month)) : 0
   }
-  const proportional = (ids: string[]) => {
-    const weights = ids.map(budgetOf)
-    const usable = weights.some((weight) => weight > 0) ? weights : ids.map(() => 1)
-    return scaleSplits(
-      ids.map((categoryId, index) => ({ categoryId, amount: usable[index] })),
-      transaction.amount,
-    )
+  const placement = (): Placement => {
+    if (picked.length === 1) return { categoryId: picked[0] }
+    const weights = picked.map(budgetOf)
+    // Une dépense cochée sans budget ce mois-ci n'aurait rien : on partage alors à parts égales.
+    const usable = weights.every((weight) => weight > 0) ? weights : picked.map(() => 1)
+    return { splits: scaleSplits(picked.map((categoryId, index) => ({ categoryId, amount: usable[index] })), transaction.amount) }
   }
-  const picked = new Set(parts.map((part) => part.categoryId))
-  const toggle = (categoryId: string) => setParts(proportional(picked.has(categoryId) ? parts.map((p) => p.categoryId).filter((id) => id !== categoryId) : [...parts.map((p) => p.categoryId), categoryId]))
-  const rest = Math.round((transaction.amount - parts.reduce((sum, part) => sum + (part.amount ?? 0), 0)) * 100) / 100
-  const ready = parts.length > 1 && parts.every((part) => part.amount !== null) && Math.abs(rest) < 0.005
+  const toggle = (categoryId: string) => setPicked(picked.includes(categoryId) ? picked.filter((id) => id !== categoryId) : [...picked, categoryId])
   // Les dépenses du budget de son compte d'abord, puis celles des autres budgets : un relevé perso
   // porte aussi des dépenses du foyer, et le relevé du foyer, parfois, celle d'une personne.
   const account: Scope = transaction.owner ?? null
   const scopes: Scope[] = [account, ...[null, ...state.people.map((person) => person.id)].filter((scope) => scope !== account)]
   const budgetName = (scope: Scope) => (scope === null ? 'Foyer' : (state.people.find((person) => person.id === scope)?.name ?? ''))
   const names = new Map(state.categories.map((category) => [category.id, category.name]))
-  const expenses: Choice[] = scopes.flatMap((scope) =>
-    // Sans celles arrêtées le mois de l'opération — un projet supprimé (celle où elle est rangée reste).
-    categoriesOf(state, scope)
-      .filter((expense) => inCategory(transaction, expense.id) || placeableAt(state, expense.id, transaction.date))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-      .map((expense) => ({
-        key: expense.id,
-        name: expense.name,
-        ...(scope !== account ? { budget: budgetName(scope) } : {}),
-        icon: expense.icon,
-        placement: { categoryId: expense.id },
-        active: split ? picked.has(expense.id) : transaction.categoryId === expense.id,
-      })),
-  )
-  const choices: Choice[] = split
-    ? expenses
-    : [
-        ...expenses,
-        { key: 'unplanned', name: 'Imprévu hors catégorie', placement: { unplanned: true }, active: transaction.unplanned === true },
-        { key: 'saving', name: 'Versement épargne', placement: { saving: true }, active: transaction.saving === true },
-        { key: 'ignored', name: 'Pas une dépense', placement: { ignored: true }, active: transaction.ignored === true },
-        {
-          key: 'unsorted',
-          name: 'À ranger',
-          placement: null,
-          active: !transaction.ignored && !transaction.saving && !transaction.unplanned && shares(transaction).length === 0,
-        },
-      ]
+  const choices: Choice[] = [
+    ...scopes.flatMap((scope) =>
+      // Sans celles arrêtées le mois de l'opération — un projet supprimé (celle où elle est rangée reste).
+      categoriesOf(state, scope)
+        .filter((expense) => inCategory(transaction, expense.id) || placeableAt(state, expense.id, transaction.date))
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+        .map((expense) => ({
+          key: expense.id,
+          name: expense.name,
+          ...(scope !== account ? { budget: budgetName(scope) } : {}),
+          icon: expense.icon,
+          placement: { categoryId: expense.id },
+          active: picked.includes(expense.id),
+        })),
+    ),
+    { key: 'unplanned', name: 'Imprévu hors catégorie', placement: { unplanned: true }, active: transaction.unplanned === true },
+    { key: 'saving', name: 'Versement épargne', placement: { saving: true }, active: transaction.saving === true },
+    { key: 'ignored', name: 'Pas une dépense', placement: { ignored: true }, active: transaction.ignored === true },
+    {
+      key: 'unsorted',
+      name: 'À ranger',
+      placement: null,
+      active: !transaction.ignored && !transaction.saving && !transaction.unplanned && shares(transaction).length === 0,
+    },
+  ]
   const results = choices.filter((choice) => matchesSearch(choice.budget ? `${choice.name} ${choice.budget}` : choice.name, query))
-  const choose = (choice: Choice) => (split && choice.placement && 'categoryId' in choice.placement ? toggle(choice.placement.categoryId) : onChoose(choice.placement))
+  // Une dépense se coche ; le reste (imprévu, épargne, écartée, à ranger) range d'un appui.
+  const choose = (choice: Choice) => (choice.placement && 'categoryId' in choice.placement ? toggle(choice.placement.categoryId) : onChoose(choice.placement))
   return (
     <div className="form">
       <p className="placement-of">
         <span>{displayLabel(transaction.label)}</span>
         <span className="numeric">{formatEuro(transaction.amount)}</span>
       </p>
-      <Button className="placement-split" active={split} aria-pressed={split} onClick={() => setSplit(!split)}>
-        Répartir entre plusieurs dépenses
-      </Button>
       <SearchField
         aria-label="Chercher une dépense"
         placeholder="Chercher une dépense"
@@ -143,36 +132,26 @@ function PlacementChoices({ state, transaction, onChoose }: { state: State; tran
         <p className="muted">Aucune dépense pour « {query.trim()} ».</p>
       ) : (
         <ul className="placement-list">
-          {results.map((choice) => (
-            <li key={choice.key}>
-              <Button className="placement-choice" active={choice.active} aria-pressed={split ? choice.active : undefined} onClick={() => choose(choice)}>
-                {choice.icon ? <CategoryGlyph icon={choice.icon} className="placement-icon" /> : <span className="placement-icon" aria-hidden="true" />}
-                <span className="placement-name">{choice.name}</span>
-                {choice.budget && <span className="placement-budget muted">{choice.budget}</span>}
-              </Button>
-            </li>
-          ))}
+          {results.map((choice) => {
+            const expense = choice.placement !== null && 'categoryId' in choice.placement
+            return (
+              <li key={choice.key}>
+                <Button className="placement-choice" active={choice.active} aria-pressed={expense ? choice.active : undefined} onClick={() => choose(choice)}>
+                  {choice.icon ? <CategoryGlyph icon={choice.icon} className="placement-icon" /> : <span className="placement-icon" aria-hidden="true" />}
+                  <span className="placement-name">{choice.name}</span>
+                  {choice.budget && <span className="placement-budget muted">{choice.budget}</span>}
+                </Button>
+              </li>
+            )
+          })}
         </ul>
       )}
-      {/* Les parts, collées au bas de la feuille : chaque dépense choisie et son montant, le reste, et
-          « Répartir » — visibles pendant qu'on choisit plus haut dans la liste. */}
-      {split && parts.length > 0 && (
+      {/* Collé au bas de la feuille : ce qui est coché, et « Ranger ». */}
+      {picked.length > 0 && (
         <div className="split-parts">
-          {parts.map((part, index) => (
-            <div className="split-part" key={part.categoryId}>
-              <label htmlFor={`split-${part.categoryId}`}>{names.get(part.categoryId)}</label>
-              <NumberField
-                id={`split-${part.categoryId}`}
-                value={part.amount}
-                placeholder="0,00"
-                suffix="€"
-                onChange={(amount) => setParts(parts.map((p, i) => (i === index ? { ...p, amount } : p)))}
-              />
-            </div>
-          ))}
-          <p className={`field-hint${Math.abs(rest) < 0.005 ? ' muted' : ' spend-over'}`}>{Math.abs(rest) < 0.005 ? 'Le compte est bon.' : `Reste ${formatEuro(rest)} à répartir.`}</p>
-          <Button tone="primary" disabled={!ready} onClick={() => onChoose({ splits: parts.map((part) => ({ categoryId: part.categoryId, amount: part.amount ?? 0 })) })}>
-            Répartir
+          <p className="field-hint muted">{picked.map((id) => names.get(id)).join(' · ')}</p>
+          <Button tone="primary" onClick={() => onChoose(placement())}>
+            {picked.length > 1 ? `Ranger dans ${picked.length} dépenses` : 'Ranger'}
           </Button>
         </div>
       )}

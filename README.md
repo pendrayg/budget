@@ -194,13 +194,13 @@ l'est d'office), le nom restant dans le libellé du bouton. Le choix est la list
 chacune avec son icône (le sélecteur natif de l'iPhone ne montre que du texte), sous une
 **recherche** active dès l'ouverture, clavier levé (accents ignorés ; Entrée prend la première).
 
-Un prélèvement peut toucher **plusieurs dépenses** (la cantine et le périscolaire, trois contrats
-d'un même assureur) : « Répartir entre plusieurs dépenses », dans la feuille, fait choisir chaque
-dépense touchée ; les parts se proposent au prorata de leur budget du mois, se corrigent, et
-« Répartir » range l'opération quand leur somme fait son montant (la barre des parts reste au bas
-de la feuille). Chaque dépense compte sa part ; dans la liste, l'opération porte une icône de
-partage, ses parts dans le libellé de son bouton. Le marchand l'apprend aussi : revenu à un autre
-montant, il se répartit dans les mêmes proportions.
+Dans la feuille, les dépenses **se cochent** : une, ou plusieurs quand un prélèvement en touche
+plusieurs (la cantine et le périscolaire, trois contrats d'un même assureur), puis « Ranger », collé
+au bas de la feuille. Plusieurs, l'opération se partage au prorata de leur budget du mois (à parts
+égales si l'une n'en a pas), sans montant à saisir ; chaque dépense compte sa part, et dans la liste
+l'opération porte une icône de partage, ses parts dans le libellé de son bouton. Le marchand
+l'apprend aussi : revenu à un autre montant, il se partage dans les mêmes proportions. Imprévu,
+versement épargne, « pas une dépense » et « à ranger » se choisissent, eux, d'un appui.
 
 Ranger une opération dans une dépense **apprend son marchand** — le libellé sans la date
 d'achat, la carte ni les numéros (« SUPERMARCHE DU PORT », « OPERATEUR MOBILE ») ; un virement garde sa
