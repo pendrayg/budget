@@ -4,7 +4,7 @@ import { addMonths, monthsBetween } from './month'
 import type { StatementLine } from './statement'
 import { categoryScope, scopePrefix, type Scope } from './scope'
 import { firstBudgetMonth, sortedGroups } from './summary'
-import type { BudgetGroup, BudgetVersion, Category, MatchRule, Month, Project, State, Transaction } from './types'
+import type { BudgetGroup, BudgetVersion, Category, MatchRule, Month, Project, Split, State, Transaction } from './types'
 
 /**
  * L'état des lieux : ce qu'on a VRAIMENT dépensé, mois par mois, d'après les relevés du compte
@@ -19,9 +19,39 @@ import type { BudgetGroup, BudgetVersion, Category, MatchRule, Month, Project, S
  * Ce qu'on fait d'une opération : la ranger dans une dépense, y voir le versement vers l'épargne,
  * l'écarter, ou la laisser à ranger.
  */
-export type Placement = { categoryId: string } | { saving: true } | { unplanned: true } | { ignored: true } | null
+export type Placement = { categoryId: string } | { splits: Split[] } | { saving: true } | { unplanned: true } | { ignored: true } | null
 
 const cents = (amount: number) => Math.round(amount * 100)
+
+/** Les dépenses d'une opération, chacune pour sa part : une seule, toute l'opération ; répartie, ses parts. */
+export function shares(transaction: Pick<Transaction, 'categoryId' | 'splits' | 'amount'>): Split[] {
+  if (transaction.splits) return transaction.splits
+  return transaction.categoryId !== undefined ? [{ categoryId: transaction.categoryId, amount: transaction.amount }] : []
+}
+
+/** La part d'une opération dans une dépense (0 si elle n'y est pas). */
+export const amountIn = (transaction: Pick<Transaction, 'categoryId' | 'splits' | 'amount'>, categoryId: string) =>
+  shares(transaction).reduce((sum, part) => sum + (part.categoryId === categoryId ? part.amount : 0), 0)
+
+/** Vrai si une opération compte, en tout ou en partie, dans une dépense. */
+export const inCategory = (transaction: Pick<Transaction, 'categoryId' | 'splits'>, categoryId: string) =>
+  transaction.categoryId === categoryId || (transaction.splits?.some((part) => part.categoryId === categoryId) ?? false)
+
+/**
+ * Des parts ramenées à un autre montant, dans les mêmes proportions, au centime ; la dernière prend
+ * l'arrondi. Pour la règle apprise d'une opération répartie, quand le marchand revient à un autre
+ * montant.
+ */
+export function scaleSplits(parts: Split[], amount: number): Split[] {
+  const total = parts.reduce((sum, part) => sum + part.amount, 0)
+  if (cents(total) === cents(amount)) return parts
+  let left = cents(amount)
+  return parts.map((part, index) => {
+    const share = index === parts.length - 1 ? left : Math.round((cents(amount) * part.amount) / (total || parts.length))
+    left -= share
+    return { categoryId: part.categoryId, amount: share / 100 }
+  })
+}
 
 /**
  * Le marchand d'une opération, pour reconnaître les suivantes : le libellé sans ce qui change
@@ -87,6 +117,7 @@ function placementOf(state: State, transaction: Pick<Transaction, 'date' | 'labe
     if (rule?.ignored) return { ignored: true }
     if (rule?.saving) return { saving: true }
     if (rule?.categoryId) return placeableAt(state, rule.categoryId, transaction.date) ? { categoryId: rule.categoryId } : null
+    if (rule?.splits) return rule.splits.every((part) => placeableAt(state, part.categoryId, transaction.date)) ? { splits: rule.splits } : null
   }
   if (transaction.amount < 0 && /^VIR\b/i.test(transaction.label)) return { ignored: true }
   return null
@@ -94,22 +125,25 @@ function placementOf(state: State, transaction: Pick<Transaction, 'date' | 'labe
 
 /** Range une opération ; `manual`, c'est la main qui l'a rangée là (cf. `Transaction.manual`). */
 function place(transaction: Transaction, placement: Placement, updatedAt: string, manual = false): Transaction {
-  const { categoryId: _category, ignored: _ignored, saving: _saving, unplanned: _unplanned, manual: _manual, ...base } = transaction
+  const { categoryId: _category, splits: _splits, ignored: _ignored, saving: _saving, unplanned: _unplanned, manual: _manual, ...base } = transaction
   if (!placement) return { ...base, updatedAt }
   const rest = manual ? { ...base, manual: true } : base
   if ('ignored' in placement) return { ...rest, ignored: true, updatedAt }
   if ('saving' in placement) return { ...rest, saving: true, updatedAt }
   if ('unplanned' in placement) return { ...rest, unplanned: true, updatedAt }
+  // Répartie : ses parts, ramenées à son montant (la règle d'un marchand revenu à un autre montant).
+  if ('splits' in placement) return { ...rest, splits: scaleSplits(placement.splits, transaction.amount), updatedAt }
   return { ...rest, categoryId: placement.categoryId, updatedAt }
 }
 
 const isSorted = (transaction: Transaction) =>
-  transaction.categoryId !== undefined || transaction.ignored === true || transaction.saving === true || transaction.unplanned === true
+  transaction.categoryId !== undefined || transaction.splits !== undefined || transaction.ignored === true || transaction.saving === true || transaction.unplanned === true
 
 /** La règle apprise d'un rangement (un imprévu ne s'apprend pas, cf. `placeTransaction`). */
 function ruleFor(placement: Exclude<Placement, null | { unplanned: true }>, key: string, updatedAt: string): MatchRule {
   if ('ignored' in placement) return { key, ignored: true, updatedAt }
   if ('saving' in placement) return { key, saving: true, updatedAt }
+  if ('splits' in placement) return { key, splits: placement.splits, updatedAt }
   return { key, categoryId: placement.categoryId, updatedAt }
 }
 
@@ -223,8 +257,9 @@ export function placeTransaction(state: State, transactionId: string, placement:
   const byKey = new Map(rules.map((rule) => [rule.key, rule]))
   // Une CORRECTION : les opérations du marchand que l'ancienne règle avait rangées au même endroit
   // la suivent. Pas celles qu'on y a rangées soi-même (l'autre contrat d'un même assureur).
+  const where = (t: Transaction) => shares(t).map((part) => part.categoryId).sort().join('+')
   const samePlace = (t: Transaction) =>
-    (t.categoryId !== undefined && t.categoryId === target.categoryId) || (t.saving === true && target.saving === true) || (t.ignored === true && target.ignored === true)
+    (where(t) !== '' && where(t) === where(target)) || (t.saving === true && target.saving === true) || (t.ignored === true && target.ignored === true)
   const follows = (t: Transaction) => !t.manual && samePlace(t) && merchantOf(t) === merchant
   return {
     ...state,
@@ -250,7 +285,7 @@ export function spendingMonths(state: State, scope: Scope = null): Month[] {
 
 /** Les mois à montrer pour un budget : ceux de son compte, et ceux où une opération d'un autre compte est rangée dans l'une de ses dépenses. */
 export function budgetSpendingMonths(state: State, scope: Scope = null): Month[] {
-  const placedHere = state.transactions.filter((t) => t.categoryId !== undefined && (t.owner ?? null) !== scope && categoryScope(state, t.categoryId) === scope)
+  const placedHere = state.transactions.filter((t) => (t.owner ?? null) !== scope && shares(t).some((part) => categoryScope(state, part.categoryId) === scope))
   return [...new Set([...spendingMonths(state, scope), ...placedHere.map((t) => t.date.slice(0, 7))])].sort().reverse()
 }
 
@@ -321,7 +356,7 @@ const OVER = 0.005
 function judgedAsEnvelope(state: State, categoryId: string, month: Month, scope: Scope) {
   const first = versionsOf(state, categoryId).find((version) => version.amount.kind !== 'none')
   if (!first) return { months: 1, spent: 0, budget: 0 }
-  const paid = state.transactions.filter((t) => t.categoryId === categoryId)
+  const paid = state.transactions.filter((t) => inCategory(t, categoryId))
   const firstPaid = paid.map((t) => t.date.slice(0, 7)).sort()[0]
   const firstStatement = spendingMonths(state, scope).at(-1)
   const start = firstPaid && firstPaid < first.from ? firstPaid : firstStatement && firstStatement > first.from ? firstStatement : first.from
@@ -345,7 +380,7 @@ function judgedAsEnvelope(state: State, categoryId: string, month: Month, scope:
     if (version) budget += periodAllowance(version.amount, monthsBetween(anchor > at ? start : anchor, at) - 1, at)
     months += 1
   }
-  const spent = sum(paid.filter((t) => t.date.slice(0, 7) >= start && t.date.slice(0, 7) <= month).map((t) => t.amount))
+  const spent = sum(paid.filter((t) => t.date.slice(0, 7) >= start && t.date.slice(0, 7) <= month).map((t) => amountIn(t, categoryId)))
   return { months: Math.max(1, months), spent, budget }
 }
 
@@ -359,7 +394,7 @@ function judgedAsEnvelope(state: State, categoryId: string, month: Month, scope:
 function judgedAgainstProject(state: State, categoryId: string, project: Project, month: Month) {
   const start = project.start ?? versionsOf(state, categoryId)[0]?.from ?? month
   const total = sum(project.items.map((item) => item.amount))
-  const spent = sum(state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) <= month).map((t) => t.amount))
+  const spent = sum(state.transactions.filter((t) => t.date.slice(0, 7) <= month).map((t) => amountIn(t, categoryId)))
   const months = Math.max(1, monthsBetween(start, month))
   const due = !project.target || month >= project.target
   return { months, spent, budget: due ? total : Math.min(total, Math.max(0, spent)) }
@@ -386,7 +421,7 @@ function judgedOverLife(state: State, categoryId: string, month: Month) {
     budget += version ? versionMonthly(version, at) : 0
     months += 1
   }
-  const spent = sum(state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) >= first.from && t.date.slice(0, 7) <= last).map((t) => t.amount))
+  const spent = sum(state.transactions.filter((t) => t.date.slice(0, 7) >= first.from && t.date.slice(0, 7) <= last).map((t) => amountIn(t, categoryId)))
   return { months, spent, budget }
 }
 
@@ -408,14 +443,14 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
   // dépense de ce budget, celles rangées dedans, de quelque compte qu'elles viennent : un relevé
   // perso porte aussi des dépenses du foyer, et l'inverse.
   const transactions = state.transactions.filter((t) => t.date.startsWith(month) && (t.owner ?? null) === scope).sort(byDate)
-  const placedThisMonth = state.transactions.filter((t) => t.date.startsWith(month) && t.categoryId !== undefined).sort(byDate)
+  const placedThisMonth = state.transactions.filter((t) => t.date.startsWith(month) && shares(t).length > 0).sort(byDate)
   const firstBudget = firstBudgetMonth(state, scope)
   const budgetMonth = firstBudget && month < firstBudget ? firstBudget : month
 
   const all: SpendingSection[] = sortedGroups(state, scope).map((group) => {
     const lines: SpendingLine[] = []
     for (const category of state.categories) {
-      const own = placedThisMonth.filter((t) => t.categoryId === category.id)
+      const own = placedThisMonth.filter((t) => inCategory(t, category.id))
       // Une dépense née après ce mois, où l'on a pourtant rangé des opérations, s'y juge sur son
       // premier budget — comme un mois d'avant le premier budget se juge sur celui-ci.
       const version = budgetAt(state, category.id, budgetMonth) ?? (own.length > 0 ? versionsOf(state, category.id)[0] : undefined)
@@ -423,7 +458,7 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
       if (groupId !== group.id) continue
       const budget = version && version.amount.kind !== 'none' ? versionMonthly(version, budgetMonth) : 0
       if (budget === 0 && own.length === 0) continue
-      const spent = sum(own.map((t) => t.amount))
+      const spent = sum(own.map((t) => amountIn(t, category.id)))
       // Un projet payé chaque mois sur le compte se juge comme une dépense courante, au mois.
       const monthlyProject = state.projects.some((p) => p.payment === 'monthly' && p.budget?.categoryId === category.id)
       if (group.save && !monthlyProject) {
@@ -453,7 +488,7 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
   const versioned = new Set(state.budgets.map((version) => version.categoryId))
   const known = new Set(state.categories.filter((category) => versioned.has(category.id)).map((category) => category.id))
   const here = new Set(all.flatMap((section) => section.lines.map((line) => line.category.id)))
-  const placed = (t: Transaction) => t.ignored === true || t.saving === true || t.unplanned === true || (t.categoryId !== undefined && known.has(t.categoryId))
+  const placed = (t: Transaction) => t.ignored === true || t.saving === true || t.unplanned === true || (shares(t).length > 0 && shares(t).every((part) => known.has(part.categoryId)))
   const sections = all.filter((section) => !section.group.save)
   const saveSections = all.filter((section) => section.group.save)
   const transfers = transactions.filter((t) => t.saving === true)
@@ -477,7 +512,7 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
     unplannedTotal,
     unsorted: transactions.filter((t) => !placed(t)),
     ignored: transactions.filter((t) => t.ignored === true),
-    elsewhere: transactions.filter((t) => t.categoryId !== undefined && known.has(t.categoryId) && !here.has(t.categoryId)),
+    elsewhere: transactions.filter((t) => placed(t) && shares(t).some((part) => !here.has(part.categoryId))),
   }
 }
 

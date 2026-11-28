@@ -1,7 +1,7 @@
 import { addCategory, budgetAt, editCategory, upsertVersion, versionMonthly, versionsOf } from './budget'
 import { addMonths, monthsBetween } from './month'
 import { categoryScope, inScope, scopePrefix } from './scope'
-import { spendingMonths, spendingSummary } from './spending'
+import { amountIn, spendingMonths, spendingSummary } from './spending'
 import type { Amount, BudgetGroup, BudgetVersion, CategoryIcon, Month, Project, State } from './types'
 
 /**
@@ -49,7 +49,7 @@ export function projectMonthly(total: number, saved: number, from: Month, target
 export function projectSaved(state: State, project: Project, upTo: Month): number {
   const categoryId = project.budget?.categoryId
   if (!categoryId) return 0
-  const paid = state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) <= upTo).reduce((sum, t) => sum + t.amount, 0)
+  const paid = state.transactions.filter((t) => t.date.slice(0, 7) <= upTo).reduce((sum, t) => sum + amountIn(t, categoryId), 0)
   return cents(Math.max(savedFromTransfers(state, categoryId, upTo), paid))
 }
 

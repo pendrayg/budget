@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { addCategory } from './budget'
 import { seedState } from './fixtures'
-import { displayLabel, importStatement, merchantKey, placeTransaction, removeMonth, spendingMonths, spendingSummary } from './spending'
+import { displayLabel, importStatement, merchantKey, placeTransaction, removeMonth, scaleSplits, spendingMonths, spendingSummary } from './spending'
 import type { StatementLine } from './statement'
 import { sanitizeState } from './state'
 
@@ -368,5 +368,35 @@ describe('une dépense à épargner périodique', () => {
     const twice = trip(trip(bretagne(), '2026-02-10', 120), '2026-08-10', 120)
     expect(line(twice, '2026-08').over).toBe(false)
     expect(line(trip(twice, '2026-11-10', 120), '2026-11').over).toBe(true)
+  })
+})
+
+describe('une opération répartie entre plusieurs dépenses', () => {
+  const ids = () => ({ cantine: idOf('Cantine'), courses: idOf('Courses') })
+
+  it('compte dans chaque dépense pour sa part, et s’apprend', () => {
+    const { cantine, courses } = ids()
+    let state = importStatement(seedState(), [{ date: '2026-11-05', label: 'PRLV SEPA MAIRIE ECOLES', amount: 150 }], 't').state
+    state = placeTransaction(state, state.transactions[0].id, { splits: [{ categoryId: cantine, amount: 90 }, { categoryId: courses, amount: 60 }] }, 't')
+    const lines = spendingSummary(state, '2026-11').sections.flatMap((s) => s.lines)
+    expect(lines.find((l) => l.category.id === cantine)?.spent).toBe(90)
+    expect(lines.find((l) => l.category.id === courses)?.spent).toBe(60)
+    expect(spendingSummary(state, '2026-11').unsorted).toHaveLength(0)
+    // Le mois suivant, le même prélèvement à un autre montant : réparti dans les mêmes proportions.
+    state = importStatement(state, [{ date: '2026-12-05', label: 'PRLV SEPA MAIRIE ECOLES', amount: 100 }], 't2').state
+    expect(state.transactions.at(-1)!.splits).toEqual([
+      { categoryId: cantine, amount: 60 },
+      { categoryId: courses, amount: 40 },
+    ])
+    // L'assainissement garde les parts.
+    expect(sanitizeState(state).transactions.map((t) => t.splits)).toEqual(state.transactions.map((t) => t.splits))
+  })
+
+  it('ramène des parts à un autre montant, l’arrondi sur la dernière', () => {
+    expect(scaleSplits([{ categoryId: 'a', amount: 1 }, { categoryId: 'b', amount: 1 }, { categoryId: 'c', amount: 1 }], 100)).toEqual([
+      { categoryId: 'a', amount: 33.33 },
+      { categoryId: 'b', amount: 33.33 },
+      { categoryId: 'c', amount: 33.34 },
+    ])
   })
 })

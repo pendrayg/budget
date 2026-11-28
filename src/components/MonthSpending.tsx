@@ -1,7 +1,7 @@
 import { DeleteButton } from '../ds'
 import { formatEuro, formatEuroDelta } from '../lib/format'
 import { monthLabel } from '../lib/month'
-import { displayLabel, removeMonth, spendingSummary, type SpendingSummary } from '../lib/spending'
+import { displayLabel, removeMonth, shares, spendingSummary, type SpendingSummary } from '../lib/spending'
 import type { CategoryIcon, Month, State, Transaction } from '../lib/types'
 import GlyphIconButton from './GlyphIconButton'
 import { categoriesOf, type Scope } from '../lib/scope'
@@ -18,6 +18,7 @@ const FOLDER_ICON: CategoryIcon = { name: 'fa-folder', code: 'f07b' }
 const UNPLANNED_ICON: CategoryIcon = { name: 'fa-bolt', code: 'f0e7' }
 const SAVING_ICON: CategoryIcon = { name: 'fa-piggy_bank', code: 'eda3' }
 const IGNORED_ICON: CategoryIcon = { name: 'fa-ban', code: 'f05e' }
+const SPLIT_ICON: CategoryIcon = { name: 'md-call_split', code: 'f00fb' }
 
 /**
  * Une opération : sa date, son libellé, son montant, et à droite un bouton-icône qui ouvre le
@@ -28,9 +29,11 @@ const IGNORED_ICON: CategoryIcon = { name: 'fa-ban', code: 'f05e' }
  */
 function TransactionRow({ transaction, state, unsorted, onPlace }: { transaction: Transaction; state: State; unsorted: boolean; onPlace: (transaction: Transaction) => void }) {
   const expense = transaction.categoryId ? state.categories.find((c) => c.id === transaction.categoryId) : undefined
+  // Répartie : chaque dépense et sa part, dans le libellé du bouton.
+  const parts = transaction.splits?.map((part) => `${state.categories.find((c) => c.id === part.categoryId)?.name ?? '?'} ${formatEuro(part.amount)}`).join(', ')
   const where =
-    expense?.name ?? (transaction.unplanned ? 'Imprévu hors catégorie' : transaction.saving ? 'Versement épargne' : transaction.ignored ? 'Pas une dépense' : undefined)
-  const icon = unsorted ? PLACE_ICON : expense ? (expense.icon ?? FOLDER_ICON) : transaction.unplanned ? UNPLANNED_ICON : transaction.saving ? SAVING_ICON : transaction.ignored ? IGNORED_ICON : PLACE_ICON
+    parts ?? expense?.name ?? (transaction.unplanned ? 'Imprévu hors catégorie' : transaction.saving ? 'Versement épargne' : transaction.ignored ? 'Pas une dépense' : undefined)
+  const icon = unsorted ? PLACE_ICON : transaction.splits ? SPLIT_ICON : expense ? (expense.icon ?? FOLDER_ICON) : transaction.unplanned ? UNPLANNED_ICON : transaction.saving ? SAVING_ICON : transaction.ignored ? IGNORED_ICON : PLACE_ICON
   const tone = unsorted ? '' : transaction.unplanned ? (transaction.amount > 0 ? ' spend-over' : ' spend-under') : ''
   const label = `Ranger ${displayLabel(transaction.label)}, ${formatEuro(transaction.amount)}${where ? ` : ${where.toLowerCase()}` : ''}`
   return (
@@ -58,7 +61,7 @@ export default function MonthSpending({ state, month, scope, update, onPlace }: 
   const unsorted = new Set(summary.unsorted.map((t) => t.id))
   const here = new Set(categoriesOf(state, scope).map((category) => category.id))
   const transactions = state.transactions
-    .filter((t) => t.date.startsWith(month) && ((t.owner ?? null) === scope || (t.categoryId !== undefined && here.has(t.categoryId))))
+    .filter((t) => t.date.startsWith(month) && ((t.owner ?? null) === scope || shares(t).some((part) => here.has(part.categoryId))))
     .sort((a, b) => b.date.localeCompare(a.date) || a.label.localeCompare(b.label))
   return (
     <div className="spending-month">

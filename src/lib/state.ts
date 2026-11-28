@@ -17,6 +17,7 @@ import type {
   Project,
   Settings,
   SharesVersion,
+  Split,
   SplitKey,
   State,
   Transaction,
@@ -370,11 +371,27 @@ function transactions(value: unknown, categoryIds: Set<string>, personIds: strin
     else if (item.saving === true) transaction.saving = true
     else if (item.unplanned === true) transaction.unplanned = true
     else if (typeof item.categoryId === 'string' && categoryIds.has(item.categoryId)) transaction.categoryId = item.categoryId
-    if (item.manual === true && (transaction.ignored || transaction.saving || transaction.unplanned || transaction.categoryId)) transaction.manual = true
+    else {
+      const parts = splits(item.splits, categoryIds)
+      if (parts.length === 1) transaction.categoryId = parts[0].categoryId
+      else if (parts.length > 1) transaction.splits = parts
+    }
+    if (item.manual === true && (transaction.ignored || transaction.saving || transaction.unplanned || transaction.categoryId || transaction.splits)) transaction.manual = true
     if (item.provisional === true) transaction.provisional = true
     result.push(transaction)
   }
   return result
+}
+
+/** Les parts d'une opération répartie : vers des dépenses connues, d'un montant fini, une par dépense. */
+function splits(value: unknown, categoryIds: Set<string>): Split[] {
+  if (!Array.isArray(value)) return []
+  const seen = new Set<string>()
+  return value.flatMap((part): Split[] => {
+    if (!isRecord(part) || typeof part.categoryId !== 'string' || !categoryIds.has(part.categoryId) || seen.has(part.categoryId) || !finite(part.amount)) return []
+    seen.add(part.categoryId)
+    return [{ categoryId: part.categoryId, amount: part.amount }]
+  })
 }
 
 function rules(value: unknown, categoryIds: Set<string>): MatchRule[] {
@@ -386,6 +403,7 @@ function rules(value: unknown, categoryIds: Set<string>): MatchRule[] {
     if (item.ignored === true) result.push({ key: item.key, ignored: true, updatedAt: stamp(item.updatedAt) })
     else if (item.saving === true) result.push({ key: item.key, saving: true, updatedAt: stamp(item.updatedAt) })
     else if (typeof item.categoryId === 'string' && categoryIds.has(item.categoryId)) result.push({ key: item.key, categoryId: item.categoryId, updatedAt: stamp(item.updatedAt) })
+    else if (splits(item.splits, categoryIds).length > 1) result.push({ key: item.key, splits: splits(item.splits, categoryIds), updatedAt: stamp(item.updatedAt) })
     else continue
     seen.add(item.key)
   }

@@ -152,6 +152,9 @@ export interface Transaction {
   amount: number
   /** La dépense du budget où elle compte. */
   categoryId?: string
+  /** Ou, à la place, plusieurs dépenses, chacune pour sa part (un prélèvement pour la cantine et
+   *  le périscolaire, pour trois contrats d'un même assureur) : la somme des parts fait le montant. */
+  splits?: Split[]
   /** Pas une dépense : un versement sur le commun, un virement interne. */
   ignored?: boolean
   /** Le virement du mois vers le compte épargne : ce qu'on met de côté pour les dépenses annuelles. */
@@ -168,10 +171,18 @@ export interface Transaction {
 }
 
 /** Ce qu'on a appris d'une opération rangée à la main : les suivantes du même marchand suivent. */
+/** La part d'une opération rangée dans plusieurs dépenses. */
+export interface Split {
+  categoryId: string
+  amount: number
+}
+
 export interface MatchRule {
   /** Le marchand, tiré du libellé (cf. `merchantKey`), préfixé du compte s'il est personnel. */
   key: string
   categoryId?: string
+  /** Une opération répartie : ses parts, ramenées au montant de la suivante. */
+  splits?: Split[]
   ignored?: boolean
   saving?: boolean
   updatedAt: string
