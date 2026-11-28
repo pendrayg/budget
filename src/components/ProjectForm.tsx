@@ -4,7 +4,7 @@ import { budgetAt } from '../lib/budget'
 import { createId, formatEuro, nowIso } from '../lib/format'
 import { currentMonth, monthLabel } from '../lib/month'
 import { scopePrefix, type Scope } from '../lib/scope'
-import { activateProject, deleteProject, isProjectSaving, projectGroup, projectMonthly, projectSaved, stopProject, syncProjectBudget } from '../lib/projects'
+import { activateProject, deleteProject, fitsPayment, isProjectSaving, projectGroup, projectMonthly, projectSaved, regroupProject, stopProject, syncProjectBudget } from '../lib/projects'
 import { sortedGroups } from '../lib/summary'
 import type { CategoryIcon, Month, State } from '../lib/types'
 import IconPicker from './IconPicker'
@@ -48,9 +48,10 @@ function fromMonth(month: Month): string {
 }
 
 /** Les catégories à épargner où un projet peut s'épargner : celles de son périmètre. */
-function saveGroupOptions(state: State, scope: Scope): { value: string; label: string }[] {
+/** Les catégories où mettre un projet : à épargner pour un paiement à l'échéance, courantes pour un paiement mensuel. */
+function groupOptionsFor(state: State, scope: Scope, payment: Payment): { value: string; label: string }[] {
   return sortedGroups(state, scope)
-    .filter((group) => group.save)
+    .filter((group) => fitsPayment(group, { payment: payment === 'monthly' ? 'monthly' : undefined }))
     .map((group) => ({ value: group.id, label: group.name }))
 }
 
@@ -85,11 +86,12 @@ export default function ProjectForm({
   const month = currentMonth()
   const project = projectId ? state.projects.find((p) => p.id === projectId) : undefined
   const owner: Scope = project ? (project.owner ?? null) : scope
-  const groupOptions = saveGroupOptions(state, owner)
+  const groupOptions = groupOptionsFor(state, owner, draft.payment)
   // Où créer la catégorie à épargner qui manque : seul, « au budget » suffit.
   const ownerName = state.people.find((person) => person.id === owner)?.name
   const budgetName = state.people.length === 1 ? 'au budget' : ownerName ? `au budget de ${ownerName}` : 'au budget du foyer'
-  const [groupId, setGroupId] = useState(groupOptions[0]?.value ?? '')
+  const [chosenGroup, setGroupId] = useState(groupOptions[0]?.value ?? '')
+  const groupId = groupOptions.some((option) => option.value === chosenGroup) ? chosenGroup : (groupOptions[0]?.value ?? '')
 
   const isNew = projectId === null
   const total = draft.lines.reduce((sum, line) => sum + (line.amount ?? 0), 0)
@@ -116,7 +118,9 @@ export default function ProjectForm({
       // Épargné (ou dont l'épargne est prévue) : sa dépense suit le projet (nom, total, début, cible).
       // On le lit sur le projet d'avant : une date de début qu'on avance ne doit pas l'arrêter.
       const saving = (previous && isProjectSaving(current, previous, month)) || isProjectSaving(current, next, month)
-      return saving ? syncProjectBudget(written, id, month, now) : written
+      // Payé chaque mois : sa dépense passe dans une catégorie courante ; à l'échéance, à épargner.
+      const regrouped = regroupProject(written, id, month, now)
+      return saving ? syncProjectBudget(regrouped, id, month, now) : regrouped
     })
   }
 
@@ -285,7 +289,7 @@ function ProjectSaving({
 
   return (
     <div className="field project-saving">
-      <span className="field-label">Épargner dans le budget</span>
+      <span className="field-label">{project.payment === 'monthly' ? 'Au budget' : 'Épargner dans le budget'}</span>
       {saving ? (
         <>
           <p className="field-hint muted">
@@ -302,16 +306,16 @@ function ProjectSaving({
           {reachable && <Button onClick={() => update((s) => syncProjectBudget(s, projectId, month, nowIso()))}>Reprendre</Button>}
         </>
       ) : groupOptions.length === 0 ? (
-        <p className="field-hint muted">Créez d’abord {budgetName} une catégorie à épargner.</p>
+        <p className="field-hint muted">Créez d’abord {budgetName} une catégorie {project.payment === 'monthly' ? 'courante' : 'à épargner'}.</p>
       ) : (
         <>
           <label className="ds-visually-hidden" htmlFor={`${uid}-group`}>
-            Catégorie à épargner
+            {project.payment === 'monthly' ? 'Catégorie' : 'Catégorie à épargner'}
           </label>
           <Select id={`${uid}-group`} options={groupOptions} value={groupId} onChange={(event) => onGroup(event.target.value)} />
           <p className="field-hint muted">{reachable ? target === from ? `${formatEuro(preview)} en ${monthLabel(from).toLowerCase()}.` : `${formatEuro(preview)} par mois, ${fromMonth(from)} à ${monthLabel(target).toLowerCase()}.` : why}</p>
           <Button tone="primary" disabled={!reachable || !groupId} onClick={() => update((s) => activateProject(s, projectId, groupId, month, createId(), nowIso()))}>
-            Commencer à épargner
+            {project.payment === 'monthly' ? 'Mettre au budget' : 'Commencer à épargner'}
           </Button>
         </>
       )}

@@ -234,7 +234,10 @@ en partant), elle se juge sur le total du projet, sans « non dépensé » avant
 dépasse que si l'on a payé plus que le total, et à la cible le reste non payé est une économie ;
 **mensuel** (une régularisation d'impôts, prélevée chaque mois sur le compte), elle est une
 dépense courante, jugée au mois sur sa mensualité, et sort du « à mettre de côté » : pas de
-virement vers l'épargne pour elle. Une autre dépense à épargner **au mois** se juge sur **sa durée** : de sa
+virement vers l'épargne pour elle. Elle va donc dans une **catégorie courante** (on la choisit
+parmi elles au moment de la mettre au budget) ; passer un projet de l'un à l'autre déplace sa
+dépense, à partir du mois en cours, dans une catégorie du bon type — de même répartition si
+possible, de « Prorata épargné » à « Prorata mensuel » —, les mois d'avant restant où ils étaient. Une autre dépense à épargner **au mois** se juge sur **sa durée** : de sa
 première mensualité à la dernière, ou jusqu'au mois si elle n'a pas de fin, chaque mois sur son
 propre budget. Seul un dépassement
 sur cette période passe en rouge. L'en-tête d'un mois, et le total de son récap, comparent donc

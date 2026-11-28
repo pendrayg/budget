@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { budgetAt } from './budget'
 import { seedState } from './fixtures'
-import { activateProject, deleteProject, isProjectSaving, projectCategoryIds, projectSaved, savingStart, stopProject, syncProjectBudget } from './projects'
+import { activateProject, deleteProject, isProjectSaving, projectCategoryIds, projectSaved, regroupProject, savingStart, stopProject, syncProjectBudget } from './projects'
 import { addGroup } from './budget'
 import { importStatement, placeableAt, placeTransaction, spendingSummary } from './spending'
 import { sanitizeState } from './state'
@@ -112,6 +112,19 @@ describe('projets épargnés', () => {
     expect(at('2026-11').over).toBe(false)
     // À la cible : 100 € sur 391 €.
     expect(at('2027-03').year).toMatchObject({ spent: 100, budget: 391 })
+  })
+
+  it('payé chaque mois, passe dans une catégorie courante à partir du mois ; les mois d’avant restent épargnés', () => {
+    let state = activateProject(withProject('2027-03'), 'nas', SAVE, '2026-10', 'c-nas', T)
+    state = { ...state, projects: state.projects.map((p) => (p.id === 'nas' ? { ...p, payment: 'monthly' as const } : p)) }
+    state = regroupProject(state, 'nas', '2026-12', T)
+    const groupOf = (month: string) => state.groups.find((g) => g.id === budgetAt(state, 'c-nas', month)?.groupId)!
+    expect(groupOf('2026-11').save).toBe(true)
+    expect(groupOf('2026-12').save).toBe(false)
+    expect(budgetAt(state, 'c-nas', '2026-12')?.amount).toEqual(budgetAt(state, 'c-nas', '2026-11')?.amount)
+    expect(spendingSummary(state, '2026-12').sections.some((s) => s.lines.some((l) => l.category.id === 'c-nas'))).toBe(true)
+    // Déjà à sa place : rien ne bouge.
+    expect(regroupProject(state, 'nas', '2026-12', T)).toBe(state)
   })
 
   it('payé chaque mois : une dépense courante, hors du « à épargner »', () => {

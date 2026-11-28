@@ -141,6 +141,37 @@ export function syncProjectBudget(state: State, projectId: string, month: Month,
   return upsertVersion(next, version(id, addMonths(project.target, 1), group, { kind: 'none' }, now))
 }
 
+/**
+ * La catégorie qui convient au paiement d'un projet : une catégorie À ÉPARGNER pour un projet payé
+ * à l'échéance (on met de côté, on paie en partant), une catégorie COURANTE pour un projet payé
+ * chaque mois sur le compte (une régularisation d'impôts) — il n'a rien à faire sur l'épargne.
+ */
+export const fitsPayment = (group: BudgetGroup, project: Pick<Project, 'payment'>) => group.save === (project.payment !== 'monthly')
+
+/**
+ * Range la dépense d'un projet dans la catégorie qui convient à son paiement, à partir de `month` :
+ * de même répartition si possible ; ses versions de ce mois et d'après y passent ; les mois
+ * d'avant restent où ils étaient. Rien à
+ * faire si elle y est déjà, ou s'il n'y a pas de telle catégorie dans son budget.
+ */
+export function regroupProject(state: State, projectId: string, month: Month, now: string): State {
+  const project = state.projects.find((p) => p.id === projectId)
+  const current = project ? projectGroup(state, project) : undefined
+  if (!project?.budget || !current || fitsPayment(current, project)) return state
+  // De préférence une catégorie de même répartition (de « Prorata épargné » à « Prorata mensuel »).
+  const fitting = state.groups.filter((group) => inScope(group, current.owner ?? null) && fitsPayment(group, project))
+  const target = fitting.find((group) => group.splitKeyId === current.splitKeyId) ?? fitting[0]
+  if (!target) return state
+  const id = project.budget.categoryId
+  const here = budgetAt(state, id, month)
+  let next: State = {
+    ...state,
+    budgets: state.budgets.map((v) => (v.categoryId === id && v.from >= month ? { ...v, groupId: target.id, splitKeyId: target.splitKeyId, save: target.save, updatedAt: now } : v)),
+  }
+  if (here && here.from < month) next = upsertVersion(next, { ...here, from: month, groupId: target.id, splitKeyId: target.splitKeyId, save: target.save, updatedAt: now })
+  return next
+}
+
 /** Arrête d'épargner un projet à partir de `month`. Sa dépense garde son histoire, le lien reste. */
 export function stopProject(state: State, projectId: string, month: Month, now: string): State {
   const project = state.projects.find((p) => p.id === projectId)
