@@ -198,6 +198,9 @@ export interface Project {
   start?: Month
   /** La dépense du budget qui l'épargne, tant qu'on l'épargne. */
   budget?: { categoryId: string }
+  /** Payé chaque mois sur le compte (une régularisation d'impôts) ; absent, à l'échéance (des
+   *  vacances : on met de côté, on paie en partant). */
+  payment?: 'monthly'
   /** Choisie, affichée après la brique commune à tous les projets (cf. `PROJECT_ICON`) ; sa dépense
    *  au budget la reprend. */
   icon?: CategoryIcon

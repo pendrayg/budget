@@ -212,23 +212,26 @@ ce premier budget. Un mois importé par erreur se supprime au bas de son dépli.
 faut **mettre de côté chaque mois** (et la part de chacun), à virer sur le compte épargne. Dans un mois, le bloc
 **Épargne** compare le virement du mois vers l'épargne — rangé en « Versement épargne », appris
 comme le reste — à cette somme. Le paiement annuel, lui, sort du compte commun le mois où il tombe :
-il ne compte **pas** dans le dépensé du mois (l'épargne le couvre), et se juge en
+il compte dans ce qui **sort du compte** ce mois-là, net de ce qu'on rapatrie de l'épargne pour
+lui (un virement reçu rangé dans la dépense, ou en « Versement épargne »), et se juge en
 **enveloppe, par sa période** : chacune de ses périodes (trois mois, six, douze, vingt-quatre ;
 chaque item à son rythme) y apporte son montant, chaque paiement en retire, et elle dépasse quand
 l'enveloppe passe sous zéro. Un trajet semestriel de 120 € : 140 € puis 120 € le semestre suivant
 dépassent de 20 € — le dépassement reste —, un troisième trajet dans l'année dépasse. L'enveloppe
 part de la première version de la dépense, ou du premier relevé du compte s'il est plus tard (avant,
 on ne sait pas ce qui a été payé) ; ses périodes repartent quand la dépense change de rythme (de
-50 € par mois à des items trimestriels), pas pour un simple changement de montant. La dépense d'un **projet** se juge sur
-le projet, **mois par mois** : de sa date de début (sinon sa première mensualité) à sa cible, son
-total se répartit à parts égales, et ce qui a été payé jusqu'au mois se compare à ce qui devait
-l'être (une régularisation de 1 158 € de septembre à décembre attend 289,50 € par mois : 867 €
-prélevés fin novembre pour 868,50 € attendus, −1,50 €). Un achat payé d'un coup à la cible tombe
-pile ; payé avant, il dépasse jusqu'à ce que les mois le rattrapent ; sans cible, le total d'un coup. Une autre dépense à épargner **au mois** se juge sur **sa durée** : de sa
+50 € par mois à des items trimestriels), pas pour un simple changement de montant. La dépense d'un **projet** dépend de
+son **paiement** (choisi dans le projet) : **à l'échéance** (des vacances : on met de côté, on paie
+en partant), elle se juge sur le total du projet, sans « non dépensé » avant la cible — elle ne
+dépasse que si l'on a payé plus que le total, et à la cible le reste non payé est une économie ;
+**mensuel** (une régularisation d'impôts, prélevée chaque mois sur le compte), elle est une
+dépense courante, jugée au mois sur sa mensualité, et sort du « à mettre de côté » : pas de
+virement vers l'épargne pour elle. Une autre dépense à épargner **au mois** se juge sur **sa durée** : de sa
 première mensualité à la dernière, ou jusqu'au mois si elle n'a pas de fin, chaque mois sur son
 propre budget. Seul un dépassement
-sur cette période passe en rouge. L'en-tête d'un mois compare donc le courant dépensé plus
-le versé sur l'épargne au courant budgété plus le « à mettre de côté ».
+sur cette période passe en rouge. L'en-tête d'un mois, et le total de son récap, comparent donc
+ce qui **sort du compte** — le courant, le versé sur l'épargne, les imprévus et les paiements des
+dépenses à épargner, net de ce qui revient de l'épargne — au budget du mois.
 
 Une dépense qui n'entre dans aucune dépense du budget se range en **« Imprévu hors catégorie »** :
 elle compte dans le dépensé du mois, sans budget en face, dans son propre bloc. C'est un cas

@@ -181,7 +181,7 @@ describe('réapprendre un marchand', () => {
 describe('dépenses annuelles et épargne', () => {
   const taxe = () => idOf('Taxe foncière')
 
-  it('un paiement annuel ne fait pas dépasser le mois : il se juge sur douze mois, hors du dépensé du mois', () => {
+  it('un paiement annuel se juge sur sa période ; au mois, il sort du compte, sauf ce qui revient de l’épargne', () => {
     // La taxe foncière de la graine : 1 200 € par an, 100 € par mois.
     let state = importStatement(seedState(), [{ date: '2026-10-15', label: 'PRLV SEPA DGFIP IMPOT FONCIER', amount: 1200 }], 't').state
     state = placeTransaction(state, state.transactions[0].id, { categoryId: taxe() }, 't2')
@@ -191,9 +191,14 @@ describe('dépenses annuelles et épargne', () => {
     expect(line.year?.spent).toBe(1200)
     expect(line.year?.budget).toBeCloseTo(1200, 6)
     expect(line.over).toBe(false)
-    expect(summary.spent).toBe(0)
+    // Payé du compte commun : il en est sorti ce mois-ci.
+    expect(summary.spent).toBe(1200)
     expect(summary.overCount).toBe(0)
     expect(summary.sections.some((s) => s.group.save)).toBe(false)
+    // Rapatrié de l'épargne (un virement reçu, rangé en « Versement épargne ») : le mois est quitte.
+    state = importStatement(state, [{ date: '2026-10-16', label: 'VIR DEPUIS EPARGNE', amount: -1200 }], 't3').state
+    state = placeTransaction(state, state.transactions.at(-1)!.id, { saving: true }, 't4')
+    expect(spendingSummary(state, '2026-10').spent).toBe(0)
   })
 
   it('juge sur son premier budget une dépense née après le mois de ses opérations', () => {

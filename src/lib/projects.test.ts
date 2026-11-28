@@ -102,20 +102,30 @@ describe('projets épargnés', () => {
     expect(state.transactions.at(-1)!.categoryId).toBeUndefined()
   })
 
-  it('se juge mois par mois sur son total : le payé face à ce qui devait l’être', () => {
+  it('payé à l’échéance : pas de « non dépensé » avant la cible, le total à la cible', () => {
     let state = activateProject(withProject('2027-03'), 'nas', SAVE, '2026-10', 'c-nas', T)
-    for (const date of ['2026-10-20', '2026-11-20']) {
-      state = importStatement(state, [{ date, label: `CARTE BOUTIQUE NAS ${date}`, amount: 100 }], T).state
-      state = placeTransaction(state, state.transactions.at(-1)!.id, { categoryId: 'c-nas' }, T)
-    }
-    const line = spendingSummary(state, '2026-11').savings.sections.flatMap((s) => s.lines).find((l) => l.category.id === 'c-nas')!
-    // 391 € d'octobre à mars, six mois : 130,33 € attendus fin novembre, 200 € payés — en avance.
-    expect(line.year?.spent).toBe(200)
-    expect(line.year?.budget).toBeCloseTo((391 * 2) / 6, 6)
-    expect(line.over).toBe(true)
-    // Fin mars, tout devait être payé : 200 € sur 391 €.
-    const march = spendingSummary(state, '2027-03').savings.sections.flatMap((s) => s.lines).find((l) => l.category.id === 'c-nas')!
-    expect(march.year).toMatchObject({ spent: 200, budget: 391 })
+    state = importStatement(state, [{ date: '2026-11-20', label: 'CARTE BOUTIQUE NAS', amount: 100 }], T).state
+    state = placeTransaction(state, state.transactions.at(-1)!.id, { categoryId: 'c-nas' }, T)
+    const at = (month: string) => spendingSummary(state, month).savings.sections.flatMap((s) => s.lines).find((l) => l.category.id === 'c-nas')!
+    // Avant la cible : 100 € payés, rien d'attendu de plus — pile.
+    expect(at('2026-11').year).toMatchObject({ spent: 100, budget: 100 })
+    expect(at('2026-11').over).toBe(false)
+    // À la cible : 100 € sur 391 €.
+    expect(at('2027-03').year).toMatchObject({ spent: 100, budget: 391 })
+  })
+
+  it('payé chaque mois : une dépense courante, hors du « à épargner »', () => {
+    let state = activateProject(withProject('2027-03'), 'nas', SAVE, '2026-10', 'c-nas', T)
+    const before = spendingSummary(state, '2026-11').savings.toSave
+    state = { ...state, projects: state.projects.map((p) => (p.id === 'nas' ? { ...p, payment: 'monthly' as const } : p)) }
+    state = importStatement(state, [{ date: '2026-11-20', label: 'PRLV REGUL', amount: 65 }], T).state
+    state = placeTransaction(state, state.transactions.at(-1)!.id, { categoryId: 'c-nas' }, T)
+    const summary = spendingSummary(state, '2026-11')
+    const line = summary.savings.sections.flatMap((s) => s.lines).find((l) => l.category.id === 'c-nas')!
+    expect(line.year).toBeUndefined()
+    expect(line.over).toBe(false)
+    expect(summary.savings.toSave).toBeCloseTo(before - line.budget, 6)
+    expect(sanitizeState(state).projects.find((p) => p.id === 'nas')?.payment).toBe('monthly')
   })
 
   it('ne compte pas en dépassement l’achat payé après la cible', () => {

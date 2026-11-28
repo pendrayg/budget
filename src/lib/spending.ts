@@ -350,21 +350,19 @@ function judgedAsEnvelope(state: State, categoryId: string, month: Month, scope:
 }
 
 /**
- * La dépense d'un PROJET se juge sur le projet, mois par mois : de sa date de début (sinon sa
- * première mensualité) à sa cible, son total se répartit à parts égales ; ce qui a été payé jusqu'au
- * mois face à ce qui devait l'être. Une régularisation de 1 158 € de septembre à décembre attend
- * 289,50 € par mois : 867 € payés fin novembre pour 868,50 € attendus, −1,50 €. Un achat payé d'un
- * coup à la cible tombe pile ; payé avant, il dépasse jusqu'à ce que les mois le rattrapent. Sans
- * cible, le total d'un coup.
+ * La dépense d'un projet PAYÉ À L'ÉCHÉANCE (des vacances : on met de côté, on paie en partant) se
+ * juge sur son total, sans « non dépensé » avant sa cible : ce qui n'est pas encore payé le sera.
+ * Avant la cible, elle ne dépasse que si l'on a payé plus que le total ; à la cible, le reste non
+ * payé est une économie. Un projet PAYÉ CHAQUE MOIS, lui, est une dépense courante (cf.
+ * `spendingSummary`).
  */
 function judgedAgainstProject(state: State, categoryId: string, project: Project, month: Month) {
   const start = project.start ?? versionsOf(state, categoryId)[0]?.from ?? month
   const total = sum(project.items.map((item) => item.amount))
   const spent = sum(state.transactions.filter((t) => t.categoryId === categoryId && t.date.slice(0, 7) <= month).map((t) => t.amount))
-  if (!project.target || project.target < start) return { months: Math.max(1, monthsBetween(start, month)), spent, budget: total }
-  const duration = monthsBetween(start, project.target)
-  const elapsed = Math.min(duration, Math.max(0, monthsBetween(start, month)))
-  return { months: Math.max(1, elapsed), spent, budget: (total * elapsed) / duration }
+  const months = Math.max(1, monthsBetween(start, month))
+  const due = !project.target || month >= project.target
+  return { months, spent, budget: due ? total : Math.min(total, Math.max(0, spent)) }
 }
 
 /**
@@ -426,7 +424,9 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
       const budget = version && version.amount.kind !== 'none' ? versionMonthly(version, budgetMonth) : 0
       if (budget === 0 && own.length === 0) continue
       const spent = sum(own.map((t) => t.amount))
-      if (group.save) {
+      // Un projet payé chaque mois sur le compte se juge comme une dépense courante, au mois.
+      const monthlyProject = state.projects.some((p) => p.payment === 'monthly' && p.budget?.categoryId === category.id)
+      if (group.save && !monthlyProject) {
         // Une dépense à épargner arrêtée (un projet après sa cible) se paie souvent APRÈS sa
         // dernière mensualité : on la juge sur cette dernière, pas sur 0 €.
         const judged = budget > 0 ? version : versionsOf(state, category.id).filter((v) => v.from <= budgetMonth && v.amount.kind !== 'none').at(-1)
@@ -458,15 +458,20 @@ export function spendingSummary(state: State, month: Month, scope: Scope = null)
   const saveSections = all.filter((section) => section.group.save)
   const transfers = transactions.filter((t) => t.saving === true)
   const transferred = sum(transfers.map((t) => t.amount))
-  const toSave = sum(saveSections.map((section) => section.budget))
+  // À mettre de côté : les dépenses à épargner, sans les projets payés chaque mois sur le compte.
+  const saveLines = saveSections.flatMap((section) => section.lines)
+  const toSave = sum(saveLines.filter((line) => line.year).map((line) => line.budget))
   const unplanned = transactions.filter((t) => t.unplanned === true)
   const unplannedTotal = sum(unplanned.map((t) => t.amount))
   return {
     month,
     sections,
     savings: { sections: saveSections, transfers, transferred, toSave },
-    budget: sum(sections.map((section) => section.budget)) + toSave,
-    spent: sum(sections.map((section) => section.spent)) + transferred + unplannedTotal,
+    budget: sum(sections.map((section) => section.budget)) + sum(saveLines.map((line) => line.budget)),
+    // Ce qui est sorti du compte : le courant, le virement vers l'épargne, les imprévus, et les
+    // paiements des dépenses à épargner — net de ce qui revient de l'épargne pour eux (rangé dans
+    // la dépense, ou en « Versement épargne » négatif).
+    spent: sum(sections.map((section) => section.spent)) + transferred + unplannedTotal + sum(saveLines.map((line) => line.spent)),
     overCount: all.flatMap((section) => section.lines).filter((line) => line.over && line.transactions.length > 0).length,
     unplanned,
     unplannedTotal,

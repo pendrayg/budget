@@ -1,4 +1,4 @@
-import { Button, DeleteButton, Input, Select } from '../ds'
+import { Button, DeleteButton, FlatSelector, Input, Select, type FlatSelectorOption } from '../ds'
 import { useId, useState } from 'react'
 import { budgetAt } from '../lib/budget'
 import { createId, formatEuro, nowIso } from '../lib/format'
@@ -23,13 +23,22 @@ interface Draft {
   icon: CategoryIcon | undefined
   target: Month | ''
   start: Month | ''
+  payment: Payment
   lines: Line[]
 }
+
+type Payment = 'due' | 'monthly'
+
+/** À l'échéance (des vacances : on met de côté, on paie en partant) ou chaque mois sur le compte (une régularisation d'impôts). */
+const PAYMENTS: FlatSelectorOption<Payment>[] = [
+  { id: 'due', label: 'À l’échéance' },
+  { id: 'monthly', label: 'Mensuel' },
+]
 
 function draftFor(state: State, projectId: string | null): Draft {
   const project = projectId ? state.projects.find((p) => p.id === projectId) : undefined
   const lines = (project?.items ?? []).map((item) => ({ id: item.id, label: item.label, amount: item.amount as number | null }))
-  return { name: project?.name ?? '', icon: project?.icon, target: project?.target ?? '', start: project?.start ?? '', lines: lines.length > 0 ? lines : [{ id: createId(), label: '', amount: null }] }
+  return { name: project?.name ?? '', icon: project?.icon, target: project?.target ?? '', start: project?.start ?? '', payment: project?.payment ?? 'due', lines: lines.length > 0 ? lines : [{ id: createId(), label: '', amount: null }] }
 }
 
 /** « de mars 2027 », « d’octobre 2026 ». */
@@ -98,6 +107,7 @@ export default function ProjectForm({
         items: d.lines.filter((line) => line.amount !== null || line.label.trim() !== '').map((line) => ({ id: line.id, label: line.label.trim(), amount: line.amount ?? 0 })),
         ...(d.target ? { target: d.target } : {}),
         ...(d.start ? { start: d.start } : {}),
+        ...(d.payment === 'monthly' ? { payment: 'monthly' as const } : {}),
         ...(previous?.budget ? { budget: previous.budget } : {}),
         ...(owner ? { owner } : {}),
         updatedAt: now,
@@ -159,6 +169,10 @@ export default function ProjectForm({
           <MonthInput id={`${uid}-target`} value={draft.target} placeholder="Aucune" onChange={(target) => change({ ...draft, target })} />
           {draft.target && <DeleteButton label="Retirer la date cible" onDelete={() => change({ ...draft, target: '' })} />}
         </div>
+      </div>
+      <div className="field">
+        <span className="field-label">Paiement</span>
+        <FlatSelector label="Paiement" options={PAYMENTS} value={draft.payment} onChange={(payment) => change({ ...draft, payment })} />
       </div>
       <ul className="items">
         {draft.lines.map((line, index) => (
